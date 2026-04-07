@@ -1,6 +1,9 @@
 package gates
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Status represents a gate's pass/fail status.
 type Status string
@@ -11,6 +14,49 @@ const (
 	StatusWarn Status = "WARN"
 	StatusSkip Status = "SKIP"
 )
+
+// TokenAge represents the maturity stage of a token.
+type TokenAge string
+
+const (
+	AgeFresh       TokenAge = "fresh"       // < 24 hours
+	AgeEarly       TokenAge = "early"       // 1-7 days
+	AgeEstablished TokenAge = "established" // > 7 days
+)
+
+// TokenContext carries metadata about the token that gates can use for tiered evaluation.
+type TokenContext struct {
+	Age            TokenAge      // Token maturity stage
+	AgeHours       float64       // Exact age in hours
+	PairCreatedAt  time.Time     // When the primary pair was created
+	HasAgeData     bool          // Whether we have reliable age data
+}
+
+// ClassifyAge determines the token's age tier from pairCreatedAt timestamp (milliseconds).
+func ClassifyAge(pairCreatedAtMs int64) TokenContext {
+	if pairCreatedAtMs == 0 {
+		return TokenContext{Age: AgeEstablished, HasAgeData: false}
+	}
+	created := time.UnixMilli(pairCreatedAtMs)
+	age := time.Since(created)
+	hours := age.Hours()
+
+	ctx := TokenContext{
+		PairCreatedAt: created,
+		AgeHours:      hours,
+		HasAgeData:    true,
+	}
+
+	switch {
+	case hours < 24:
+		ctx.Age = AgeFresh
+	case hours < 24*7:
+		ctx.Age = AgeEarly
+	default:
+		ctx.Age = AgeEstablished
+	}
+	return ctx
+}
 
 // Evidence represents a single piece of evidence collected during gate evaluation.
 type Evidence struct {
@@ -33,6 +79,12 @@ type Gate interface {
 	Name() string
 	Number() int
 	Evaluate(token string, chainID int64) (*Result, error)
+}
+
+// AgeAwareGate is a gate that adjusts thresholds based on token maturity.
+type AgeAwareGate interface {
+	Gate
+	EvaluateWithContext(token string, chainID int64, ctx TokenContext) (*Result, error)
 }
 
 // JSON serializes the result.

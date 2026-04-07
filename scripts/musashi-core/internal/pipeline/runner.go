@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/data"
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/gates"
 )
 
@@ -16,6 +17,8 @@ type PipelineResult struct {
 	Timestamp string          `json:"timestamp"`
 	Status    string          `json:"status"` // PASS, FAIL, WARN
 	FailedAt  int             `json:"failed_at,omitempty"`
+	TokenAge  string          `json:"token_age,omitempty"`
+	AgeHours  float64         `json:"age_hours,omitempty"`
 	Gates     []*gates.Result `json:"gates"`
 }
 
@@ -31,6 +34,9 @@ func (p *PipelineResult) Pretty() string {
 
 	sb.WriteString(fmt.Sprintf("\n武蔵 MUSASHI — Gate Pipeline Results\n"))
 	sb.WriteString(fmt.Sprintf("Token: %s | Chain: %d\n", p.Token, p.ChainID))
+	if p.TokenAge != "" {
+		sb.WriteString(fmt.Sprintf("Age:   %s (%.1f hours)\n", p.TokenAge, p.AgeHours))
+	}
 	sb.WriteString(fmt.Sprintf("Time:  %s\n", p.Timestamp))
 	sb.WriteString(strings.Repeat("─", 60) + "\n")
 
@@ -61,9 +67,32 @@ func (p *PipelineResult) Pretty() string {
 	return sb.String()
 }
 
+// fetchTokenAge gets the earliest pairCreatedAt from DexScreener data.
+func fetchTokenAge(token string) gates.TokenContext {
+	dex := data.NewDexScreenerClient()
+	dexData, err := dex.GetTokenPairs(token)
+	if err != nil || len(dexData.Pairs) == 0 {
+		return gates.TokenContext{Age: gates.AgeEstablished, HasAgeData: false}
+	}
+
+	// Find the earliest pair creation time (oldest pair = token age)
+	var earliestMs int64
+	for _, p := range dexData.Pairs {
+		if p.PairCreatedAt > 0 && (earliestMs == 0 || p.PairCreatedAt < earliestMs) {
+			earliestMs = p.PairCreatedAt
+		}
+	}
+
+	return gates.ClassifyAge(earliestMs)
+}
+
 // RunGates executes the gate pipeline sequentially with fail-fast behavior.
 // Gates 4 (social) and 5 (narrative) are agent-driven and skipped here.
+// Token age is automatically detected and used for tiered thresholds.
 func RunGates(token string, chainID int64) (*PipelineResult, error) {
+	// Fetch token age context first
+	tokenCtx := fetchTokenAge(token)
+
 	result := &PipelineResult{
 		Token:     token,
 		ChainID:   chainID,
@@ -72,11 +101,16 @@ func RunGates(token string, chainID int64) (*PipelineResult, error) {
 		Gates:     make([]*gates.Result, 0),
 	}
 
+	if tokenCtx.HasAgeData {
+		result.TokenAge = string(tokenCtx.Age)
+		result.AgeHours = tokenCtx.AgeHours
+	}
+
 	// Define gate sequence: 1, 2, 3, [4-5 agent], 6, 7
 	gateList := []gates.Gate{
 		gates.NewContractSafetyGate(),  // Gate 1
-		gates.NewLiquidityGate(),       // Gate 2
-		gates.NewWalletsGate(),         // Gate 3
+		gates.NewLiquidityGate(),       // Gate 2 (age-aware)
+		gates.NewWalletsGate(),         // Gate 3 (age-aware)
 		// Gate 4 (Social) — agent-driven, skip
 		// Gate 5 (Narrative) — agent-driven, skip
 		gates.NewTimingGate(),          // Gate 6
@@ -84,7 +118,16 @@ func RunGates(token string, chainID int64) (*PipelineResult, error) {
 	}
 
 	for _, gate := range gateList {
-		gateResult, err := gate.Evaluate(token, chainID)
+		var gateResult *gates.Result
+		var err error
+
+		// Use age-aware evaluation for gates that support it
+		if ageGate, ok := gate.(gates.AgeAwareGate); ok {
+			gateResult, err = ageGate.EvaluateWithContext(token, chainID, tokenCtx)
+		} else {
+			gateResult, err = gate.Evaluate(token, chainID)
+		}
+
 		if err != nil {
 			return nil, fmt.Errorf("gate %d (%s) error: %w", gate.Number(), gate.Name(), err)
 		}
