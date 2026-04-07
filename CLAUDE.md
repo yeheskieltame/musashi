@@ -427,8 +427,24 @@ BSC:       https://bsc-dataseed.binance.org
 **Faucet (Google):** https://cloud.google.com/application/web3/faucet/0g/galileo
 
 ```bash
-# Deploy both contracts with Foundry
-forge script script/Deploy.s.sol --rpc-url https://evmrpc-testnet.0g.ai --broadcast
+# NOTE: `forge script` does NOT work with 0G Chain (chain 16602 unsupported).
+# Use `forge create` + `cast send` instead:
+
+# Step 1: Deploy ConvictionLog
+forge create src/ConvictionLog.sol:ConvictionLog \
+  --rpc-url https://evmrpc-testnet.0g.ai \
+  --private-key $OG_CHAIN_PRIVATE_KEY --legacy --broadcast
+
+# Step 2: Deploy MusashiINFT (needs ConvictionLog address)
+forge create src/MusashiINFT.sol:MusashiINFT \
+  --rpc-url https://evmrpc-testnet.0g.ai \
+  --private-key $OG_CHAIN_PRIVATE_KEY --legacy --broadcast \
+  --gas-limit 3000000 --constructor-args <CONVICTION_LOG_ADDRESS>
+
+# Step 3: Link them
+cast send <CONVICTION_LOG_ADDRESS> "setINFT(address)" <INFT_ADDRESS> \
+  --rpc-url https://evmrpc-testnet.0g.ai \
+  --private-key $OG_CHAIN_PRIVATE_KEY --legacy
 
 # SAVE deployed addresses — needed for submission
 # SAVE Explorer links — needed for submission
@@ -468,8 +484,8 @@ Both contracts deployed on 0G Galileo Testnet (Chain ID: 16602):
 
 | Contract | Address |
 |----------|---------|
-| ConvictionLog | `0x7698c369Cec5bFD14bFe9184ea19D644540f483b` |
-| MusashiINFT | `0xFB1Cd4b556eCA02D84BA3754Fbd4Fe2C81aEE488` |
+| ConvictionLog | `0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D` |
+| MusashiINFT | `0x1dC1CE24d956951a078aE0Dd61379A86c901E773` |
 
 ### ConvictionLog.sol (deployed version)
 
@@ -494,7 +510,7 @@ uint64  public wins;
 uint64  public losses;
 int128  public totalReturnBps;
 
-function logStrike(address _token, uint64 _chainId, uint8 _convergence, bytes32 _evidenceHash)
+function logStrike(uint256 _agentId, address _token, uint64 _chainId, uint8 _convergence, bytes32 _evidenceHash)
 function recordOutcome(uint256 _id, int128 _returnBps)
 function getStrike(uint256 _id) → Strike memory
 function strikeCount() → uint256
@@ -529,7 +545,7 @@ function getAgent(uint256 tokenId) → AgentToken memory
 function agentCount() → uint256
 ```
 
-**IMPORTANT for Go binary ABI encoding:** `logStrike` uses `uint64` for chainId, NOT `uint256`. The function selector is `keccak256("logStrike(address,uint64,uint8,bytes32)")`. Using `uint256` in the selector will cause a revert.
+**IMPORTANT for Go binary ABI encoding:** `logStrike` uses `uint256` for agentId and `uint64` for chainId. The function selector is `keccak256("logStrike(uint256,address,uint64,uint8,bytes32)")`. Using the wrong types in the selector will cause a revert.
 
 ---
 
@@ -562,8 +578,8 @@ OG_CHAIN_RPC=https://evmrpc-testnet.0g.ai
 OG_CHAIN_PRIVATE_KEY=         # Deployer wallet (hex, 0x prefix accepted)
 
 # Deployed contracts
-CONVICTION_LOG_ADDRESS=0x7698c369Cec5bFD14bFe9184ea19D644540f483b
-MUSASHI_INFT_ADDRESS=0xFB1Cd4b556eCA02D84BA3754Fbd4Fe2C81aEE488
+CONVICTION_LOG_ADDRESS=0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D
+MUSASHI_INFT_ADDRESS=0x1dC1CE24d956951a078aE0Dd61379A86c901E773
 
 # 0G Storage — uses official 0g-storage-client CLI (file upload)
 OG_STORAGE_RPC=https://evmrpc-testnet.0g.ai
