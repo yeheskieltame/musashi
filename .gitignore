@@ -1,0 +1,18 @@
+# Environment (private keys)
+.env
+
+# OS
+.DS_Store
+**/.DS_Store
+
+# Evidence downloads (re-downloadable from 0G Storage)
+evidence/
+
+# Go
+scripts/musashi-core/musashi-core
+scripts/musashi-core/musashi
+
+# Foundry build artifacts
+contracts/out/
+contracts/cache/
+contracts/broadcast/
