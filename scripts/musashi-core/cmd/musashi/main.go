@@ -232,6 +232,28 @@ var recordOutcomeCmd = &cobra.Command{
 	},
 }
 
+var scanCmd = &cobra.Command{
+	Use:   "scan",
+	Short: "Scan, score, and rank tokens — find the best opportunities automatically",
+	Long: `Fetches tokens from multiple sources (trending, new pools, boosted),
+scores them based on liquidity, volume, market cap, age, and safety,
+then returns a ranked list. Use --gates to auto-run the gate pipeline
+on the top candidates.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		chainID, _ := cmd.Flags().GetInt64("chain")
+		limit, _ := cmd.Flags().GetInt("limit")
+		runGates, _ := cmd.Flags().GetBool("gates")
+
+		result, err := pipeline.ScanTokens(chainID, limit, runGates)
+		if err != nil {
+			return fmt.Errorf("scan failed: %w", err)
+		}
+
+		fmt.Println(result)
+		return nil
+	},
+}
+
 var setINFTCmd = &cobra.Command{
 	Use:   "set-inft [inft_address]",
 	Short: "Link MusashiINFT contract to ConvictionLog (one-time setup)",
@@ -292,7 +314,11 @@ func init() {
 
 	searchCmd.Flags().Int("limit", 5, "Max results to return")
 
-	rootCmd.AddCommand(gatesCmd, strikeCmd, storeCmd, discoveryCmd, mintAgentCmd, updateAgentCmd, statusCmd, agentInfoCmd, recordOutcomeCmd, searchCmd, setINFTCmd)
+	scanCmd.Flags().Int64("chain", 0, "Filter by chain ID (0=all chains, 1=ETH, 56=BSC, 8453=Base)")
+	scanCmd.Flags().Int("limit", 10, "Max tokens to return")
+	scanCmd.Flags().Bool("gates", false, "Auto-run gate pipeline on top 5 candidates")
+
+	rootCmd.AddCommand(gatesCmd, strikeCmd, storeCmd, discoveryCmd, mintAgentCmd, updateAgentCmd, statusCmd, agentInfoCmd, recordOutcomeCmd, searchCmd, setINFTCmd, scanCmd)
 }
 
 func main() {
