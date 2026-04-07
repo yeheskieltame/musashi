@@ -27,7 +27,10 @@ func (g *ContractSafetyGate) Evaluate(token string, chainID int64) (*Result, err
 
 	sec, err := g.goplus.GetTokenSecurity(chainID, token)
 	if err != nil {
-		return result.Fail(fmt.Sprintf("GoPlus API error: %v", err)), nil
+		// GoPlus not having data ≠ unsafe contract. It means the token
+		// isn't indexed yet (common for new or niche tokens).
+		result.AddEvidence("goplus", "error", err.Error())
+		return result.Warn("GoPlus has no security data for this token — agent should verify contract manually"), nil
 	}
 
 	result.AddEvidence("goplus", "token_name", sec.TokenName)
