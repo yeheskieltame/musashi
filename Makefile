@@ -19,33 +19,49 @@ deploy:
 	@echo "=== Deploying to 0G Galileo Testnet ==="
 	@echo "Note: forge script doesn't support chain 16602, using forge create + cast send"
 	@echo ""
-	@echo "Step 1: Deploy ConvictionLog"
-	cd contracts && forge create src/ConvictionLog.sol:ConvictionLog \
-		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
-		--private-key $${OG_CHAIN_PRIVATE_KEY} \
-		--legacy --broadcast
+	@echo "--- Setup keystore (one-time): ---"
+	@echo "  cast wallet import musashi-deployer --interactive"
 	@echo ""
-	@echo "Step 2: Deploy MusashiINFT (paste ConvictionLog address below)"
-	@echo "  make deploy-inft CONVICTION_LOG=0x..."
+	@echo "--- Or use env var (less secure, visible in ps): ---"
+	@echo "  export OG_CHAIN_PRIVATE_KEY=0x..."
+	@echo ""
+	@echo "Step 1: Deploy ConvictionLog"
+	@echo "  make deploy-conviction ACCOUNT=musashi-deployer"
+	@echo "  (or: make deploy-conviction USE_KEY=1)"
+	@echo ""
+	@echo "Step 2: Deploy MusashiINFT"
+	@echo "  make deploy-inft CONVICTION_LOG=0x... ACCOUNT=musashi-deployer"
 	@echo ""
 	@echo "Step 3: Link contracts"
-	@echo "  make deploy-link CONVICTION_LOG=0x... INFT=0x..."
+	@echo "  make deploy-link CONVICTION_LOG=0x... INFT=0x... ACCOUNT=musashi-deployer"
+
+# Resolve signer: prefer --account (keystore), fall back to --private-key (env var)
+ifdef ACCOUNT
+SIGNER_FLAG = --account $(ACCOUNT)
+else ifdef USE_KEY
+SIGNER_FLAG = --private-key $${OG_CHAIN_PRIVATE_KEY}
+else
+SIGNER_FLAG = --account musashi-deployer
+endif
+
+deploy-conviction:
+	cd contracts && forge create src/ConvictionLog.sol:ConvictionLog \
+		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
+		$(SIGNER_FLAG) --legacy --broadcast
 
 deploy-inft:
-	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-inft CONVICTION_LOG=0x..." && exit 1)
+	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-inft CONVICTION_LOG=0x... [ACCOUNT=name]" && exit 1)
 	cd contracts && forge create src/MusashiINFT.sol:MusashiINFT \
 		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
-		--private-key $${OG_CHAIN_PRIVATE_KEY} \
-		--legacy --broadcast --gas-limit 3000000 \
+		$(SIGNER_FLAG) --legacy --broadcast --gas-limit 3000000 \
 		--constructor-args $(CONVICTION_LOG)
 
 deploy-link:
-	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x..." && exit 1)
-	@test -n "$(INFT)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x..." && exit 1)
+	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x... [ACCOUNT=name]" && exit 1)
+	@test -n "$(INFT)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x... [ACCOUNT=name]" && exit 1)
 	cast send $(CONVICTION_LOG) "setINFT(address)" $(INFT) \
 		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
-		--private-key $${OG_CHAIN_PRIVATE_KEY} \
-		--legacy
+		$(SIGNER_FLAG) --legacy
 
 skill:
 	@test -f SKILL.md && echo "SKILL.md exists" || (echo "SKILL.md missing!" && exit 1)

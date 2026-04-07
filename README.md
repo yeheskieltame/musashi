@@ -258,13 +258,16 @@ make test
 cp .env.example .env
 ```
 
-Edit `.env` and set your private key:
+Edit `.env`:
 
 ```
 OG_CHAIN_RPC=https://evmrpc-testnet.0g.ai
-OG_CHAIN_PRIVATE_KEY=your_private_key_here
 CONVICTION_LOG_ADDRESS=0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D
 MUSASHI_INFT_ADDRESS=0x1dC1CE24d956951a078aE0Dd61379A86c901E773
+
+# Optional: only needed for on-chain publishing (strike, store, mint, update)
+# Use a dedicated wallet with minimal funds — never your main wallet
+OG_CHAIN_PRIVATE_KEY=your_dedicated_wallet_key_here
 OG_STORAGE_RPC=https://evmrpc-testnet.0g.ai
 OG_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
 ```
@@ -278,6 +281,12 @@ All commands below assume environment is loaded:
 ```bash
 set -a && source .env && set +a
 ```
+
+> **For deployment only**: use Foundry keystore instead of env var (more secure):
+> ```bash
+> cast wallet import musashi-deployer --interactive
+> # Then use: make deploy-conviction ACCOUNT=musashi-deployer
+> ```
 
 ---
 
@@ -356,9 +365,10 @@ make contracts         # Build Solidity contracts
 make test              # Run all tests (Go + Foundry)
 make test-core         # Run Go tests only
 make test-contracts    # Run Foundry tests only
-make deploy            # Deploy ConvictionLog (step 1 of 3)
-make deploy-inft CONVICTION_LOG=0x...  # Deploy MusashiINFT (step 2)
-make deploy-link CONVICTION_LOG=0x... INFT=0x...  # Link contracts (step 3)
+make deploy            # Show deployment instructions
+make deploy-conviction ACCOUNT=musashi-deployer    # Deploy ConvictionLog
+make deploy-inft CONVICTION_LOG=0x... ACCOUNT=...  # Deploy MusashiINFT
+make deploy-link CONVICTION_LOG=0x... INFT=0x... ACCOUNT=...  # Link contracts
 make gates TOKEN=0x... CHAIN=1        # Run gates on a token
 make discover CHAIN=1 LIMIT=20       # Discover new tokens
 make status                           # Query ConvictionLog state
@@ -406,13 +416,82 @@ set -a && source .env && set +a
 ./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <new_hash>
 ```
 
-### OpenClaw Skill usage
+### OpenClaw Skill Usage
+
+#### Install from ClawHub
 
 ```bash
 openclaw skills install musashi
 ```
 
-Then message your agent:
+The Go binary (`musashi-core`) is built automatically from source during install (requires Go 1.21+).
+
+#### Configure Environment
+
+MUSASHI has two modes. **Analysis mode works without any private key.**
+
+**Minimal config (analysis only)** -- add to your `openclaw.json`:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "musashi": {
+        "env": {
+          "OG_CHAIN_RPC": "https://evmrpc-testnet.0g.ai",
+          "CONVICTION_LOG_ADDRESS": "0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D",
+          "MUSASHI_INFT_ADDRESS": "0x1dC1CE24d956951a078aE0Dd61379A86c901E773"
+        }
+      }
+    }
+  }
+}
+```
+
+This gives you the full pipeline: 7 gates, 4 specialists, pattern detection, adversarial debate, and conviction judge. No wallet needed.
+
+**Full config (analysis + on-chain publishing)** -- add the private key for STRIKE publishing:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "musashi": {
+        "env": {
+          "OG_CHAIN_RPC": "https://evmrpc-testnet.0g.ai",
+          "CONVICTION_LOG_ADDRESS": "0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D",
+          "MUSASHI_INFT_ADDRESS": "0x1dC1CE24d956951a078aE0Dd61379A86c901E773",
+          "OG_CHAIN_PRIVATE_KEY": "your-dedicated-wallet-key",
+          "OG_STORAGE_RPC": "https://evmrpc-testnet.0g.ai",
+          "OG_STORAGE_INDEXER": "https://indexer-storage-testnet-turbo.0g.ai"
+        }
+      }
+    }
+  }
+}
+```
+
+> **Security:** Use a dedicated wallet with minimal funds -- never your main wallet. MUSASHI always asks for explicit confirmation before signing any transaction. The skill has `disable-model-invocation: true`, meaning it only runs when you explicitly request it.
+
+For enhanced key security, use a secret manager via SecretRef:
+
+```json
+"OG_CHAIN_PRIVATE_KEY": { "source": "exec", "id": "op read op://vault/musashi-key/credential" }
+```
+
+#### Optional: Install 0g-storage-client
+
+Only needed if you want evidence uploaded to 0G Storage (publish mode):
+
+```bash
+git clone --depth 1 https://github.com/0glabs/0g-storage-client.git /tmp/0g-storage-client
+cd /tmp/0g-storage-client && go build -o 0g-storage-client .
+sudo cp 0g-storage-client /usr/local/bin/
+```
+
+#### Use It
+
+Invoke with `/musashi` or message your agent:
 
 ```
 "Analyze token 0x1234 on Base"
@@ -420,6 +499,8 @@ Then message your agent:
 "What's the current narrative meta?"
 "Show my STRIKE history"
 ```
+
+The agent will run the full pipeline and report results. If a token passes all gates and the conviction judge says PASS, it will ask you before publishing on-chain.
 
 ---
 
@@ -469,14 +550,23 @@ musashi/
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OG_CHAIN_RPC` | No | 0G Chain RPC (default: `https://evmrpc-testnet.0g.ai`) |
-| `OG_CHAIN_PRIVATE_KEY` | Yes (for writes) | Deployer wallet private key (hex, with or without 0x prefix) |
-| `CONVICTION_LOG_ADDRESS` | Yes | ConvictionLog contract address |
-| `MUSASHI_INFT_ADDRESS` | Yes | MusashiINFT contract address |
-| `OG_STORAGE_RPC` | No | 0G Storage RPC (default: `https://evmrpc-testnet.0g.ai`) |
-| `OG_STORAGE_INDEXER` | No | 0G Storage indexer (default: `https://indexer-storage-testnet-turbo.0g.ai`) |
+### Analysis Mode (read-only, no private key)
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `OG_CHAIN_RPC` | Yes | 0G Chain RPC endpoint | `https://evmrpc-testnet.0g.ai` |
+| `CONVICTION_LOG_ADDRESS` | Yes | ConvictionLog contract address | — |
+| `MUSASHI_INFT_ADDRESS` | Yes | MusashiINFT contract address | — |
+
+### Publish Mode (on-chain signing)
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `OG_CHAIN_PRIVATE_KEY` | For publishing only | Dedicated wallet key (hex, with or without 0x prefix) | — |
+| `OG_STORAGE_RPC` | For evidence upload | 0G Storage RPC | `https://evmrpc-testnet.0g.ai` |
+| `OG_STORAGE_INDEXER` | For evidence upload | 0G Storage indexer | `https://indexer-storage-testnet-turbo.0g.ai` |
+
+> Without `OG_CHAIN_PRIVATE_KEY`, all analysis commands work normally. Only `strike`, `store`, `mint-agent`, `update-agent`, and `set-inft` require a key. These commands return a graceful `analysis_only` / `skipped` status instead of erroring when no key is set.
 
 ---
 

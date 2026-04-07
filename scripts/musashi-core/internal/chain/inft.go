@@ -147,6 +147,7 @@ func MintAgent(name string, configHash string, intelligenceHash string) (string,
 }
 
 // UpdateAgentIntelligence updates the INFT's intelligence hash after new analysis cycles.
+// If OG_CHAIN_PRIVATE_KEY is not set, returns a skip message instead of an error.
 func UpdateAgentIntelligence(tokenID uint64, intelligenceHash string) (string, error) {
 	rpcURL := os.Getenv("OG_CHAIN_RPC")
 	if rpcURL == "" {
@@ -155,7 +156,7 @@ func UpdateAgentIntelligence(tokenID uint64, intelligenceHash string) (string, e
 
 	privateKeyHex := os.Getenv("OG_CHAIN_PRIVATE_KEY")
 	if privateKeyHex == "" {
-		return "", fmt.Errorf("OG_CHAIN_PRIVATE_KEY not set")
+		return `{"status":"skipped","reason":"OG_CHAIN_PRIVATE_KEY not set — analysis-only mode"}`, nil
 	}
 
 	contractAddr := os.Getenv("MUSASHI_INFT_ADDRESS")

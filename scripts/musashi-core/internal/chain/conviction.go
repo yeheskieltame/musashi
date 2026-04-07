@@ -41,6 +41,7 @@ type StrikeResult struct {
 	StrikeID        string `json:"strike_id,omitempty"`
 	AgentID         uint64 `json:"agent_id,omitempty"`
 	ExplorerURL     string `json:"explorer_url"`
+	Status          string `json:"status,omitempty"`
 }
 
 // 0G Chain defaults (override via env vars for mainnet)
@@ -67,6 +68,7 @@ func stripHexPrefix(s string) string {
 }
 
 // PublishStrike publishes a conviction STRIKE to the ConvictionLog contract on 0G Chain.
+// If OG_CHAIN_PRIVATE_KEY is not set, returns an analysis_only result instead of an error.
 func PublishStrike(agentID uint64, tokenAddress string, tokenChainID int64, convergence uint8, evidenceHash string) (string, error) {
 	rpcURL := os.Getenv("OG_CHAIN_RPC")
 	if rpcURL == "" {
@@ -75,7 +77,12 @@ func PublishStrike(agentID uint64, tokenAddress string, tokenChainID int64, conv
 
 	privateKeyHex := os.Getenv("OG_CHAIN_PRIVATE_KEY")
 	if privateKeyHex == "" {
-		return "", fmt.Errorf("OG_CHAIN_PRIVATE_KEY not set")
+		result := StrikeResult{
+			Status:  "analysis_only",
+			AgentID: agentID,
+		}
+		b, _ := json.MarshalIndent(result, "", "  ")
+		return string(b), nil
 	}
 
 	contractAddr := os.Getenv("CONVICTION_LOG_ADDRESS")
