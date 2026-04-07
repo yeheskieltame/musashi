@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # publish_strike.sh — Publish a STRIKE conviction to 0G Chain
-# Usage: ./scripts/publish_strike.sh <token_address> <convergence> <evidence_hash> [chain_id]
+# Usage: ./scripts/publish_strike.sh <token_address> <convergence> <evidence_hash> [chain_id] [agent_id]
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BINARY="$SCRIPT_DIR/musashi-core/musashi-core"
 
-TOKEN="${1:?Usage: publish_strike.sh <token_address> <convergence> <evidence_hash>}"
+TOKEN="${1:?Usage: publish_strike.sh <token_address> <convergence> <evidence_hash> [chain_id] [agent_id]}"
 CONVERGENCE="${2:?Convergence score (3 or 4) required}"
 EVIDENCE="${3:?Evidence hash required}"
 
@@ -22,5 +22,6 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 CHAIN="${4:-1}"
+AGENT_ID="${5:-0}"
 
-exec "$BINARY" strike "$TOKEN" --convergence "$CONVERGENCE" --evidence "$EVIDENCE" --token-chain "$CHAIN"
+exec "$BINARY" strike "$TOKEN" --convergence "$CONVERGENCE" --evidence "$EVIDENCE" --token-chain "$CHAIN" --agent-id "$AGENT_ID"

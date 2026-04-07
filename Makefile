@@ -1,4 +1,4 @@
-.PHONY: core contracts skill clean test status agent-info record-outcome
+.PHONY: core test-core contracts test-contracts deploy deploy-inft deploy-link skill gates discover mint-agent store-evidence status agent-info record-outcome clean all test
 
 OG_TESTNET_RPC ?= https://evmrpc-testnet.0g.ai
 
@@ -16,9 +16,36 @@ test-contracts:
 	cd contracts && forge test -vvv
 
 deploy:
-	cd contracts && forge script script/Deploy.s.sol \
+	@echo "=== Deploying to 0G Galileo Testnet ==="
+	@echo "Note: forge script doesn't support chain 16602, using forge create + cast send"
+	@echo ""
+	@echo "Step 1: Deploy ConvictionLog"
+	cd contracts && forge create src/ConvictionLog.sol:ConvictionLog \
 		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
-		--broadcast
+		--private-key $${OG_CHAIN_PRIVATE_KEY} \
+		--legacy --broadcast
+	@echo ""
+	@echo "Step 2: Deploy MusashiINFT (paste ConvictionLog address below)"
+	@echo "  make deploy-inft CONVICTION_LOG=0x..."
+	@echo ""
+	@echo "Step 3: Link contracts"
+	@echo "  make deploy-link CONVICTION_LOG=0x... INFT=0x..."
+
+deploy-inft:
+	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-inft CONVICTION_LOG=0x..." && exit 1)
+	cd contracts && forge create src/MusashiINFT.sol:MusashiINFT \
+		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
+		--private-key $${OG_CHAIN_PRIVATE_KEY} \
+		--legacy --broadcast --gas-limit 3000000 \
+		--constructor-args $(CONVICTION_LOG)
+
+deploy-link:
+	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x..." && exit 1)
+	@test -n "$(INFT)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x..." && exit 1)
+	cast send $(CONVICTION_LOG) "setINFT(address)" $(INFT) \
+		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
+		--private-key $${OG_CHAIN_PRIVATE_KEY} \
+		--legacy
 
 skill:
 	@test -f SKILL.md && echo "SKILL.md exists" || (echo "SKILL.md missing!" && exit 1)

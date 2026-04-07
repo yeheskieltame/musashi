@@ -5,6 +5,9 @@ import "forge-std/Script.sol";
 import "../src/ConvictionLog.sol";
 import "../src/MusashiINFT.sol";
 
+// NOTE: `forge script` does not support 0G Chain (chain ID 16602).
+// Use `forge create` + `cast send` instead. See Makefile deploy targets.
+// This script is kept as a reference for the deployment sequence.
 contract DeployMusashi is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("OG_CHAIN_PRIVATE_KEY");
@@ -37,14 +40,14 @@ contract DeployMusashi is Script {
             string.concat(
                 "forge verify-contract ",
                 vm.toString(address(convictionLog)),
-                " ConvictionLog --verifier blockscout --verifier blockscout --verifier-url https://chainscan-galileo.0g.ai/open/api/"
+                " ConvictionLog --verifier blockscout --verifier-url https://chainscan-galileo.0g.ai/open/api/"
             )
         );
         console.log(
             string.concat(
                 "forge verify-contract ",
                 vm.toString(address(inft)),
-                " MusashiINFT --verifier blockscout --verifier blockscout --verifier-url https://chainscan-galileo.0g.ai/open/api/ --constructor-args $(cast abi-encode \"constructor(address)\" ",
+                " MusashiINFT --verifier blockscout --verifier-url https://chainscan-galileo.0g.ai/open/api/ --constructor-args $(cast abi-encode \"constructor(address)\" ",
                 vm.toString(address(convictionLog)),
                 ")"
             )
