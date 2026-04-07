@@ -105,6 +105,9 @@ func (c *OGStorageClient) UploadFile(filePath string) (*StoreResult, error) {
 	}
 
 	rootHash := parseRootHash(out)
+	if rootHash == "" {
+		return nil, fmt.Errorf("0g-storage-client upload succeeded but no root hash found in output: %s", out)
+	}
 	txHash := parseTxHash(out)
 	explorerURL := ""
 	if txHash != "" {
