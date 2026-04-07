@@ -110,8 +110,10 @@ contract ConvictionLog is Ownable2Step, Pausable {
         }));
 
         // Update global + per-agent strike count
-        unchecked { ++totalStrikes; }
-        _agentRep[_agentId].strikeCount++;
+        unchecked {
+            ++totalStrikes;
+            ++_agentRep[_agentId].strikeCount;
+        }
 
         emit StrikeLogged(id, _agentId, _token, _chainId, _convergence, _evidenceHash);
     }

@@ -154,12 +154,14 @@ contract MusashiINFT is Ownable2Step, Pausable, ReentrancyGuard {
         address executor,
         uint48  duration,
         bytes32 permissionsHash
-    ) external onlyAgentOwner(tokenId) {
+    ) external onlyAgentOwner(tokenId) whenNotPaused {
         if (executor == address(0)) revert ZeroAddress();
 
-        uint48 expiresAt = uint48(block.timestamp) + duration;
-        if (expiresAt < uint48(block.timestamp)) revert DurationOverflow();
-        _auths[tokenId][executor] = UsageAuth(executor, expiresAt, permissionsHash);
+        uint48 ts = uint48(block.timestamp);
+        uint48 expiresAt;
+        unchecked { expiresAt = ts + duration; }
+        if (expiresAt < ts) revert DurationOverflow();
+        _auths[tokenId][executor] = UsageAuth({executor: executor, expiresAt: expiresAt, permissionsHash: permissionsHash});
 
         emit UsageAuthorized(tokenId, executor, expiresAt);
     }
