@@ -75,6 +75,8 @@ Returns JSON with pass/fail per gate + evidence:
 
 **If ANY gate fails, report the failure reason to the user and STOP.** Explain WHY it failed in plain language.
 
+**If the Go binary returns an error or times out,** report the error to the user and ask if they want to retry. Do NOT treat infrastructure errors as gate failures.
+
 ### Step 2: Agent-Driven Gates (Gates 4, 5)
 
 These gates require YOUR investigation skills -- not scripts.
@@ -111,7 +113,7 @@ Produces the PATTERN REPORT: contradictions, correlations, convergence score (1-
 
 Load `prompts/bull_researcher.md` and `prompts/bear_researcher.md`.
 Both receive: 4 specialist reports + pattern report.
-Run 2 debate rounds with live evidence search.
+Run 2 debate rounds sequentially (bull opening → bear opening → bull rebuttal → bear rebuttal). Each side may use `browser` and `web_search` for live evidence.
 
 ### Step 6: Conviction Judge
 
@@ -121,10 +123,12 @@ Only convergence 3/4 or 4/4 proceeds to STRIKE.
 
 ### Step 7: If PASS, Store Evidence + Publish STRIKE
 
-Store evidence to 0G Storage:
+Store evidence to 0G Storage (write evidence to a temp file first to avoid CLI argument length limits):
 ```
-exec {baseDir}/scripts/musashi-core/musashi-core store '<full_evidence_json>'
+exec {baseDir}/scripts/musashi-core/musashi-core store '<evidence_json_or_file_path>'
 ```
+
+**If 0G Storage upload fails** (network issues, insufficient gas), still publish the STRIKE with a local SHA-256 hash as evidence. Report the storage failure to the user.
 
 Publish conviction on 0G Chain:
 ```

@@ -78,10 +78,10 @@ GET /search/trending           # Trending coins
 GET /coins/categories          # Categories with market data
 ```
 
-## Farcaster (via Neynar)
+## Farcaster (via Neynar) -- Optional
 
 **Base URL:** `https://api.neynar.com/v2/farcaster`
-**Auth:** API key in header (`api_key: YOUR_KEY`)
+**Auth:** Free API key from [neynar.com](https://neynar.com) in header (`api_key: YOUR_KEY`). This is the only API that requires a key, and it is optional -- the agent can browse Farcaster directly via the browser tool instead.
 
 ```
 GET /cast/search?q={query}&limit=25    # Search casts

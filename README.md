@@ -22,8 +22,8 @@ MUSASHI builds the missing **reputation layer** for 0G's agent ecosystem.
 
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| ConvictionLog | `0x7698c369Cec5bFD14bFe9184ea19D644540f483b` | [View](https://chainscan-galileo.0g.ai/address/0x7698c369Cec5bFD14bFe9184ea19D644540f483b) |
-| MusashiINFT | `0xFB1Cd4b556eCA02D84BA3754Fbd4Fe2C81aEE488` | [View](https://chainscan-galileo.0g.ai/address/0xFB1Cd4b556eCA02D84BA3754Fbd4Fe2C81aEE488) |
+| ConvictionLog | `0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D` | [View](https://chainscan-galileo.0g.ai/address/0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D) |
+| MusashiINFT | `0x1dC1CE24d956951a078aE0Dd61379A86c901E773` | [View](https://chainscan-galileo.0g.ai/address/0x1dC1CE24d956951a078aE0Dd61379A86c901E773) |
 
 Network: 0G-Galileo-Testnet, Chain ID: 16602
 
@@ -203,10 +203,10 @@ This creates a complete audit trail: **agent identity (INFT) → conviction sign
 | GeckoTerminal | Token data, pools, OHLCV, new/trending pools | Gate 7, Discovery |
 | CoinGecko | Global market data, BTC dominance, trending | Gate 6 |
 | DefiLlama | Chain TVL history, stablecoin flows | Gate 6 |
-| Farcaster/Neynar | Casts, mentions, social signals | Agent social analysis |
+| Farcaster/Neynar | Casts, mentions, social signals | Agent social analysis (Neynar requires a free API key) |
 | Public RPCs | On-chain reads (balance, code, ERC20 calls) | Gate support |
 
-Social analysis (X/Twitter, Telegram) is done via OpenClaw's browser tool -- no paid API subscriptions.
+Social analysis (X/Twitter, Telegram) is done via OpenClaw's browser tool -- no paid API subscriptions. Neynar's Farcaster API requires a free key from [neynar.com](https://neynar.com) but is optional.
 
 ---
 
@@ -214,9 +214,10 @@ Social analysis (X/Twitter, Telegram) is done via OpenClaw's browser tool -- no 
 
 ### Prerequisites
 
-- Go 1.21+
-- Foundry (forge, cast)
+- Go 1.22+ (see `go.mod` for exact version)
+- Foundry (`curl -L https://foundry.paradigm.xyz | bash && foundryup`)
 - `0g-storage-client` CLI
+- `make` (included on macOS; on Linux install via `sudo apt install build-essential`)
 
 ### Install 0g-storage-client
 
@@ -262,8 +263,8 @@ Edit `.env` and set your private key:
 ```
 OG_CHAIN_RPC=https://evmrpc-testnet.0g.ai
 OG_CHAIN_PRIVATE_KEY=your_private_key_here
-CONVICTION_LOG_ADDRESS=0x7698c369Cec5bFD14bFe9184ea19D644540f483b
-MUSASHI_INFT_ADDRESS=0xFB1Cd4b556eCA02D84BA3754Fbd4Fe2C81aEE488
+CONVICTION_LOG_ADDRESS=0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D
+MUSASHI_INFT_ADDRESS=0x1dC1CE24d956951a078aE0Dd61379A86c901E773
 OG_STORAGE_RPC=https://evmrpc-testnet.0g.ai
 OG_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
 ```
@@ -284,19 +285,21 @@ set -a && source .env && set +a
 
 ### musashi-core commands
 
+> **Note:** The binary is at `scripts/musashi-core/musashi-core`. Run commands from the project root using `./scripts/musashi-core/musashi-core`, or use `make` targets for convenience.
+
 | Command | Description | Example |
 |---------|-------------|---------|
-| `gates` | Run elimination gates on a token | `musashi-core gates 0x2260FA...99 --chain 1 --output json` |
-| `search` | Search token by name/ticker | `musashi-core search "PEPE" --limit 5` |
-| `strike` | Publish STRIKE to ConvictionLog | `musashi-core strike 0x2260FA...99 --agent-id 0 --convergence 4 --evidence <hash>` |
-| `store` | Upload evidence JSON to 0G Storage | `musashi-core store '{"token":"0x...","analysis":"..."}' ` |
-| `discover` | Scan for new tokens | `musashi-core discover --chain 1 --limit 20` |
-| `status` | Query global or per-agent reputation | `musashi-core status` or `musashi-core status --per-agent --agent-id 0` |
-| `record-outcome` | Record STRIKE outcome | `musashi-core record-outcome --strike-id 0 --return-bps 500` |
-| `set-inft` | Link MusashiINFT to ConvictionLog (one-time) | `musashi-core set-inft 0xFB1C...488` |
-| `mint-agent` | Mint agent INFT | `musashi-core mint-agent --name MUSASHI --config-hash <hash> --intelligence-hash <hash>` |
-| `update-agent` | Update agent intelligence + sync reputation | `musashi-core update-agent --token-id 0 --intelligence-hash <hash>` |
-| `agent-info` | Query INFT agent state | `musashi-core agent-info --token-id 0` |
+| `gates` | Run elimination gates on a token | `./scripts/musashi-core/musashi-core gates 0x2260FA...99 --chain 1 --output json` |
+| `search` | Search token by name/ticker | `./scripts/musashi-core/musashi-core search "PEPE" --limit 5` |
+| `strike` | Publish STRIKE to ConvictionLog | `./scripts/musashi-core/musashi-core strike 0x2260FA...99 --agent-id 0 --convergence 4 --evidence <hash>` |
+| `store` | Upload evidence JSON to 0G Storage | `./scripts/musashi-core/musashi-core store '{"token":"0x...","analysis":"..."}' ` |
+| `discover` | Scan for new tokens | `./scripts/musashi-core/musashi-core discover --chain 1 --limit 20` |
+| `status` | Query global or per-agent reputation | `./scripts/musashi-core/musashi-core status` or `... status --per-agent --agent-id 0` |
+| `record-outcome` | Record STRIKE outcome | `./scripts/musashi-core/musashi-core record-outcome --strike-id 0 --return-bps 500` |
+| `set-inft` | Link MusashiINFT to ConvictionLog (one-time) | `./scripts/musashi-core/musashi-core set-inft 0xFB1C...488` |
+| `mint-agent` | Mint agent INFT | `./scripts/musashi-core/musashi-core mint-agent --name MUSASHI --config-hash <hash> --intelligence-hash <hash>` |
+| `update-agent` | Update agent intelligence + sync reputation | `./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <hash>` |
+| `agent-info` | Query INFT agent state | `./scripts/musashi-core/musashi-core agent-info --token-id 0` |
 
 ### Full flag reference
 
@@ -353,7 +356,9 @@ make contracts         # Build Solidity contracts
 make test              # Run all tests (Go + Foundry)
 make test-core         # Run Go tests only
 make test-contracts    # Run Foundry tests only
-make deploy            # Deploy contracts to 0G Galileo Testnet
+make deploy            # Deploy ConvictionLog (step 1 of 3)
+make deploy-inft CONVICTION_LOG=0x...  # Deploy MusashiINFT (step 2)
+make deploy-link CONVICTION_LOG=0x... INFT=0x...  # Link contracts (step 3)
 make gates TOKEN=0x... CHAIN=1        # Run gates on a token
 make discover CHAIN=1 LIMIT=20       # Discover new tokens
 make status                           # Query ConvictionLog state
@@ -368,15 +373,18 @@ make all               # Build everything
 ### Full pipeline example
 
 ```bash
+# Load environment first
+set -a && source .env && set +a
+
 # 1. Run gates
-musashi-core gates 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 --chain 1 --output json > evidence.json
+./scripts/musashi-core/musashi-core gates 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 --chain 1 --output json > evidence.json
 
 # 2. Store evidence to 0G Storage
-musashi-core store "$(cat evidence.json)"
+./scripts/musashi-core/musashi-core store "$(cat evidence.json)"
 # Returns: { "root_hash": "0xabc...", "storage_scan": "https://storagescan-galileo.0g.ai/file/0xabc..." }
 
 # 3. Publish STRIKE with evidence hash and agent ID
-musashi-core strike 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 \
+./scripts/musashi-core/musashi-core strike 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 \
   --agent-id 0 \
   --convergence 4 \
   --evidence abc123...  \
@@ -384,18 +392,18 @@ musashi-core strike 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 \
 # Returns: { "tx_hash": "0x...", "explorer_url": "https://chainscan-galileo.0g.ai/tx/0x..." }
 
 # 4. Check per-agent reputation
-musashi-core status --per-agent --agent-id 0
+./scripts/musashi-core/musashi-core status --per-agent --agent-id 0
 # Returns: { "agent_id": 0, "strikes": 1, "wins": 0, "losses": 0, ... }
 
 # 5. Check global reputation (all agents)
-musashi-core status
+./scripts/musashi-core/musashi-core status
 # Returns: { "strike_count": 1, "wins": 0, "losses": 0, ... }
 
 # 6. Record outcome later (owner only — outcomes are objective facts)
-musashi-core record-outcome --strike-id 0 --return-bps 1200
+./scripts/musashi-core/musashi-core record-outcome --strike-id 0 --return-bps 1200
 
 # 7. Sync reputation to INFT
-musashi-core update-agent --token-id 0 --intelligence-hash <new_hash>
+./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <new_hash>
 ```
 
 ### OpenClaw Skill usage
@@ -502,6 +510,12 @@ musashi/
 | [Tessera](https://github.com/yeheskieltame/Tessera) | Gate elimination, Go binary, evidence pipeline |
 | [TradingAgents](https://github.com/TauricResearch/TradingAgents) | Specialist roles, adversarial debate |
 | [OpenClaw](https://github.com/openclaw/openclaw) | Skill system, agent tools, distribution |
+
+---
+
+## 30-Word Description
+
+> MUSASHI is an OpenClaw Skill and on-chain reputation protocol on 0G. AI agents analyze tokens through 7 elimination gates, publish conviction signals (STRIKEs) to 0G Chain, and store verifiable evidence on 0G Storage.
 
 ---
 
