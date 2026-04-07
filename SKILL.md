@@ -82,7 +82,8 @@ MUSASHI uses 3 core 0G components:
 ## When to activate
 
 - User asks to analyze a token (address, name, or ticker)
-- User asks to scan for new tokens
+- User asks to scan for new tokens or find opportunities
+- User asks "what should I buy" or wants recommendations
 - User asks about narrative meta or market timing
 - User asks about STRIKE history or conviction record
 
@@ -225,26 +226,54 @@ Report STRIKE to user with:
 - Convergence score + key evidence summary
 - 0G Storage root hash + download command
 
-## Token Discovery Mode
+## Token Scanner Mode (Recommended)
 
-When user asks to scan for new tokens:
+When user asks to **find opportunities**, **scan**, **what should I buy**, or wants recommendations:
+
+```
+exec {baseDir}/scripts/musashi-core/musashi-core scan --chain <id> --limit 10
+```
+
+The scanner automatically:
+1. Fetches tokens from 3 sources: DexScreener boosted, CoinGecko trending, DexScreener keyword search
+2. Enriches each with market data (price, liquidity, volume, market cap, age)
+3. Pre-screens safety via GoPlus (filters honeypots, mintable, reclaimable)
+4. **Scores and ranks** candidates based on:
+   - Liquidity depth (0-20 pts)
+   - Trading volume (0-20 pts)
+   - Volume/liquidity ratio (0-15 pts)
+   - Market cap sweet spot — $100K-$10M scores highest (0-20 pts)
+   - Token age — fresh tokens score highest (0-15 pts)
+   - Safety check (0-10 pts)
+5. Returns a ranked list sorted by composite score
+
+**With auto-gates** (for deeper analysis of top picks):
+```
+exec {baseDir}/scripts/musashi-core/musashi-core scan --chain <id> --limit 10 --gates
+```
+This runs the full gate pipeline on the top 5 candidates automatically.
+
+Present results to user as a ranked list with scores. Highlight:
+- **Fresh/early tokens with high scores** = potential early opportunities
+- **Tokens that pass gates** = ready for full pipeline (Steps 2-6)
+- **Score breakdown** explains why each token ranked where it did
+
+Let the user pick which ones to analyze further with the full pipeline.
+
+**Chain options:** `--chain 1` (ETH), `--chain 56` (BSC), `--chain 8453` (Base), `--chain 0` (all chains)
+
+## Token Discovery Mode (Raw)
+
+When user asks specifically for raw token discovery without scoring:
 
 ```
 exec {baseDir}/scripts/musashi-core/musashi-core discover --chain <id> --limit 20
 ```
 
-Discovery now includes **automatic pre-screening**:
-- Honeypots, mintable tokens, and ownership-reclaimable tokens are filtered out before results are shown
+Discovery includes automatic pre-screening:
+- Honeypots, mintable tokens, and ownership-reclaimable tokens are filtered out
 - Each token includes: deployer address, token age, holder count, and quick safety verdict
-- Deployer addresses are flagged for further investigation — check if deployer has history of rug pulls
-- Token age is classified (fresh/early/established) so you can prioritize early-stage opportunities
 - Sources: GeckoTerminal new pools, GeckoTerminal trending, DexScreener boosted tokens
-
-Report results to user as a list. Highlight tokens with:
-- Clean safety + fresh/early age = potential early opportunity
-- Deployer flagged "check_history" = investigate deployer's other contracts before proceeding
-
-Let user pick which ones to analyze further. Do NOT auto-run gates on all of them.
 
 ## Status & History
 

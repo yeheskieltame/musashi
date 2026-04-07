@@ -78,15 +78,16 @@ musashi/
 │   │   │   │   ├── farcaster.go     Farcaster Hub API — casts, mentions
 │   │   │   │   └── rpc.go           Multi-chain RPC (go-ethereum)
 │   │   │   ├── gates/
-│   │   │   │   ├── gate.go          Gate interface: Result{Pass/Fail, Evidence, Reason}
-│   │   │   │   ├── contract_safety.go  Gate 1: GoPlus + RPC
-│   │   │   │   ├── liquidity.go        Gate 2: DexScreener + RPC
-│   │   │   │   ├── wallets.go          Gate 3: RPC + holder analysis
+│   │   │   │   ├── gate.go          Gate interface + TokenAge/TokenContext (age tiers)
+│   │   │   │   ├── contract_safety.go  Gate 1: GoPlus + RPC (strict, no age tiers)
+│   │   │   │   ├── liquidity.go        Gate 2: DexScreener + RPC (age-tiered thresholds)
+│   │   │   │   ├── wallets.go          Gate 3: RPC + holder analysis (age-tiered + trend)
 │   │   │   │   ├── timing.go           Gate 6: DefiLlama + CoinGecko
 │   │   │   │   └── cross_validation.go Gate 7: DexScreener vs GeckoTerminal
 │   │   │   ├── pipeline/
-│   │   │   │   ├── runner.go        Sequential gate execution (fail-fast)
-│   │   │   │   └── discovery.go     New token scanner
+│   │   │   │   ├── runner.go        Sequential gate execution (age-aware, fail-fast)
+│   │   │   │   ├── discovery.go     Raw token discovery (pre-screened)
+│   │   │   │   └── scanner.go       Token scanner: fetch → score → rank → optional gates
 │   │   │   ├── storage/
 │   │   │   │   └── og_storage.go    0G Storage via official 0g-storage-client CLI
 │   │   │   └── chain/
@@ -130,11 +131,15 @@ musashi/
 ### Key Architectural Decisions
 
 1. **Gates 1-3, 6-7 run via Go binary** — hard data, deterministic pass/fail, fast
-2. **Gates 4-5 run via agent** — social browsing + narrative analysis need reasoning, not scripts
-3. **Specialist analysis + debate happen in agent context** — OpenClaw agent reasons over reports
-4. **Evidence stored in 0G Storage** — Go binary uses official `0g-storage-client` CLI (file upload)
-6. **STRIKE published on 0G Chain** — Go binary calls ConvictionLog contract on Galileo Testnet
-7. **Agent tokenized as INFT** — MusashiINFT (ERC-7857) links identity + reputation + intelligence
+2. **Gates 2-3 use age-tiered thresholds** — fresh tokens (<24h) have lower minimums; Gate 1 stays strict
+3. **Gate 3 does trend analysis** — activity acceleration, buy/sell pressure trends, not just snapshots
+4. **`scan` command ranks opportunities** — multi-source fetch → score → rank → optional auto-gates
+5. **Gates 4-5 run via agent** — social browsing + narrative analysis need reasoning, not scripts
+6. **Specialist analysis + debate happen in agent context** — OpenClaw agent reasons over reports
+7. **Evidence stored in 0G Storage** — Go binary uses official `0g-storage-client` CLI (file upload)
+8. **STRIKE = early conviction entry signal** — not confirmed momentum. Find before the crowd.
+9. **STRIKE published on 0G Chain** — Go binary calls ConvictionLog contract on Galileo Testnet
+10. **Agent tokenized as INFT** — MusashiINFT (ERC-7857) links identity + reputation + intelligence
 
 ---
 
@@ -230,9 +235,9 @@ Persists full pipeline output to 0G Storage for cross-session memory.
 
 ### Phase 1: Go Binary — Gate Pipeline [DONE]
 
-9 CLI commands implemented: `gates`, `strike`, `store`, `discover`, `status`, `record-outcome`, `mint-agent`, `update-agent`, `agent-info`.
+12 CLI commands implemented: `scan`, `gates`, `search`, `discover`, `strike`, `store`, `status`, `record-outcome`, `mint-agent`, `update-agent`, `agent-info`, `set-inft`.
 
-5 automated gates (1,2,3,6,7) with real API data. Gates 4-5 are agent-driven.
+5 automated gates (1,2,3,6,7) with real API data + age-tiered thresholds + trend analysis. Gates 4-5 are agent-driven. `scan` command auto-discovers, scores, and ranks tokens.
 
 ### Phase 2: OpenClaw Skill — Agent Intelligence [DONE]
 

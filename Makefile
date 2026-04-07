@@ -71,6 +71,9 @@ gates:
 	@test -n "$(TOKEN)" || (echo "Usage: make gates TOKEN=0x... CHAIN=1" && exit 1)
 	./scripts/gate_check.sh "$(TOKEN)" "$(or $(CHAIN),1)"
 
+scan:
+	scripts/musashi-core/musashi-core scan --chain "$(or $(CHAIN),0)" --limit "$(or $(LIMIT),10)" $(if $(GATES),--gates,)
+
 discover:
 	scripts/musashi-core/musashi-core discover --chain "$(or $(CHAIN),1)" --limit "$(or $(LIMIT),20)"
 

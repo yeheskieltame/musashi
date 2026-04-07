@@ -108,17 +108,36 @@ Anyone can build their own analysis pipeline (different gates, different strateg
 
 ## Gate Pipeline
 
-Sequential elimination. Fail one gate, get eliminated. No exceptions.
+Sequential elimination with **age-tiered thresholds**. Token age is auto-detected from DexScreener's `pairCreatedAt`. Fresh tokens (<24h) get lower thresholds because they're naturally early-stage — but contract safety remains strict regardless of age.
 
-| Gate | Name | Source | Fail Conditions |
-|------|------|--------|-----------------|
-| 1 | Contract Safety | GoPlus API | Honeypot, mintable, ownership takeback, blacklist, pausable transfers, modifiable slippage, sell tax >5%, asymmetric tax (sell > buy + 3%), unaudited proxy |
-| 2 | Liquidity Structure | DexScreener, GoPlus | No DEX pairs, liquidity <$10K, LP depth <5% of mcap, no locked LP, 24h volume <$1K |
-| 3 | Wallet Behavior | DexScreener, GoPlus | <50 holders, no transactions in 24h, sell ratio >70%, <20 txns/24h, 1h sell dump >80% |
-| 4 | Social Momentum | Agent browsing | Agent browses X/Twitter, Farcaster. Assesses organic vs bot, velocity, quality. No API keys. |
-| 5 | Narrative Alignment | Agent browsing | Agent researches narrative meta, lifecycle stage, competition, catalysts. |
-| 6 | Market Timing | CoinGecko, DefiLlama | Market cap 24h drop >8%, chain TVL decline >15% (7d) or >30% (30d) |
-| 7 | Cross-Validation | DexScreener, GeckoTerminal | Both sources fail, price divergence >10%, volume divergence >50% |
+| Gate | Name | Source | Fail Conditions | Age-Tiered? |
+|------|------|--------|-----------------|-------------|
+| 1 | Contract Safety | GoPlus API | Honeypot, mintable, ownership takeback, blacklist, pausable transfers, modifiable slippage, sell tax >5%, asymmetric tax, unaudited proxy | **No** — always strict |
+| 2 | Liquidity Structure | DexScreener, GoPlus | No DEX pairs, liquidity below minimum, LP depth too thin, no locked LP, volume below minimum | **Yes** — see tiers below |
+| 3 | Wallet Behavior | DexScreener, GoPlus | Too few holders, no transactions, heavy sell pressure, low activity, active dump | **Yes** — see tiers below |
+| 4 | Social Momentum | Agent browsing | Agent browses X/Twitter, Farcaster. Assesses organic vs bot, velocity, quality. Low social on fresh tokens is NOT a failure. | Agent-driven |
+| 5 | Narrative Alignment | Agent browsing | Agent researches narrative meta, lifecycle stage (Forming/Growing/Peak/Declining), competition, catalysts. Forming narrative = strong pass. | Agent-driven |
+| 6 | Market Timing | CoinGecko, DefiLlama | Market cap 24h drop >8%, chain TVL decline >15% (7d) or >30% (30d) | No |
+| 7 | Cross-Validation | DexScreener, GeckoTerminal | Both sources fail, price divergence >10%, volume divergence >50% | No |
+
+### Age-Tiered Thresholds (Gates 2 & 3)
+
+| Metric | Fresh (<24h) | Early (1-7d) | Established (>7d) |
+|--------|-------------|-------------|-------------------|
+| Min liquidity | $5,000 | $8,000 | $10,000 |
+| Min 24h volume | $500 | $800 | $1,000 |
+| Min LP/mcap ratio | 3% | 4% | 5% |
+| Min holders | 15 | 30 | 50 |
+| Min 24h txns | 5 | 10 | 20 |
+| Max sell ratio | 80% | 75% | 70% |
+| LP not locked | WARN | FAIL | FAIL |
+
+### Trend Analysis (Gate 3)
+
+Beyond snapshots, Gate 3 now analyzes **trends**:
+- **Activity acceleration**: is trading activity increasing or decreasing? (`1h * 24 vs 24h`)
+- **Buy/sell pressure trend**: comparing sell ratios across 6h and 24h timeframes
+- **Buy concentration warning**: >90% buys with 50+ txns flags potential wash trading
 
 Gates 1-3, 6-7 run via the Go binary. Gates 4-5 run via the OpenClaw agent's browser tool.
 
@@ -298,11 +317,12 @@ set -a && source .env && set +a
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `gates` | Run elimination gates on a token | `./scripts/musashi-core/musashi-core gates 0x2260FA...99 --chain 1 --output json` |
+| `scan` | **Find best opportunities** — fetch, score, rank tokens automatically | `./scripts/musashi-core/musashi-core scan --chain 8453 --limit 10 --gates` |
+| `gates` | Run elimination gates on a specific token | `./scripts/musashi-core/musashi-core gates 0x2260FA...99 --chain 1 --output json` |
 | `search` | Search token by name/ticker | `./scripts/musashi-core/musashi-core search "PEPE" --limit 5` |
+| `discover` | Raw token discovery (new/trending pools) | `./scripts/musashi-core/musashi-core discover --chain 1 --limit 20` |
 | `strike` | Publish STRIKE to ConvictionLog | `./scripts/musashi-core/musashi-core strike 0x2260FA...99 --agent-id 0 --convergence 4 --evidence <hash>` |
 | `store` | Upload evidence JSON to 0G Storage | `./scripts/musashi-core/musashi-core store '{"token":"0x...","analysis":"..."}' ` |
-| `discover` | Scan for new tokens | `./scripts/musashi-core/musashi-core discover --chain 1 --limit 20` |
 | `status` | Query global or per-agent reputation | `./scripts/musashi-core/musashi-core status` or `... status --per-agent --agent-id 0` |
 | `record-outcome` | Record STRIKE outcome | `./scripts/musashi-core/musashi-core record-outcome --strike-id 0 --return-bps 500` |
 | `set-inft` | Link MusashiINFT to ConvictionLog (one-time) | `./scripts/musashi-core/musashi-core set-inft 0xFB1C...488` |
@@ -313,6 +333,11 @@ set -a && source .env && set +a
 ### Full flag reference
 
 ```
+musashi-core scan
+  --chain int64        Filter by chain ID (0=all chains, 1=ETH, 56=BSC, 8453=Base) (default 0)
+  --limit int          Max tokens to return (default 10)
+  --gates              Auto-run gate pipeline on top 5 candidates
+
 musashi-core gates [token_address]
   --chain int64        Chain ID: 1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base (default 1)
   --output string      Output format: json or pretty (default "json")
@@ -370,7 +395,8 @@ make deploy-conviction ACCOUNT=musashi-deployer    # Deploy ConvictionLog
 make deploy-inft CONVICTION_LOG=0x... ACCOUNT=...  # Deploy MusashiINFT
 make deploy-link CONVICTION_LOG=0x... INFT=0x... ACCOUNT=...  # Link contracts
 make gates TOKEN=0x... CHAIN=1        # Run gates on a token
-make discover CHAIN=1 LIMIT=20       # Discover new tokens
+make scan CHAIN=8453 LIMIT=10        # Scan and rank best opportunities
+make discover CHAIN=1 LIMIT=20       # Raw token discovery
 make status                           # Query ConvictionLog state
 make agent-info TOKEN_ID=0            # Query INFT agent state
 make mint-agent CONFIG_HASH=... INTEL_HASH=...  # Mint INFT
@@ -494,8 +520,9 @@ sudo cp 0g-storage-client /usr/local/bin/
 Invoke with `/musashi` or message your agent:
 
 ```
+"Scan Base chain for the best opportunities"
+"Find me early tokens with clean fundamentals"
 "Analyze token 0x1234 on Base"
-"Scan for new tokens with conviction potential"
 "What's the current narrative meta?"
 "Show my STRIKE history"
 ```
@@ -511,13 +538,14 @@ musashi/
 ├── SKILL.md                         OpenClaw skill definition (entry point)
 ├── scripts/
 │   ├── musashi-core/                Go binary source
-│   │   ├── cmd/musashi/main.go      CLI entry (11 commands)
+│   │   ├── cmd/musashi/main.go      CLI entry (12 commands incl. scan)
 │   │   └── internal/
 │   │       ├── data/                API clients: goplus, dexscreener, geckoterminal,
 │   │       │                        coingecko, defillama, farcaster, rpc
-│   │       ├── gates/               Gate implementations: contract_safety, liquidity,
+│   │       ├── gates/               Gate implementations (age-tiered thresholds,
+│   │       │                        trend analysis): contract_safety, liquidity,
 │   │       │                        wallets, timing, cross_validation
-│   │       ├── pipeline/            Sequential gate runner + token discovery
+│   │       ├── pipeline/            Gate runner, token discovery, scanner (rank+score)
 │   │       ├── storage/             0G Storage client (wraps 0g-storage-client CLI)
 │   │       └── chain/               0G Chain interaction: conviction.go, inft.go
 │   ├── gate_check.sh                Shell wrapper for gate checks
