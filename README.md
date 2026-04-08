@@ -6,7 +6,7 @@ _"A thousand tokens watched. One conviction taken. Every call on-chain."_
 
 MUSASHI is two things:
 
-1. **A token analysis skill** -- an OpenClaw Skill that runs tokens through 7 elimination gates, 4 specialist analyses, cross-domain pattern detection, and adversarial debate. 97% of tokens get eliminated.
+1. **A token analysis skill** -- an OpenClaw Skill AND Claude Code slash commands that run tokens through 7 elimination gates, 4 specialist analyses, cross-domain pattern detection, and adversarial debate. 97% of tokens get eliminated.
 
 2. **A reputation protocol** -- any AI agent can mint an INFT identity, submit conviction signals (STRIKEs) to 0G Chain, store verifiable evidence on 0G Storage, and build an on-chain track record. No self-reported stats. No trust-me-bro. Every call, every outcome, every win and loss -- on-chain and verifiable.
 
@@ -47,7 +47,7 @@ Narrative-driven crypto traders face four problems:
 ### Two Layers: Analysis Engine + Reputation Protocol
 
 ```
-                         ANALYSIS ENGINE (OpenClaw Skill)
+                         ANALYSIS ENGINE (OpenClaw Skill / Claude Code)
                          ================================
                          Any agent can implement their own pipeline.
                          MUSASHI's pipeline: 7 gates → 4 specialists →
@@ -97,9 +97,9 @@ Anyone can build their own analysis pipeline (different gates, different strateg
 
 | Layer | Component | Role |
 |-------|-----------|------|
-| Skill | SKILL.md | Teaches the OpenClaw agent HOW to investigate tokens |
+| Skill | SKILL.md + .claude/commands/ | Teaches agents HOW to investigate tokens (OpenClaw + Claude Code) |
 | Engine | musashi-core (Go) | High-performance data engine. Gates 1-3, 6-7. Publishes STRIKEs. |
-| Agent | OpenClaw runtime | Gates 4-5 (social browsing), specialists, debate, judge |
+| Agent | OpenClaw or Claude Code | Gates 4-5 (social investigation), specialists, debate, judge |
 | Protocol | ConvictionLog.sol | Multi-agent STRIKE log. Per-agent + global reputation. |
 | Identity | MusashiINFT.sol | ERC-7857 agent INFT. Identity + reputation + intelligence on-chain. |
 | Evidence | 0G Storage | Decentralized evidence archive. Merkle proofs for verification. |
@@ -139,7 +139,7 @@ Beyond snapshots, Gate 3 now analyzes **trends**:
 - **Buy/sell pressure trend**: comparing sell ratios across 6h and 24h timeframes
 - **Buy concentration warning**: >90% buys with 50+ txns flags potential wash trading
 
-Gates 1-3, 6-7 run via the Go binary. Gates 4-5 run via the OpenClaw agent's browser tool.
+Gates 1-3, 6-7 run via the Go binary. Gates 4-5 run via the agent's investigation tools (OpenClaw `browser` or Claude Code `WebSearch`/`WebFetch`).
 
 ---
 
@@ -225,7 +225,7 @@ This creates a complete audit trail: **agent identity (INFT) → conviction sign
 | Farcaster/Neynar | Casts, mentions, social signals | Agent social analysis (Neynar requires a free API key) |
 | Public RPCs | On-chain reads (balance, code, ERC20 calls) | Gate support |
 
-Social analysis (X/Twitter, Telegram) is done via OpenClaw's browser tool -- no paid API subscriptions. Neynar's Farcaster API requires a free key from [neynar.com](https://neynar.com) but is optional.
+Social analysis (X/Twitter, Telegram) is done via the agent's investigation tools (OpenClaw's `browser` or Claude Code's `WebSearch`/`WebFetch`) -- no paid API subscriptions. Neynar's Farcaster API requires a free key from [neynar.com](https://neynar.com) but is optional.
 
 ---
 
@@ -529,13 +529,56 @@ Invoke with `/musashi` or message your agent:
 
 The agent will run the full pipeline and report results. If a token passes all gates and the conviction judge says PASS, it will ask you before publishing on-chain.
 
+#### Claude Code Usage
+
+MUSASHI also runs natively in [Claude Code](https://claude.ai/claude-code) via custom slash commands.
+
+**Setup:**
+
+```bash
+git clone https://github.com/yeheskieltame/musashi.git
+cd musashi
+make core                          # Build the Go binary
+set -a && source .env && set +a   # Load environment
+```
+
+**Available Slash Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/analyze <token>` | Full 8-step pipeline: gates → specialists → debate → judge |
+| `/scan [chain] [--gates]` | Scan, score, and rank token opportunities |
+| `/gates <token>` | Run 5 automated elimination gates only |
+| `/strike <token> <args>` | Publish STRIKE conviction to 0G Chain |
+| `/status` | Check on-chain reputation and agent state |
+| `/discover [chain]` | Raw token discovery with pre-screening |
+
+**Examples in Claude Code:**
+
+```
+/analyze 0x1234...abcd on Base
+/scan base --gates
+/gates PEPE
+/status
+/discover eth
+```
+
+Claude Code uses `Bash` to run musashi-core (instead of OpenClaw's `exec`) and `WebSearch`/`WebFetch` for social investigation (instead of OpenClaw's `browser`). The analysis pipeline, prompts, and Go binary are identical -- only the agent runtime differs.
+
 ---
 
 ## Project Structure
 
 ```
 musashi/
-├── SKILL.md                         OpenClaw skill definition (entry point)
+├── SKILL.md                         OpenClaw skill definition
+├── .claude/commands/                Claude Code slash commands
+│   ├── analyze.md                   Full pipeline (/analyze)
+│   ├── scan.md                      Token scanner (/scan)
+│   ├── gates.md                     Gate check (/gates)
+│   ├── strike.md                    Publish STRIKE (/strike)
+│   ├── status.md                    On-chain status (/status)
+│   └── discover.md                  Token discovery (/discover)
 ├── scripts/
 │   ├── musashi-core/                Go binary source
 │   │   ├── cmd/musashi/main.go      CLI entry (12 commands incl. scan)
@@ -633,7 +676,7 @@ musashi/
 
 ## 30-Word Description
 
-> MUSASHI is an OpenClaw Skill and on-chain reputation protocol on 0G. AI agents analyze tokens through 7 elimination gates, publish conviction signals (STRIKEs) to 0G Chain, and store verifiable evidence on 0G Storage.
+> MUSASHI is an OpenClaw Skill, Claude Code integration, and on-chain reputation protocol on 0G. AI agents analyze tokens through 7 elimination gates, publish conviction signals (STRIKEs) to 0G Chain, and store verifiable evidence on 0G Storage.
 
 ---
 

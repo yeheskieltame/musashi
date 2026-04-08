@@ -6,11 +6,15 @@
 
 ## Identity
 
-**MUSASHI (武蔵)** — An OpenClaw Skill that turns the agent into a conviction-weighted narrative intelligence engine, powered by 0G.
+**MUSASHI (武蔵)** — A conviction-weighted narrative intelligence engine, powered by 0G. Runs as an OpenClaw Skill AND as Claude Code slash commands.
 
-**Architecture:** OpenClaw Skill (SKILL.md) + Go binary (musashi-core) + Solidity (ConvictionLog + MusashiINFT on 0G Chain)
+**Architecture:** OpenClaw Skill (SKILL.md) + Claude Code Commands (.claude/commands/) + Go binary (musashi-core) + Solidity (ConvictionLog + MusashiINFT on 0G Chain)
 
-**Key insight:** MUSASHI is NOT a standalone system. It's a Skill that leverages OpenClaw's existing agent runtime (browser, exec, memory, channels) and teaches the agent HOW to investigate crypto tokens. The Go binary handles performance-critical data fetching and gate logic. 0G provides decentralized storage, chain, and agent identity (INFT).
+**Key insight:** MUSASHI is NOT a standalone system. It's designed for AI agent runtimes that can investigate, reason, and act. The Go binary handles performance-critical data fetching and gate logic. 0G provides decentralized storage, chain, and agent identity (INFT). The agent (OpenClaw or Claude Code) does the thinking.
+
+**Dual Runtime Support:**
+- **OpenClaw:** SKILL.md defines the skill. Agent uses `exec` for Go binary, `browser` for social investigation.
+- **Claude Code:** `.claude/commands/` provides slash commands (`/analyze`, `/scan`, `/gates`, `/strike`, `/status`, `/discover`). Agent uses `Bash` for Go binary, `WebSearch`/`WebFetch` for social investigation.
 
 ---
 
@@ -24,9 +28,9 @@ prompt = f"Analyze: {data}"
 response = llm(prompt)  # LLM is just a formatter
 ```
 
-**RIGHT:** The OpenClaw agent receives a mission. It DECIDES what to investigate. It uses `browser` to browse X/Twitter. It uses `exec` to run `musashi-core gates 0x...` for hard data. It follows leads. It cross-references. It reasons about what it found and decides whether to dig deeper.
+**RIGHT:** The agent receives a mission. It DECIDES what to investigate. It browses X/Twitter (OpenClaw `browser` or Claude Code `WebSearch`). It runs `musashi-core gates 0x...` for hard data (OpenClaw `exec` or Claude Code `Bash`). It follows leads. It cross-references. It reasons about what it found and decides whether to dig deeper.
 
-The SKILL.md teaches this investigative behavior. The Go binary provides fast, reliable data. The agent does the thinking.
+The SKILL.md (OpenClaw) and `.claude/commands/` (Claude Code) teach this investigative behavior. The Go binary provides fast, reliable data. The agent does the thinking.
 
 ---
 
@@ -63,7 +67,14 @@ The SKILL.md teaches this investigative behavior. The Go binary provides fast, r
 
 ```
 musashi/
-├── SKILL.md                         ← OpenClaw skill definition (THE ENTRY POINT)
+├── SKILL.md                         ← OpenClaw skill definition
+├── .claude/commands/                ← Claude Code slash commands
+│   ├── analyze.md                   Full pipeline: gates → specialists → debate → judge
+│   ├── scan.md                      Scan, score, rank token opportunities
+│   ├── gates.md                     Run 5 automated gates only
+│   ├── strike.md                    Publish STRIKE to 0G Chain
+│   ├── status.md                    Check on-chain state + reputation
+│   └── discover.md                  Raw token discovery with pre-screening
 │
 ├── scripts/
 │   ├── musashi-core/                ← Go binary: performance-critical data engine
@@ -140,6 +151,57 @@ musashi/
 8. **STRIKE = early conviction entry signal** — not confirmed momentum. Find before the crowd.
 9. **STRIKE published on 0G Chain** — Go binary calls ConvictionLog contract on Galileo Testnet
 10. **Agent tokenized as INFT** — MusashiINFT (ERC-7857) links identity + reputation + intelligence
+
+---
+
+## Claude Code Integration
+
+MUSASHI runs natively in Claude Code via custom slash commands in `.claude/commands/`. These map 1:1 to the OpenClaw SKILL.md pipeline.
+
+### Slash Commands
+
+| Command | Description | Equivalent SKILL.md Step |
+|---------|-------------|--------------------------|
+| `/analyze <token>` | Full 8-step pipeline | Steps 0-8 |
+| `/scan [chain] [--gates]` | Scan + score + rank | Token Scanner Mode |
+| `/gates <token>` | Run 5 automated gates | Step 1 only |
+| `/strike <token> <args>` | Publish STRIKE on-chain | Steps 7-8 |
+| `/status` | Check on-chain reputation | Status & History |
+| `/discover [chain]` | Raw token discovery | Discovery Mode |
+
+### Tool Mapping (OpenClaw → Claude Code)
+
+| OpenClaw Tool | Claude Code Tool | Usage |
+|---------------|------------------|-------|
+| `exec` | `Bash` | Run musashi-core binary |
+| `browser` | `WebSearch` + `WebFetch` | Social investigation (Gates 4-5, debate) |
+| `web_search` | `WebSearch` | Find live evidence |
+| `memory` | File-based memory (`~/.claude/`) | Cross-session context |
+| `channels` | Telegram MCP / direct output | User communication |
+
+### Running musashi-core in Claude Code
+
+The Go binary is invoked via Bash instead of exec:
+```bash
+# OpenClaw
+exec {baseDir}/scripts/musashi-core/musashi-core gates 0x... --chain 1
+
+# Claude Code
+./scripts/musashi-core/musashi-core gates 0x... --chain 1 --output json
+```
+
+Build the binary first if needed: `cd scripts/musashi-core && go build -o musashi-core ./cmd/musashi/`
+
+### Social Investigation in Claude Code
+
+Gates 4-5 (Social Momentum, Narrative Alignment) use WebSearch instead of browser:
+```
+WebSearch: "$SYMBOL token crypto twitter"
+WebSearch: "narrative meta AI tokens 2026"
+WebFetch: <specific URL for deeper investigation>
+```
+
+The agent follows the same investigative logic — it decides what to search, assesses quality, and follows leads.
 
 ---
 
@@ -619,8 +681,8 @@ OG_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
 
 ## Key Reminders
 
-1. **SKILL.md is the product.** Not a CLI app. Not a webapp. An installable OpenClaw Skill.
-2. **Don't rebuild OpenClaw features.** Browser, exec, memory, channels — all built-in. Use them.
+1. **SKILL.md + .claude/commands/ are the product.** Installable OpenClaw Skill AND Claude Code slash commands.
+2. **Don't rebuild agent runtime features.** Both OpenClaw and Claude Code provide tools natively. Use them.
 3. **Go binary for data, agent for reasoning.** Gates 1-3, 6-7 = Go. Gates 4-5 = agent browsing.
 4. **0G Storage for evidence.** File upload via official CLI. Merkle root hash stored on-chain.
 6. **2 contracts deployed, Galileo testnet, real activity.** ConvictionLog + MusashiINFT both live with verifiable transactions.
