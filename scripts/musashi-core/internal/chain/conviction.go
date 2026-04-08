@@ -44,11 +44,11 @@ type StrikeResult struct {
 	Status          string `json:"status,omitempty"`
 }
 
-// 0G Chain defaults (override via env vars for mainnet)
+// 0G Chain defaults (mainnet)
 const (
-	DefaultOGChainRPC = "https://evmrpc-testnet.0g.ai"
-	OGGalileoChainID  = 16602
-	defaultExplorer   = "https://chainscan-galileo.0g.ai"
+	DefaultOGChainRPC = "https://evmrpc.0g.ai"
+	OGMainnetChainID  = 16661
+	defaultExplorer   = "https://chainscan.0g.ai"
 )
 
 // OGExplorerBase returns the explorer URL, configurable via OG_EXPLORER_URL env var.

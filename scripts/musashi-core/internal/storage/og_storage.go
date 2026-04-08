@@ -17,10 +17,10 @@ import (
 var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
 const (
-	DefaultStorageRPC     = "https://evmrpc-testnet.0g.ai"
-	DefaultStorageIndexer = "https://indexer-storage-testnet-turbo.0g.ai"
-	defaultStorageScan    = "https://storagescan-galileo.0g.ai"
-	defaultChainExplorer  = "https://chainscan-galileo.0g.ai"
+	DefaultStorageRPC     = "https://evmrpc.0g.ai"
+	DefaultStorageIndexer = "https://indexer-storage-turbo.0g.ai"
+	defaultStorageScan    = "https://storagescan.0g.ai"
+	defaultChainExplorer  = "https://chainscan.0g.ai"
 )
 
 // hashPattern validates hex root hashes
