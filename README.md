@@ -18,14 +18,14 @@ MUSASHI builds the missing **reputation layer** for 0G's agent ecosystem.
 
 ---
 
-## Deployed Contracts (0G Galileo Testnet)
+## Deployed Contracts (0G Mainnet)
 
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| ConvictionLog | `0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D` | [View](https://chainscan-galileo.0g.ai/address/0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D) |
-| MusashiINFT | `0x1dC1CE24d956951a078aE0Dd61379A86c901E773` | [View](https://chainscan-galileo.0g.ai/address/0x1dC1CE24d956951a078aE0Dd61379A86c901E773) |
+| ConvictionLog | `0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed` | [View](https://chainscan.0g.ai/address/0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed) |
+| MusashiINFT | `0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32` | [View](https://chainscan.0g.ai/address/0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32) |
 
-Network: 0G-Galileo-Testnet, Chain ID: 16602
+Network: 0G-Mainnet, Chain ID: 16661
 
 ---
 
@@ -280,18 +280,18 @@ cp .env.example .env
 Edit `.env`:
 
 ```
-OG_CHAIN_RPC=https://evmrpc-testnet.0g.ai
-CONVICTION_LOG_ADDRESS=0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D
-MUSASHI_INFT_ADDRESS=0x1dC1CE24d956951a078aE0Dd61379A86c901E773
+OG_CHAIN_RPC=https://evmrpc.0g.ai
+CONVICTION_LOG_ADDRESS=0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed
+MUSASHI_INFT_ADDRESS=0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32
 
 # Optional: only needed for on-chain publishing (strike, store, mint, update)
 # Use a dedicated wallet with minimal funds — never your main wallet
 OG_CHAIN_PRIVATE_KEY=your_dedicated_wallet_key_here
-OG_STORAGE_RPC=https://evmrpc-testnet.0g.ai
-OG_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
+OG_STORAGE_RPC=https://evmrpc.0g.ai
+OG_STORAGE_INDEXER=https://indexer-storage-turbo.0g.ai
 ```
 
-Get testnet tokens from [faucet.0g.ai](https://faucet.0g.ai/).
+Get testnet tokens from [faucet.0g.ai](https://faucet.0g.ai/) (testnet only; mainnet requires real 0G tokens).
 
 ### Load Environment
 
@@ -417,7 +417,7 @@ set -a && source .env && set +a
 
 # 2. Store evidence to 0G Storage
 ./scripts/musashi-core/musashi-core store "$(cat evidence.json)"
-# Returns: { "root_hash": "0xabc...", "storage_scan": "https://storagescan-galileo.0g.ai/file/0xabc..." }
+# Returns: { "root_hash": "0xabc...", "storage_scan": "https://storagescan.0g.ai/file/0xabc..." }
 
 # 3. Publish STRIKE with evidence hash and agent ID
 ./scripts/musashi-core/musashi-core strike 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 \
@@ -425,7 +425,7 @@ set -a && source .env && set +a
   --convergence 4 \
   --evidence abc123...  \
   --token-chain 1
-# Returns: { "tx_hash": "0x...", "explorer_url": "https://chainscan-galileo.0g.ai/tx/0x..." }
+# Returns: { "tx_hash": "0x...", "explorer_url": "https://chainscan.0g.ai/tx/0x..." }
 
 # 4. Check per-agent reputation
 ./scripts/musashi-core/musashi-core status --per-agent --agent-id 0
@@ -464,9 +464,9 @@ MUSASHI has two modes. **Analysis mode works without any private key.**
     "entries": {
       "musashi": {
         "env": {
-          "OG_CHAIN_RPC": "https://evmrpc-testnet.0g.ai",
-          "CONVICTION_LOG_ADDRESS": "0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D",
-          "MUSASHI_INFT_ADDRESS": "0x1dC1CE24d956951a078aE0Dd61379A86c901E773"
+          "OG_CHAIN_RPC": "https://evmrpc.0g.ai",
+          "CONVICTION_LOG_ADDRESS": "0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed",
+          "MUSASHI_INFT_ADDRESS": "0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32"
         }
       }
     }
@@ -484,12 +484,12 @@ This gives you the full pipeline: 7 gates, 4 specialists, pattern detection, adv
     "entries": {
       "musashi": {
         "env": {
-          "OG_CHAIN_RPC": "https://evmrpc-testnet.0g.ai",
-          "CONVICTION_LOG_ADDRESS": "0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D",
-          "MUSASHI_INFT_ADDRESS": "0x1dC1CE24d956951a078aE0Dd61379A86c901E773",
+          "OG_CHAIN_RPC": "https://evmrpc.0g.ai",
+          "CONVICTION_LOG_ADDRESS": "0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed",
+          "MUSASHI_INFT_ADDRESS": "0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32",
           "OG_CHAIN_PRIVATE_KEY": "your-dedicated-wallet-key",
-          "OG_STORAGE_RPC": "https://evmrpc-testnet.0g.ai",
-          "OG_STORAGE_INDEXER": "https://indexer-storage-testnet-turbo.0g.ai"
+          "OG_STORAGE_RPC": "https://evmrpc.0g.ai",
+          "OG_STORAGE_INDEXER": "https://indexer-storage-turbo.0g.ai"
         }
       }
     }
@@ -625,7 +625,7 @@ musashi/
 
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
-| `OG_CHAIN_RPC` | Yes | 0G Chain RPC endpoint | `https://evmrpc-testnet.0g.ai` |
+| `OG_CHAIN_RPC` | Yes | 0G Chain RPC endpoint | `https://evmrpc.0g.ai` |
 | `CONVICTION_LOG_ADDRESS` | Yes | ConvictionLog contract address | — |
 | `MUSASHI_INFT_ADDRESS` | Yes | MusashiINFT contract address | — |
 
@@ -634,8 +634,8 @@ musashi/
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
 | `OG_CHAIN_PRIVATE_KEY` | For publishing only | Dedicated wallet key (hex, with or without 0x prefix) | — |
-| `OG_STORAGE_RPC` | For evidence upload | 0G Storage RPC | `https://evmrpc-testnet.0g.ai` |
-| `OG_STORAGE_INDEXER` | For evidence upload | 0G Storage indexer | `https://indexer-storage-testnet-turbo.0g.ai` |
+| `OG_STORAGE_RPC` | For evidence upload | 0G Storage RPC | `https://evmrpc.0g.ai` |
+| `OG_STORAGE_INDEXER` | For evidence upload | 0G Storage indexer | `https://indexer-storage-turbo.0g.ai` |
 
 > Without `OG_CHAIN_PRIVATE_KEY`, all analysis commands work normally. Only `strike`, `store`, `mint-agent`, `update-agent`, and `set-inft` require a key. These commands return a graceful `analysis_only` / `skipped` status instead of erroring when no key is set.
 
@@ -657,7 +657,7 @@ musashi/
 ### Submission Checklist
 
 - [x] GitHub repo with substantial development
-- [x] 0G testnet contract addresses + Explorer links with verifiable activity
+- [x] 0G mainnet contract addresses + Explorer links with verifiable activity
 - [x] 0G Storage integration with evidence uploads
 - [x] INFT (ERC-7857) agent tokenization
 - [x] README with architecture + 0G integration explanation + setup guide

@@ -34,8 +34,8 @@ To enable publish mode, set these env vars in your OpenClaw config (`openclaw.js
       "musashi": {
         "env": {
           "OG_CHAIN_PRIVATE_KEY": "your-dedicated-wallet-key",
-          "OG_STORAGE_RPC": "https://evmrpc-testnet.0g.ai",
-          "OG_STORAGE_INDEXER": "https://indexer-storage-testnet-turbo.0g.ai"
+          "OG_STORAGE_RPC": "https://evmrpc.0g.ai",
+          "OG_STORAGE_INDEXER": "https://indexer-storage-turbo.0g.ai"
         }
       }
     }

@@ -100,10 +100,10 @@ Base:      https://mainnet.base.org
 ## 0G Infrastructure
 
 ```
-0G Chain RPC:    https://evmrpc-testnet.0g.ai (Galileo Testnet, Chain ID 16602)
-0G Storage:      https://indexer-storage-testnet-turbo.0g.ai (Turbo indexer)
+0G Chain RPC:    https://evmrpc.0g.ai (Mainnet, Chain ID 16661)
+0G Storage:      https://indexer-storage-turbo.0g.ai (Turbo indexer)
 0G Compute:      https://compute-marketplace.0g.ai/inference (marketplace)
-0G Explorer:     https://chainscan-galileo.0g.ai/
-0G Storage Scan: https://storagescan-galileo.0g.ai/
+0G Explorer:     https://chainscan.0g.ai/
+0G Storage Scan: https://storagescan.0g.ai/
 0G Faucet:       https://faucet.0g.ai/
 ```

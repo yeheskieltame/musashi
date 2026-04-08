@@ -43,7 +43,7 @@ The SKILL.md (OpenClaw) and `.claude/commands/` (Claude Code) teach this investi
 ### Submission Requirements (ALL mandatory)
 
 1. **GitHub repo** — public, substantial commits during hackathon period
-2. **0G contract address** + Explorer link with verifiable activity (Galileo Testnet)
+2. **0G contract address** + Explorer link with verifiable activity (Mainnet)
 3. **Demo video** ≤ 3 minutes showing real functionality (not slides)
 4. **X post** with #0GHackathon #BuildOn0G @0G*labs @0g_CN @0g_Eco @HackQuest*
 5. **README** with architecture, 0G integration explanation, reproduction steps
@@ -121,12 +121,12 @@ musashi/
 │   └── conviction_judge.md          Binary PASS/FAIL
 │
 ├── contracts/                       Solidity (Foundry)
-│   ├── src/ConvictionLog.sol        STRIKE log on 0G Chain (Galileo Testnet)
+│   ├── src/ConvictionLog.sol        STRIKE log on 0G Chain (Mainnet)
 │   ├── src/MusashiINFT.sol          Agent INFT (ERC-7857) on 0G Chain
 │   ├── test/ConvictionLog.t.sol     ConvictionLog tests
 │   ├── test/MusashiINFT.t.sol       MusashiINFT tests
 │   ├── script/Deploy.s.sol          Deploys both contracts
-│   └── foundry.toml                 Config with 0G Galileo Testnet RPC
+│   └── foundry.toml                 Config with 0G Mainnet RPC
 │
 ├── references/                      Supporting docs (loaded by agent when needed)
 │   ├── GATES.md                     Detailed gate criteria + thresholds
@@ -149,7 +149,7 @@ musashi/
 6. **Specialist analysis + debate happen in agent context** — OpenClaw agent reasons over reports
 7. **Evidence stored in 0G Storage** — Go binary uses official `0g-storage-client` CLI (file upload)
 8. **STRIKE = early conviction entry signal** — not confirmed momentum. Find before the crowd.
-9. **STRIKE published on 0G Chain** — Go binary calls ConvictionLog contract on Galileo Testnet
+9. **STRIKE published on 0G Chain** — Go binary calls ConvictionLog contract on Mainnet
 10. **Agent tokenized as INFT** — MusashiINFT (ERC-7857) links identity + reputation + intelligence
 
 ---
@@ -307,7 +307,7 @@ SKILL.md written with full 8-step pipeline. All 8 agent prompts in prompts/.
 
 ### Phase 3: 0G Infrastructure — Deep Integration [DONE]
 
-- ConvictionLog + MusashiINFT deployed on Galileo Testnet
+- ConvictionLog + MusashiINFT deployed on Mainnet
 - 0G Storage integration via `0g-storage-client` CLI (file upload + merkle proof)
 - MUSASHI minted as INFT (token ID 0)
 - Full pipeline wired: gates → store evidence → strike with real evidence hash
@@ -471,46 +471,44 @@ BSC:       https://bsc-dataseed.binance.org
 ```bash
 # File upload (evidence archive):
 0g-storage-client upload \
-  --url https://evmrpc-testnet.0g.ai \
+  --url https://evmrpc.0g.ai \
   --key $OG_CHAIN_PRIVATE_KEY \
-  --indexer https://indexer-storage-testnet-turbo.0g.ai \
+  --indexer https://indexer-storage-turbo.0g.ai \
   --file evidence.json
 
 # File download (with merkle proof verification):
 0g-storage-client download \
-  --indexer https://indexer-storage-testnet-turbo.0g.ai \
+  --indexer https://indexer-storage-turbo.0g.ai \
   --root <root_hash> \
   --file output.json \
   --proof
 ```
 
-### 0G Chain — Galileo Testnet (EVM — Foundry)
+### 0G Chain — Mainnet (EVM — Foundry)
 
 **Docs:** https://docs.0g.ai/developer-hub/building-on-0g/0g-chain
-**Network:** 0G-Galileo-Testnet | Chain ID: 16602
-**RPC:** https://evmrpc-testnet.0g.ai
-**Explorer:** https://chainscan-galileo.0g.ai
-**Faucet:** https://faucet.0g.ai (0.1 0G/day)
-**Faucet (Google):** https://cloud.google.com/application/web3/faucet/0g/galileo
+**Network:** 0G-Mainnet | Chain ID: 16661
+**RPC:** https://evmrpc.0g.ai
+**Explorer:** https://chainscan.0g.ai
 
 ```bash
-# NOTE: `forge script` does NOT work with 0G Chain (chain 16602 unsupported).
+# NOTE: `forge script` does NOT work with 0G Chain (chain 16661 unsupported).
 # Use `forge create` + `cast send` instead:
 
 # Step 1: Deploy ConvictionLog
 forge create src/ConvictionLog.sol:ConvictionLog \
-  --rpc-url https://evmrpc-testnet.0g.ai \
+  --rpc-url https://evmrpc.0g.ai \
   --private-key $OG_CHAIN_PRIVATE_KEY --legacy --broadcast
 
 # Step 2: Deploy MusashiINFT (needs ConvictionLog address)
 forge create src/MusashiINFT.sol:MusashiINFT \
-  --rpc-url https://evmrpc-testnet.0g.ai \
+  --rpc-url https://evmrpc.0g.ai \
   --private-key $OG_CHAIN_PRIVATE_KEY --legacy --broadcast \
   --gas-limit 3000000 --constructor-args <CONVICTION_LOG_ADDRESS>
 
 # Step 3: Link them
 cast send <CONVICTION_LOG_ADDRESS> "setINFT(address)" <INFT_ADDRESS> \
-  --rpc-url https://evmrpc-testnet.0g.ai \
+  --rpc-url https://evmrpc.0g.ai \
   --private-key $OG_CHAIN_PRIVATE_KEY --legacy
 
 # SAVE deployed addresses — needed for submission
@@ -536,9 +534,8 @@ MUSASHI is tokenized as an INFT via MusashiINFT contract. Links identity → rep
 | ----------------- | ----------------------------------------------------------- |
 | Main docs         | https://docs.0g.ai                                         |
 | SDKs              | https://build.0g.ai/sdks/                                  |
-| Testnet Explorer  | https://chainscan-galileo.0g.ai                             |
-| Storage Explorer  | https://storagescan-galileo.0g.ai                           |
-| Faucet            | https://faucet.0g.ai                                        |
+| Explorer          | https://chainscan.0g.ai                                     |
+| Storage Explorer  | https://storagescan.0g.ai                                   |
 | GitHub            | https://github.com/0glabs                                   |
 | INFT GitHub       | https://github.com/0gfoundation/0g-agent-nft               |
 | Community         | https://github.com/0gfoundation/awesome-0g                 |
@@ -547,12 +544,12 @@ MUSASHI is tokenized as an INFT via MusashiINFT contract. Links identity → rep
 
 ## Deployed Contracts
 
-Both contracts deployed on 0G Galileo Testnet (Chain ID: 16602):
+Both contracts deployed on 0G Mainnet (Chain ID: 16661):
 
 | Contract | Address |
 |----------|---------|
-| ConvictionLog | `0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D` |
-| MusashiINFT | `0x1dC1CE24d956951a078aE0Dd61379A86c901E773` |
+| ConvictionLog | `0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed` |
+| MusashiINFT | `0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32` |
 
 ### ConvictionLog.sol (deployed version)
 
@@ -640,21 +637,21 @@ Full prompts are in `prompts/` directory. Key design:
 ```bash
 # .env — see .env.example for template
 
-# 0G Chain — Galileo Testnet (Chain ID: 16602)
-OG_CHAIN_RPC=https://evmrpc-testnet.0g.ai
+# 0G Chain — Mainnet (Chain ID: 16661)
+OG_CHAIN_RPC=https://evmrpc.0g.ai
 OG_CHAIN_PRIVATE_KEY=         # Deployer wallet (hex, 0x prefix accepted)
 
 # Deployed contracts
-CONVICTION_LOG_ADDRESS=0x9265966a024E43a9F29b7Ed25747d49baBEbBA1D
-MUSASHI_INFT_ADDRESS=0x1dC1CE24d956951a078aE0Dd61379A86c901E773
+CONVICTION_LOG_ADDRESS=0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed
+MUSASHI_INFT_ADDRESS=0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32
 
 # 0G Storage — uses official 0g-storage-client CLI (file upload)
-OG_STORAGE_RPC=https://evmrpc-testnet.0g.ai
-OG_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
+OG_STORAGE_RPC=https://evmrpc.0g.ai
+OG_STORAGE_INDEXER=https://indexer-storage-turbo.0g.ai
 ```
 
 **No paid external API keys.** All data APIs are free. Social analysis is agent-driven browsing.
-**0G faucet:** https://faucet.0g.ai (0.1 0G/day for testnet)
+**0G faucet (testnet only):** https://faucet.0g.ai (not applicable for mainnet)
 **Private key:** The Go binary strips `0x` prefix automatically if present.
 
 ---
@@ -685,7 +682,7 @@ OG_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
 2. **Don't rebuild agent runtime features.** Both OpenClaw and Claude Code provide tools natively. Use them.
 3. **Go binary for data, agent for reasoning.** Gates 1-3, 6-7 = Go. Gates 4-5 = agent browsing.
 4. **0G Storage for evidence.** File upload via official CLI. Merkle root hash stored on-chain.
-6. **2 contracts deployed, Galileo testnet, real activity.** ConvictionLog + MusashiINFT both live with verifiable transactions.
+6. **2 contracts deployed, 0G Mainnet, real activity.** ConvictionLog + MusashiINFT both live with verifiable transactions.
 7. **INFT for deep 0G integration.** ERC-7857 tokenized agent identity + reputation on-chain. MUSASHI minted as token ID 0.
 8. **Free APIs only.** No Twitter API key. Agent browses public X/Twitter via OpenClaw browser.
 9. **Demo > dashboard.** No frontend needed. 3-min video showing real agent behavior wins.
@@ -701,8 +698,7 @@ OG_STORAGE_INDEXER=https://indexer-storage-testnet-turbo.0g.ai
 
 - Docs: https://docs.0g.ai
 - SDKs: https://build.0g.ai/sdks/
-- Explorer: https://chainscan-galileo.0g.ai/
-- Faucet: https://faucet.0g.ai/
+- Explorer: https://chainscan.0g.ai/
 - GitHub: https://github.com/0glabs
 - Community: https://github.com/0gfoundation/awesome-0g
 
