@@ -180,8 +180,8 @@ func DiscoverTokens(chainID int64, limit int) (string, error) {
 			break
 		}
 
-		// Rate limit: small delay between GoPlus calls
-		time.Sleep(200 * time.Millisecond)
+		// Rate limit: buffer between GoPlus calls
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	result.Tokens = enriched

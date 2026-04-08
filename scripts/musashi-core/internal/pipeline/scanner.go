@@ -252,7 +252,7 @@ func ScanTokens(chainID int64, limit int, runGates bool) (string, error) {
 		c.Score, c.ScoreBreak = scoreCandidate(c)
 
 		enriched = append(enriched, *c)
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond) // GoPlus rate limit buffer
 	}
 
 	// Sort by score descending

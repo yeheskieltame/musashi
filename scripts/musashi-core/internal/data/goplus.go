@@ -82,6 +82,10 @@ func (c *GoPlusClient) GetTokenSecurity(chainID int64, address string) (*TokenSe
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == 429 {
+		return nil, fmt.Errorf("goplus error: too many requests")
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("goplus error: status %d: %s", resp.StatusCode, body)
