@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────
-# MUSASHI — Deploy & Verify on 0G Galileo Testnet
+# MUSASHI — Deploy & Verify on 0G Mainnet
 # ─────────────────────────────────────────────────────
 # 0G ChainScan uses an Etherscan-compatible API at /open/api
 # Only supports solidity-single-file (flattened), compilerversion without commit hash
@@ -24,14 +24,14 @@ if [[ -z "${OG_CHAIN_PRIVATE_KEY:-}" ]]; then
     exit 1
 fi
 
-RPC_URL="${OG_CHAIN_RPC:-https://evmrpc-testnet.0g.ai}"
-VERIFIER_API="https://chainscan-galileo.0g.ai/open/api"
-CHAIN_ID=16602
+RPC_URL="${OG_CHAIN_RPC:-https://evmrpc.0g.ai}"
+VERIFIER_API="https://chainscan.0g.ai/open/api"
+CHAIN_ID=16661
 SOLC_VERSION="0.8.20"
 
 echo "╔═══════════════════════════════════════════════╗"
 echo "║   MUSASHI 武蔵 — Deploy & Verify              ║"
-echo "║   Network: 0G Galileo Testnet (${CHAIN_ID})       ║"
+echo "║   Network: 0G Mainnet (${CHAIN_ID})               ║"
 echo "║   RPC: ${RPC_URL}"
 echo "╚═══════════════════════════════════════════════╝"
 echo ""
@@ -189,6 +189,6 @@ echo "║  ConvictionLog:  $CONVICTION_LOG"
 echo "║  MusashiINFT:    $MUSASHI_INFT"
 echo "╠═══════════════════════════════════════════════╣"
 echo "║  Explorer:                                    ║"
-echo "║  https://chainscan-galileo.0g.ai/address/$CONVICTION_LOG"
-echo "║  https://chainscan-galileo.0g.ai/address/$MUSASHI_INFT"
+echo "║  https://chainscan.0g.ai/address/$CONVICTION_LOG"
+echo "║  https://chainscan.0g.ai/address/$MUSASHI_INFT"
 echo "╚═══════════════════════════════════════════════╝"

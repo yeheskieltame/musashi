@@ -10,6 +10,8 @@ remappings = [
 [rpc_endpoints]
 og_chain = "${OG_CHAIN_RPC}"
 og_testnet = "https://evmrpc-testnet.0g.ai"
+og_mainnet = "https://evmrpc.0g.ai"
 
 [etherscan]
 og_testnet = { key = "no-key-needed", url = "https://chainscan-galileo.0g.ai/open/api/", chain = 16602 }
+og_mainnet = { key = "no-key-needed", url = "https://chainscan.0g.ai/open/api/", chain = 16661 }
