@@ -170,6 +170,7 @@ function spawnAgent(opts: {
 } {
   const args = [
     "-p",
+    "--verbose",
     "--model", opts.model,
     "--output-format", "stream-json",
     "--no-session-persistence",
