@@ -8,27 +8,35 @@ import (
 )
 
 // ContractSafetyGate implements Gate 1: Contract Safety.
-// Uses GoPlus token_security + RPC checks.
-type ContractSafetyGate struct {
-	goplus *data.GoPlusClient
-}
+// Uses GoPlus token_security (shared from pipeline context) + RPC checks.
+type ContractSafetyGate struct{}
 
 func NewContractSafetyGate() *ContractSafetyGate {
-	return &ContractSafetyGate{
-		goplus: data.NewGoPlusClient(),
-	}
+	return &ContractSafetyGate{}
 }
 
 func (g *ContractSafetyGate) Name() string   { return "Contract Safety" }
 func (g *ContractSafetyGate) Number() int     { return 1 }
 
 func (g *ContractSafetyGate) Evaluate(token string, chainID int64) (*Result, error) {
+	return g.EvaluateWithContext(token, chainID, TokenContext{Age: AgeEstablished})
+}
+
+func (g *ContractSafetyGate) EvaluateWithContext(token string, chainID int64, ctx TokenContext) (*Result, error) {
 	result := NewResult(g.Name(), g.Number())
 
-	sec, err := g.goplus.GetTokenSecurity(chainID, token)
+	// Use shared GoPlus data from pipeline context to avoid redundant API calls
+	var sec *data.TokenSecurityData
+	var err error
+	if ctx.GoPlusFetched {
+		sec = ctx.GoPlusData
+		err = ctx.GoPlusError
+	} else {
+		goplus := data.NewGoPlusClient()
+		sec, err = goplus.GetTokenSecurity(chainID, token)
+	}
+
 	if err != nil {
-		// GoPlus not having data ≠ unsafe contract. It means the token
-		// isn't indexed yet (common for new or niche tokens).
 		result.AddEvidence("goplus", "error", err.Error())
 		return result.Warn("GoPlus has no security data for this token — agent should verify contract manually"), nil
 	}

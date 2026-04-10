@@ -12,13 +12,11 @@ import (
 // Analyzes buy diversity and volume trends, not just snapshots.
 type WalletsGate struct {
 	dex    *data.DexScreenerClient
-	goplus *data.GoPlusClient
 }
 
 func NewWalletsGate() *WalletsGate {
 	return &WalletsGate{
 		dex:    data.NewDexScreenerClient(),
-		goplus: data.NewGoPlusClient(),
 	}
 }
 
@@ -53,13 +51,21 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 		result.AddEvidence("analysis", "thresholds", fmt.Sprintf("min_holders=%d min_txns=%d max_sell_ratio=%.0f%% (tier: %s)", minHolders, minTxns, maxSellRatio*100, ctx.Age))
 	}
 
-	// GoPlus holder data
-	sec, err := g.goplus.GetTokenSecurity(chainID, token)
-	if err != nil {
-		// GoPlus doesn't support all chains (e.g., 0G Chain).
-		// For unsupported chains, skip holder analysis and warn.
-		result.AddEvidence("goplus", "error", err.Error())
+	// GoPlus holder data (uses shared data from pipeline context)
+	sec := ctx.GoPlusData
+	if ctx.GoPlusFetched && ctx.GoPlusError != nil {
+		result.AddEvidence("goplus", "error", ctx.GoPlusError.Error())
 		return result.Warn("GoPlus does not support this chain — holder analysis skipped, agent should verify wallet behavior manually"), nil
+	}
+	if sec == nil {
+		// Fallback: fetch directly if not cached (standalone gate execution)
+		goplus := data.NewGoPlusClient()
+		var err error
+		sec, err = goplus.GetTokenSecurity(chainID, token)
+		if err != nil {
+			result.AddEvidence("goplus", "error", err.Error())
+			return result.Warn("GoPlus does not support this chain — holder analysis skipped, agent should verify wallet behavior manually"), nil
+		}
 	}
 
 	result.AddEvidence("goplus", "holder_count", sec.HolderCount)

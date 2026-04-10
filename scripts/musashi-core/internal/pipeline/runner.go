@@ -89,9 +89,18 @@ func fetchTokenAge(token string) gates.TokenContext {
 // RunGates executes the gate pipeline sequentially with fail-fast behavior.
 // Gates 4 (social) and 5 (narrative) are agent-driven and skipped here.
 // Token age is automatically detected and used for tiered thresholds.
+// GoPlus data is fetched ONCE and shared across all gates to avoid rate limits.
 func RunGates(token string, chainID int64) (*PipelineResult, error) {
 	// Fetch token age context first
 	tokenCtx := fetchTokenAge(token)
+
+	// Fetch GoPlus data once and cache in context — Gates 1, 2, 3 all need it.
+	// This prevents 3x redundant API calls which trigger 429 rate limits.
+	goplus := data.NewGoPlusClient()
+	sec, err := goplus.GetTokenSecurity(chainID, token)
+	tokenCtx.GoPlusFetched = true
+	tokenCtx.GoPlusData = sec
+	tokenCtx.GoPlusError = err
 
 	result := &PipelineResult{
 		Token:     token,

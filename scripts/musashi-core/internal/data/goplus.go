@@ -15,9 +15,16 @@ type GoPlusClient struct {
 	client *ResilientClient
 }
 
+// GoPlusRetryConfig uses longer backoffs since GoPlus aggressively rate-limits (429).
+var GoPlusRetryConfig = RetryConfig{
+	MaxRetries:     4,
+	InitialBackoff: 2 * time.Second,
+	MaxBackoff:     15 * time.Second,
+}
+
 func NewGoPlusClient() *GoPlusClient {
 	return &GoPlusClient{
-		client: NewResilientClient(15*time.Second, DefaultRetryConfig),
+		client: NewResilientClient(20*time.Second, GoPlusRetryConfig),
 	}
 }
 

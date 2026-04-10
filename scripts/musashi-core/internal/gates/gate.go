@@ -3,6 +3,8 @@ package gates
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/data"
 )
 
 // Status represents a gate's pass/fail status.
@@ -30,6 +32,10 @@ type TokenContext struct {
 	AgeHours       float64       // Exact age in hours
 	PairCreatedAt  time.Time     // When the primary pair was created
 	HasAgeData     bool          // Whether we have reliable age data
+	// Shared data: fetched once in pipeline, reused across gates to avoid rate limits
+	GoPlusData     *data.TokenSecurityData // Cached GoPlus result (nil if fetch failed)
+	GoPlusError    error                   // Error from GoPlus fetch (nil if success)
+	GoPlusFetched  bool                    // Whether GoPlus was already fetched
 }
 
 // ClassifyAge determines the token's age tier from pairCreatedAt timestamp (milliseconds).

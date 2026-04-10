@@ -11,14 +11,12 @@ import (
 type LiquidityGate struct {
 	dex    *data.DexScreenerClient
 	gecko  *data.GeckoTerminalClient
-	goplus *data.GoPlusClient
 }
 
 func NewLiquidityGate() *LiquidityGate {
 	return &LiquidityGate{
 		dex:    data.NewDexScreenerClient(),
 		gecko:  data.NewGeckoTerminalClient(),
-		goplus: data.NewGoPlusClient(),
 	}
 }
 
@@ -158,9 +156,9 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 		result.AddEvidence("analysis", "liquidity_concentration", fmt.Sprintf("%.1f%% on %s", bestPair.Liquidity.Usd/totalLiquidity*100, bestPair.DexID))
 	}
 
-	// Check 4: GoPlus LP lock status
-	sec, err := g.goplus.GetTokenSecurity(chainID, token)
-	if err == nil && len(sec.LPHolders) > 0 {
+	// Check 4: GoPlus LP lock status (uses shared data from pipeline context)
+	sec := ctx.GoPlusData
+	if sec != nil && len(sec.LPHolders) > 0 {
 		totalLPLocked := 0
 		for _, lp := range sec.LPHolders {
 			if lp.IsLocked == 1 {
