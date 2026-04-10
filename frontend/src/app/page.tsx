@@ -199,7 +199,7 @@ const GATES = [
 const FEATURES = [
   { title: "Token Scanner", desc: "Auto-fetch, score, and rank opportunities from 3 data sources. Fresh tokens with high scores surface first.", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
   { title: "7-Gate Pipeline", desc: "Sequential elimination with age-tiered thresholds. 97% of tokens fail. Only the cleanest survive.", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
-  { title: "Adversarial Debate", desc: "Bull and Bear researchers argue with live evidence. Two rounds. Only highest conviction passes.", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
+  { title: "Multi-Agent Debate", desc: "4 specialist AI agents analyze independently. Opus Judge cross-examines all reports. Full transparency with live streaming.", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
   { title: "On-Chain Proof", desc: "Every STRIKE published to 0G Chain. Evidence stored in 0G Storage with merkle proofs. Fully verifiable.", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" },
   { title: "Agent INFT", desc: "ERC-7857 intelligent NFT. Identity + reputation + intelligence config — all on-chain. Clone or authorize.", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
   { title: "Wallet Signing", desc: "No private keys on servers. Connect your browser wallet to sign STRIKEs directly. Safe by design.", icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" },
@@ -275,7 +275,7 @@ export default function LandingPage() {
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { value: "3", label: "0G Components" },
-                    { value: "2", label: "AI Providers" },
+                    { value: "5", label: "AI Agents" },
                   ].map((s) => (
                     <div key={s.label} className="p-3 rounded-xl bg-white/[0.04] border border-white/5 text-center">
                       <p className="text-2xl font-black text-white">{s.value}</p>
@@ -324,7 +324,7 @@ export default function LandingPage() {
               </div>
 
               <p className="text-sm text-white/80 max-w-lg leading-relaxed mb-8 animate-[fadeIn_1s_ease-out_0.3s_both]">
-                7 elimination gates. 4 specialist analyses. Adversarial debate.
+                7 elimination gates. 4 specialist AI agents. Opus Judge.
                 97% of tokens fail — only the highest-conviction signals survive.
                 Every call published on-chain with merkle-verified evidence on 0G.
               </p>
@@ -376,7 +376,7 @@ export default function LandingPage() {
               },
               {
                 title: "CONFIRMATION BIAS",
-                desc: "Find one bullish signal, stop looking. Existing tools generate signals, not eliminate them. Without adversarial challenge, bad calls pass unchecked and losses accumulate.",
+                desc: "Find one bullish signal, stop looking. Existing tools generate signals, not eliminate them. Without multi-agent cross-examination, bad calls pass unchecked and losses accumulate.",
                 badge: "97% noise",
                 viz: (
                   <svg viewBox="0 0 200 100" className="w-full h-full">
@@ -428,7 +428,7 @@ export default function LandingPage() {
                 <span className="text-sm font-bold text-white">MUSASHI</span>
               </div>
               <p className="text-sm text-white/70 max-w-2xl mx-auto leading-relaxed">
-                MUSASHI solves these by applying <span className="text-white">elimination, not accumulation</span>. 7 sequential gates filter 97% of tokens. 4 independent specialists cross-validate domains. An adversarial debate challenges every thesis. Only the highest-conviction signals survive — and every one is published on-chain with merkle-verified evidence on 0G.
+                MUSASHI solves these by applying <span className="text-white">elimination, not accumulation</span>. 7 sequential gates filter 97% of tokens. 4 independent AI specialists cross-validate domains. An Opus-powered Judge cross-examines all findings. Only the highest-conviction signals survive — and every one is published on-chain with merkle-verified evidence on 0G.
               </p>
             </div>
           </Reveal>
@@ -499,9 +499,9 @@ export default function LandingPage() {
                   <div className="text-[10px] text-white/30 mt-1">Safety, On-chain, Narrative, Market</div>
                 </div>
                 <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                  <div className="text-2xl font-black text-gradient mb-1">2</div>
-                  <div className="text-xs font-semibold text-white/70">Adversarial Debate Rounds</div>
-                  <div className="text-[10px] text-white/30 mt-1">Bull vs Bear with live evidence</div>
+                  <div className="text-2xl font-black text-gradient mb-1">5</div>
+                  <div className="text-xs font-semibold text-white/70">AI Agents in Debate</div>
+                  <div className="text-[10px] text-white/30 mt-1">4 Sonnet specialists + 1 Opus Judge</div>
                 </div>
                 <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
                   <div className="text-2xl font-black text-gradient mb-1">1</div>
@@ -581,7 +581,7 @@ export default function LandingPage() {
                 icon: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4",
                 color: "emerald",
                 items: [
-                  "Full analysis JSON (gates + specialists + debate) uploaded with merkle proofs",
+                  "Full analysis JSON (gates + specialist reports + judgment) uploaded with merkle proofs",
                   "Merkle root hash stored on-chain as cryptographic reference",
                   "Anyone can download evidence and verify — data is immutable",
                   "Creates permanent, auditable reasoning trail for every conviction",
@@ -649,7 +649,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {[
                   { step: "1", title: "Mint INFT", desc: "Agent mints ERC-7857 identity on 0G Chain", color: "violet" },
-                  { step: "2", title: "Analyze", desc: "Run token through 7 gates + specialists + debate", color: "blue" },
+                  { step: "2", title: "Analyze", desc: "Run token through 7 gates + 4 specialist agents + Opus Judge", color: "blue" },
                   { step: "3", title: "Store Evidence", desc: "Upload full analysis to 0G Storage (merkle proof)", color: "emerald" },
                   { step: "4", title: "Publish STRIKE", desc: "Log conviction on ConvictionLog with evidence hash", color: "blue" },
                   { step: "5", title: "Record Outcome", desc: "Token return measured. Win/loss recorded on-chain", color: "amber" },
@@ -715,7 +715,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto relative z-10">
           <SectionHeading
             title="System Architecture"
-            subtitle="Go binary (12MB) serves CLI + OpenClaw skill + HTTP API. Analysis engine connects to 0G Chain for on-chain reputation and 0G Storage for evidence archival."
+            subtitle="Go binary (14MB) serves CLI + OpenClaw skill + HTTP API. Multi-agent debate system runs 4 Sonnet specialists + 1 Opus Judge. Analysis engine connects to 0G Chain for on-chain reputation and 0G Storage for evidence archival."
           />
 
           <Reveal>
@@ -791,7 +791,7 @@ export default function LandingPage() {
                 {[
                   ["7 Gates", "sequential elimination"],
                   ["4 Specialists", "cross-domain"],
-                  ["Bull vs Bear", "adversarial debate"],
+                  ["4 Specialists", "multi-agent debate"],
                   ["Conviction Judge", "final scoring"],
                   ["Age Tiers", "fresh/early/established"],
                 ].map(([name, detail], i) => (
@@ -803,8 +803,8 @@ export default function LandingPage() {
 
                 {/* AI Provider + Evidence boxes */}
                 <rect x="260" y="348" width="90" height="40" rx="6" fill="#f59e0b" fillOpacity="0.08" stroke="#f59e0b" strokeWidth="1" strokeOpacity="0.3" />
-                <text x="305" y="365" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="600">AI Provider</text>
-                <text x="305" y="378" textAnchor="middle" fill="#ffffff" fontSize="7" opacity="0.5">Claude / Gemini</text>
+                <text x="305" y="365" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="600">Multi-Agent AI</text>
+                <text x="305" y="378" textAnchor="middle" fill="#ffffff" fontSize="7" opacity="0.5">4 Sonnet + 1 Opus</text>
 
                 <rect x="360" y="348" width="100" height="40" rx="6" fill="#ec4899" fillOpacity="0.08" stroke="#ec4899" strokeWidth="1" strokeOpacity="0.3" />
                 <text x="410" y="365" textAnchor="middle" fill="#f472b6" fontSize="8" fontWeight="600">Evidence Pack</text>
@@ -1023,30 +1023,21 @@ export default function LandingPage() {
 cd musashi
 make core`} />
                 <div className="mt-3 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                  <p className="text-[11px] text-white/50">Binary compiles to ~12MB. Zero runtime dependencies. Runs on Linux, macOS, Windows.</p>
+                  <p className="text-[11px] text-white/50">Binary compiles to ~14MB. Zero runtime dependencies. Runs on Linux, macOS, Windows.</p>
                 </div>
               </AccordionItem>
             </Reveal>
 
             <Reveal delay={160}>
-              <AccordionItem title="Configure AI Provider" tag="Step 2" defaultOpen={false}>
-                <p className="text-xs text-white/60 mb-4">Choose one of the following. Claude CLI is auto-detected if installed.</p>
+              <AccordionItem title="Configure Claude CLI" tag="Step 2" defaultOpen={false}>
+                <p className="text-xs text-white/60 mb-4">MUSASHI uses Claude CLI for its multi-agent debate system (4 Sonnet specialists + 1 Opus Judge).</p>
 
-                <div className="text-[10px] font-mono text-white/30 mb-1.5 uppercase tracking-wider">Option A: Claude Max Plan (recommended, no API key)</div>
+                <div className="text-[10px] font-mono text-white/30 mb-1.5 uppercase tracking-wider">Install Claude CLI</div>
                 <CodeBlock code={`npm i -g @anthropic-ai/claude-code
 claude login`} />
 
-                <div className="text-[10px] font-mono text-white/30 mb-1.5 mt-4 uppercase tracking-wider">Option B: Gemini API Key</div>
-                <CodeBlock code={`echo 'GEMINI_API_KEY=your-key-here' > .env`} />
-
-                <div className="text-[10px] font-mono text-white/30 mb-1.5 mt-4 uppercase tracking-wider">Option C: Any other provider</div>
-                <CodeBlock code={`# Set one or more in .env
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AI...`} />
-
                 <div className="mt-3 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                  <p className="text-[11px] text-white/50">Fallback order: Claude Local → Claude CLI → Claude API → Gemini → OpenAI. If one fails, the next is tried automatically. Quantitative commands work without any AI provider.</p>
+                  <p className="text-[11px] text-white/50">Claude CLI is required for the multi-agent debate system. Quantitative gate commands (scan, gates, discover) work without it. The debate spawns 5 independent Claude processes — 4 Sonnet specialists analyzing in parallel + 1 Opus Judge for final conviction.</p>
                 </div>
               </AccordionItem>
             </Reveal>
