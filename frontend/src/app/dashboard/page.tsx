@@ -9,10 +9,11 @@ import { TokenScanner } from "@/components/TokenScanner";
 import { ReputationPanel } from "@/components/ReputationPanel";
 import { StrikePublisher } from "@/components/StrikePublisher";
 import { StrikeLedger } from "@/components/StrikeLedger";
+import { DebateTerminal } from "@/components/DebateTerminal";
 import { GlassCard } from "@/components/GlassCard";
-import type { PipelineResult, SearchResult } from "@/types";
+import type { PipelineResult, SearchResult, DebateVerdict } from "@/types";
 
-type Tab = "scanner" | "gates" | "ledger" | "strike";
+type Tab = "scanner" | "gates" | "debate" | "ledger" | "strike";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>("scanner");
@@ -29,6 +30,11 @@ export default function DashboardPage() {
   // Selected token for strike
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [selectedChain, setSelectedChain] = useState<number>(1);
+
+  // Debate
+  const [debateToken, setDebateToken] = useState<string | null>(null);
+  const [debateChain, setDebateChain] = useState<number>(1);
+  const [debateVerdict, setDebateVerdict] = useState<DebateVerdict | null>(null);
 
   const handleSearch = useCallback(async (query: string) => {
     setLoading(true);
@@ -81,9 +87,21 @@ export default function DashboardPage() {
     handleGates(result.address, chain);
   }, [handleGates]);
 
+  const handleStartDebate = useCallback((token: string, chain: number) => {
+    setDebateToken(token);
+    setDebateChain(chain);
+    setDebateVerdict(null);
+    setActiveTab("debate");
+  }, []);
+
+  const handleDebateComplete = useCallback((result: DebateVerdict) => {
+    setDebateVerdict(result);
+  }, []);
+
   const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: "scanner", label: "Scanner", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
     { id: "gates", label: "Gates", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    { id: "debate", label: "Debate", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
     { id: "ledger", label: "Ledger", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
     { id: "strike", label: "Strike", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
   ];
@@ -227,6 +245,12 @@ export default function DashboardPage() {
                           <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
                             Chain: {gateResult.chain_id}
                           </span>
+                          <button
+                            onClick={() => handleStartDebate(gateResult.token, gateResult.chain_id)}
+                            className="text-xs bg-blue-50 text-blue-600 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 transition-colors cursor-pointer font-medium"
+                          >
+                            Run Debate
+                          </button>
                           {gateResult.status === "PASS" && (
                             <button
                               onClick={() => setActiveTab("strike")}
@@ -260,6 +284,38 @@ export default function DashboardPage() {
                   </div>
                 )}
               </GlassCard>
+            )}
+
+            {activeTab === "debate" && (
+              debateToken ? (
+                <DebateTerminal
+                  token={debateToken}
+                  chain={debateChain}
+                  onComplete={handleDebateComplete}
+                />
+              ) : (
+                <GlassCard strong className="p-7">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-slate-800">Multi-Agent Debate</h2>
+                  </div>
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-50 flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto">
+                      Run gate analysis on a token first, then click "Run Debate" to launch
+                      4 specialist AI agents (Sonnet) + 1 Opus Judge for full conviction analysis.
+                    </p>
+                  </div>
+                </GlassCard>
+              )
             )}
 
             {activeTab === "ledger" && (
