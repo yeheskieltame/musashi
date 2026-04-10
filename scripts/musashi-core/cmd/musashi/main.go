@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/chain"
@@ -41,13 +42,21 @@ var gatesCmd = &cobra.Command{
 
 var strikeCmd = &cobra.Command{
 	Use:   "strike [token_address]",
-	Short: "Publish a STRIKE conviction to 0G Chain",
+	Short: "Publish a STRIKE conviction to 0G Chain (only for high-conviction PASS results)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		convergence, _ := cmd.Flags().GetUint8("convergence")
 		evidence, _ := cmd.Flags().GetString("evidence")
 		tokenChain, _ := cmd.Flags().GetInt64("token-chain")
 		agentID, _ := cmd.Flags().GetUint64("agent-id")
+
+		if convergence < 3 || convergence > 4 {
+			return fmt.Errorf("convergence must be 3 or 4 (got %d). Only high-conviction results should be published as STRIKEs", convergence)
+		}
+
+		if evidence == "" {
+			return fmt.Errorf("evidence hash required. Store evidence first with 'musashi store', then pass the hash here")
+		}
 
 		result, err := chain.PublishStrike(agentID, args[0], tokenChain, convergence, evidence)
 		if err != nil {
@@ -61,15 +70,32 @@ var strikeCmd = &cobra.Command{
 
 var storeCmd = &cobra.Command{
 	Use:   "store [evidence_json]",
-	Short: "Store evidence to 0G Storage (file upload)",
+	Short: "Store evidence to 0G Storage (only for PASS/STRIKE results)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client := storage.NewOGStorageClient()
+		forceUpload, _ := cmd.Flags().GetBool("force")
 
-		var evidence interface{}
+		var evidence map[string]interface{}
 		if err := json.Unmarshal([]byte(args[0]), &evidence); err != nil {
 			return fmt.Errorf("invalid JSON evidence: %w", err)
 		}
+
+		// Guard: only upload evidence for high-conviction results
+		if !forceUpload {
+			status, _ := evidence["status"].(string)
+			verdict, _ := evidence["verdict"].(string)
+			pass, hasBool := evidence["pass"].(bool)
+
+			isPass := strings.EqualFold(status, "PASS") ||
+				strings.EqualFold(verdict, "PASS") ||
+				(hasBool && pass)
+
+			if !isPass && status != "" {
+				return fmt.Errorf("refusing to upload: evidence status is %q (not PASS). Only high-conviction STRIKE evidence should be stored on 0G Storage. Use --force to override", status)
+			}
+		}
+
+		client := storage.NewOGStorageClient()
 
 		result, err := client.StoreEvidence(evidence)
 		if err != nil {
@@ -311,6 +337,8 @@ func init() {
 
 	statusCmd.Flags().Uint64("agent-id", 0, "INFT agent token ID for per-agent reputation")
 	statusCmd.Flags().Bool("per-agent", false, "Query per-agent reputation instead of global")
+
+	storeCmd.Flags().Bool("force", false, "Force upload even if evidence status is not PASS")
 
 	searchCmd.Flags().Int("limit", 5, "Max results to return")
 
