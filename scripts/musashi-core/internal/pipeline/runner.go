@@ -115,13 +115,14 @@ func RunGates(token string, chainID int64) (*PipelineResult, error) {
 		result.AgeHours = tokenCtx.AgeHours
 	}
 
-	// Define gate sequence: 1, 2, 3, [4-5 agent], 6, 7
+	// Define gate sequence: all 7 gates.
+	// Gates 4 and 5 are AI-powered (Sonnet agent with WebSearch).
 	gateList := []gates.Gate{
-		gates.NewContractSafetyGate(),  // Gate 1
-		gates.NewLiquidityGate(),       // Gate 2 (age-aware)
-		gates.NewWalletsGate(),         // Gate 3 (age-aware)
-		// Gate 4 (Social) — agent-driven, skip
-		// Gate 5 (Narrative) — agent-driven, skip
+		gates.NewContractSafetyGate(),  // Gate 1 (age-aware, shared GoPlus)
+		gates.NewLiquidityGate(),       // Gate 2 (age-aware, shared GoPlus)
+		gates.NewWalletsGate(),         // Gate 3 (age-aware, shared GoPlus)
+		gates.NewSocialGate(),          // Gate 4 (AI-powered: Farcaster + WebSearch)
+		gates.NewNarrativeGate(),       // Gate 5 (AI-powered: WebSearch narrative analysis)
 		gates.NewTimingGate(),          // Gate 6
 		gates.NewCrossValidationGate(), // Gate 7
 	}
