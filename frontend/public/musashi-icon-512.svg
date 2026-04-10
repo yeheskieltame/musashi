@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#0C1829" stroke="#1e3a5f" stroke-width="2"/>
+
+  <!-- Left katana (longer) -->
+  <g transform="rotate(-25, 256, 256)">
+    <rect x="248" y="60" width="6" height="280" rx="3" fill="#7c8db5"/>
+    <rect x="246" y="55" width="10" height="12" rx="2" fill="#2563eb"/>
+    <rect x="244" y="340" width="14" height="6" rx="1" fill="#c9a33a"/>
+    <rect x="248" y="346" width="6" height="80" rx="3" fill="#1a1a2e"/>
+    <line x1="249" y1="350" x2="249" y2="420" stroke="#2a2a40" stroke-width="2"/>
+    <line x1="253" y1="350" x2="253" y2="420" stroke="#2a2a40" stroke-width="2"/>
+  </g>
+
+  <!-- Right katana (shorter - wakizashi) -->
+  <g transform="rotate(25, 256, 256)">
+    <rect x="250" y="100" width="5" height="220" rx="2.5" fill="#8e9fc2"/>
+    <rect x="248" y="95" width="9" height="10" rx="2" fill="#7c3aed"/>
+    <rect x="247" y="320" width="11" height="5" rx="1" fill="#c9a33a"/>
+    <rect x="250" y="325" width="5" height="65" rx="2.5" fill="#1a1a2e"/>
+    <line x1="251" y1="329" x2="251" y2="386" stroke="#2a2a40" stroke-width="1.5"/>
+    <line x1="254" y1="329" x2="254" y2="386" stroke="#2a2a40" stroke-width="1.5"/>
+  </g>
+
+  <!-- Kanji 武蔵 subtle watermark -->
+  <text x="256" y="480" text-anchor="middle" font-family="serif" font-size="28" fill="#1e3a5f" opacity="0.4">武蔵</text>
+</svg>
