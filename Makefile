@@ -1,6 +1,6 @@
 .PHONY: core test-core contracts test-contracts deploy deploy-inft deploy-link skill gates discover mint-agent store-evidence status agent-info record-outcome clean all test
 
-OG_TESTNET_RPC ?= https://evmrpc-testnet.0g.ai
+OG_DEFAULT_RPC ?= https://evmrpc.0g.ai
 
 core:
 	cd scripts/musashi-core && go build -o musashi-core ./cmd/musashi/
@@ -16,8 +16,8 @@ test-contracts:
 	cd contracts && forge test -vvv
 
 deploy:
-	@echo "=== Deploying to 0G Galileo Testnet ==="
-	@echo "Note: forge script doesn't support chain 16602, using forge create + cast send"
+	@echo "=== Deploying to 0G Mainnet ==="
+	@echo "Note: forge script doesn't support chain 16661, using forge create + cast send"
 	@echo ""
 	@echo "--- Setup keystore (one-time): ---"
 	@echo "  cast wallet import musashi-deployer --interactive"
@@ -46,13 +46,13 @@ endif
 
 deploy-conviction:
 	cd contracts && forge create src/ConvictionLog.sol:ConvictionLog \
-		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
+		--rpc-url $${OG_CHAIN_RPC:-$(OG_DEFAULT_RPC)} \
 		$(SIGNER_FLAG) --legacy --broadcast
 
 deploy-inft:
 	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-inft CONVICTION_LOG=0x... [ACCOUNT=name]" && exit 1)
 	cd contracts && forge create src/MusashiINFT.sol:MusashiINFT \
-		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
+		--rpc-url $${OG_CHAIN_RPC:-$(OG_DEFAULT_RPC)} \
 		$(SIGNER_FLAG) --legacy --broadcast --gas-limit 3000000 \
 		--constructor-args $(CONVICTION_LOG)
 
@@ -60,7 +60,7 @@ deploy-link:
 	@test -n "$(CONVICTION_LOG)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x... [ACCOUNT=name]" && exit 1)
 	@test -n "$(INFT)" || (echo "Usage: make deploy-link CONVICTION_LOG=0x... INFT=0x... [ACCOUNT=name]" && exit 1)
 	cast send $(CONVICTION_LOG) "setINFT(address)" $(INFT) \
-		--rpc-url $${OG_CHAIN_RPC:-$(OG_TESTNET_RPC)} \
+		--rpc-url $${OG_CHAIN_RPC:-$(OG_DEFAULT_RPC)} \
 		$(SIGNER_FLAG) --legacy
 
 skill:
