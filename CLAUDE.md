@@ -76,6 +76,14 @@ musashi/
 │   ├── status.md                    Check on-chain state + reputation
 │   └── discover.md                  Raw token discovery with pre-screening
 │
+├── frontend/                        ← Next.js dashboard (0G Mainnet)
+│   ├── src/app/                     Landing page + interactive dashboard
+│   ├── src/components/              TokenScanner, StrikeLedger, StrikePublisher,
+│   │                                AgentChat, ReputationPanel, GatePipeline,
+│   │                                CommandBar, WalletConnect
+│   ├── src/lib/contracts.ts         On-chain ABIs + mainnet addresses
+│   └── src/lib/wagmi.ts             0G Mainnet chain definition (ID: 16661)
+│
 ├── scripts/
 │   ├── musashi-core/                ← Go binary: performance-critical data engine
 │   │   ├── cmd/musashi/main.go      CLI entry point (cobra)
@@ -350,12 +358,12 @@ Response includes:
   owner_address        → informational
   creator_address      → Gate 3: track deployer
 
-Chain IDs: ETH=1, BSC=56, Polygon=137, Arbitrum=42161, Base=8453
+Chain IDs: ETH=1, BSC=56, Polygon=137, Arbitrum=42161, Base=8453, 0G=16661
 ```
 
 **Docs:** https://docs.gopluslabs.io/reference/api-overview
 
-### DexScreener — Gates 2, 6, 7
+### DexScreener — Gates 2, 3, 7
 
 **Base:** `https://api.dexscreener.com`
 **Auth:** None **Limit:** ~30 req/min
@@ -453,10 +461,11 @@ GET /coins/categories
 
 ```
 Ethereum:  https://eth.llamarpc.com
-Base:      https://mainnet.base.org
-Arbitrum:  https://arb1.arbitrum.io/rpc
 BSC:       https://bsc-dataseed.binance.org
-0G Chain:  check docs.0g.ai for current RPC
+Polygon:   https://polygon-rpc.com
+Arbitrum:  https://arb1.arbitrum.io/rpc
+Base:      https://mainnet.base.org
+0G Chain:  https://evmrpc.0g.ai
 ```
 
 ---
@@ -553,7 +562,7 @@ Both contracts deployed on 0G Mainnet (Chain ID: 16661):
 
 ### ConvictionLog.sol (deployed version)
 
-Packed storage (3 slots per strike). O(1) cached reputation (no loops). Ownable2Step + Pausable.
+Packed storage (4 slots per strike). O(1) cached reputation (no loops). Ownable2Step + Pausable.
 
 Key types and functions — **note `uint64 chainId` and `int128 outcomeBps`, NOT uint256/int256**:
 
@@ -566,9 +575,20 @@ struct Strike {
     uint64  chainId;      // slot 2: chainId(8) + timestamp(6) + outcomeBps(16)
     uint48  timestamp;
     int128  outcomeBps;
+    uint256 agentId;     // slot 3
 }
 
-// Cached reputation state (O(1), updated in recordOutcome)
+// Per-agent reputation (2 slots)
+struct AgentReputation {
+    uint64 strikeCount;
+    uint64 totalFilled;
+    uint64 wins;
+    uint64 losses;
+    int128 totalReturnBps;
+}
+
+// Cached global reputation state (O(1), updated in recordOutcome)
+uint64  public totalStrikes;
 uint64  public totalFilled;
 uint64  public wins;
 uint64  public losses;
@@ -579,6 +599,7 @@ function recordOutcome(uint256 _id, int128 _returnBps)
 function getStrike(uint256 _id) → Strike memory
 function strikeCount() → uint256
 function reputation() → (uint256 total, uint256 w, uint256 l, int256 totalReturn)
+function agentReputation(uint256 _agentId) → (uint256 strikes, uint256 filled, uint256 w, uint256 l, int256 totalReturn)
 ```
 
 ### MusashiINFT.sol (deployed version)
@@ -685,7 +706,7 @@ OG_STORAGE_INDEXER=https://indexer-storage-turbo.0g.ai
 6. **2 contracts deployed, 0G Mainnet, real activity.** ConvictionLog + MusashiINFT both live with verifiable transactions.
 7. **INFT for deep 0G integration.** ERC-7857 tokenized agent identity + reputation on-chain. MUSASHI minted as token ID 0.
 8. **Free APIs only.** No Twitter API key. Agent browses public X/Twitter via OpenClaw browser.
-9. **Demo > dashboard.** No frontend needed. 3-min video showing real agent behavior wins.
+9. **Frontend dashboard exists.** Next.js app with wallet connect, strike ledger, reputation panel, token scanner. 3-min demo video should show both CLI and dashboard.
 10. **Ship working code.** Judges check commits. Better to have 5 gates working perfectly than 7 gates half-broken.
 11. **Go binary accepts 0x prefix on private keys.** `stripHexPrefix()` handles both formats.
 12. **GoPlus returns holder_count as string, not int.** All GoPlus numeric fields use string type in the Go struct.

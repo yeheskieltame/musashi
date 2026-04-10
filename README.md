@@ -27,6 +27,17 @@ MUSASHI builds the missing **reputation layer** for 0G's agent ecosystem.
 
 Network: 0G-Mainnet, Chain ID: 16661
 
+### Supported Chains (Token Analysis)
+
+| Chain | ID | RPC |
+|-------|-----|-----|
+| Ethereum | 1 | eth.llamarpc.com |
+| BSC | 56 | bsc-dataseed.binance.org |
+| Polygon | 137 | polygon-rpc.com |
+| Arbitrum | 42161 | arb1.arbitrum.io/rpc |
+| Base | 8453 | mainnet.base.org |
+| 0G | 16661 | evmrpc.0g.ai |
+
 ---
 
 ## Problem
@@ -170,7 +181,7 @@ If PASS: evidence stored to 0G Storage, STRIKE published to ConvictionLog on 0G 
 
 **The core protocol.** Any INFT-holding agent can log conviction STRIKEs. Each strike records: which agent (`agentId`), which token, which chain, convergence score, and evidence hash (link to 0G Storage).
 
-- **Per-agent reputation** -- `agentReputation(agentId)` returns strikes, wins, losses, cumulative return for a specific agent
+- **Per-agent reputation** -- `agentReputation(agentId)` returns strikes, filled, wins, losses, cumulative return for a specific agent
 - **Global reputation** -- `reputation()` returns aggregate stats across all agents
 - **Outcome recording** -- contract owner records outcomes (objective facts: token went up/down X%)
 - **Access control** -- `logStrike` verifies caller owns the INFT via cross-contract call to MusashiINFT. No one can fake another agent's track record
@@ -233,7 +244,7 @@ Social analysis (X/Twitter, Telegram) is done via the agent's investigation tool
 
 ### Prerequisites
 
-- Go 1.22+ (see `go.mod` for exact version)
+- Go 1.26+ (see `go.mod` for exact version)
 - Foundry (`curl -L https://foundry.paradigm.xyz | bash && foundryup`)
 - `0g-storage-client` CLI
 - `make` (included on macOS; on Linux install via `sudo apt install build-essential`)
@@ -291,7 +302,7 @@ OG_STORAGE_RPC=https://evmrpc.0g.ai
 OG_STORAGE_INDEXER=https://indexer-storage-turbo.0g.ai
 ```
 
-Get testnet tokens from [faucet.0g.ai](https://faucet.0g.ai/) (testnet only; mainnet requires real 0G tokens).
+Mainnet requires real 0G (A0GI) tokens for gas. Acquire A0GI via [0G's official channels](https://0g.ai).
 
 ### Load Environment
 
@@ -334,12 +345,12 @@ set -a && source .env && set +a
 
 ```
 musashi-core scan
-  --chain int64        Filter by chain ID (0=all chains, 1=ETH, 56=BSC, 8453=Base) (default 0)
+  --chain int64        Filter by chain ID (0=all, 1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base, 16661=0G) (default 0)
   --limit int          Max tokens to return (default 10)
   --gates              Auto-run gate pipeline on top 5 candidates
 
 musashi-core gates [token_address]
-  --chain int64        Chain ID: 1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base (default 1)
+  --chain int64        Chain ID: 1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base, 16661=0G (default 1)
   --output string      Output format: json or pretty (default "json")
 
 musashi-core search [query]
@@ -450,7 +461,7 @@ set -a && source .env && set +a
 openclaw skills install musashi
 ```
 
-The Go binary (`musashi-core`) is built automatically from source during install (requires Go 1.21+).
+The Go binary (`musashi-core`) is built automatically from source during install (requires Go 1.26+).
 
 #### Configure Environment
 
@@ -548,7 +559,7 @@ set -a && source .env && set +a   # Load environment
 |---------|-------------|
 | `/analyze <token>` | Full 8-step pipeline: gates → specialists → debate → judge |
 | `/scan [chain] [--gates]` | Scan, score, and rank token opportunities |
-| `/gates <token>` | Run 5 automated elimination gates only |
+| `/gates <token>` | Run 5 automated gates (1,2,3,6,7) via Go binary |
 | `/strike <token> <args>` | Publish STRIKE conviction to 0G Chain |
 | `/status` | Check on-chain reputation and agent state |
 | `/discover [chain]` | Raw token discovery with pre-screening |
@@ -567,6 +578,37 @@ Claude Code uses `Bash` to run musashi-core (instead of OpenClaw's `exec`) and `
 
 ---
 
+## Frontend Dashboard
+
+MUSASHI includes a Next.js web dashboard that connects directly to the deployed contracts on 0G Mainnet.
+
+### Features
+
+| Component | Description |
+|-----------|-------------|
+| Token Scanner | Search and scan tokens across 6 chains (ETH, BSC, Polygon, Arbitrum, Base, 0G) |
+| Gate Pipeline | Visual gate results with pass/fail per gate |
+| Strike Ledger | Browse all published STRIKEs from ConvictionLog |
+| Strike Publisher | Publish STRIKEs directly from the browser (wallet required) |
+| Reputation Panel | View per-agent and global reputation stats |
+| Agent Chat | Interactive agent interface for analysis |
+| Wallet Connect | MetaMask / injected wallet connection to 0G Mainnet |
+
+### Run Locally
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+# Open http://localhost:3000
+```
+
+The dashboard reads from the same mainnet contracts:
+- ConvictionLog: `0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed`
+- MusashiINFT: `0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32`
+
+---
+
 ## Project Structure
 
 ```
@@ -579,9 +621,16 @@ musashi/
 │   ├── strike.md                    Publish STRIKE (/strike)
 │   ├── status.md                    On-chain status (/status)
 │   └── discover.md                  Token discovery (/discover)
+├── frontend/                        Next.js dashboard (0G Mainnet)
+│   ├── src/app/                     Landing page + interactive dashboard
+│   ├── src/components/              TokenScanner, StrikeLedger, StrikePublisher,
+│   │                                AgentChat, ReputationPanel, GatePipeline,
+│   │                                CommandBar, WalletConnect
+│   ├── src/lib/contracts.ts         On-chain ABIs + mainnet contract addresses
+│   └── src/lib/wagmi.ts             0G Mainnet chain definition (ID: 16661)
 ├── scripts/
 │   ├── musashi-core/                Go binary source
-│   │   ├── cmd/musashi/main.go      CLI entry (12 commands incl. scan)
+│   │   ├── cmd/musashi/main.go      CLI entry point (12 commands)
 │   │   └── internal/
 │   │       ├── data/                API clients: goplus, dexscreener, geckoterminal,
 │   │       │                        coingecko, defillama, farcaster, rpc
@@ -661,6 +710,7 @@ musashi/
 - [x] 0G Storage integration with evidence uploads
 - [x] INFT (ERC-7857) agent tokenization
 - [x] README with architecture + 0G integration explanation + setup guide
+- [x] Next.js frontend dashboard with wallet connect + on-chain reads/writes
 - [ ] Demo video (3 minutes max)
 - [ ] Public X post with #0GHackathon #BuildOn0G
 
@@ -676,7 +726,7 @@ musashi/
 
 ## 30-Word Description
 
-> MUSASHI is an OpenClaw Skill, Claude Code integration, and on-chain reputation protocol on 0G. AI agents analyze tokens through 7 elimination gates, publish conviction signals (STRIKEs) to 0G Chain, and store verifiable evidence on 0G Storage.
+> MUSASHI is an on-chain reputation protocol on 0G where AI agents analyze tokens through 7 elimination gates, publish conviction STRIKEs to 0G Chain, and store verifiable evidence on 0G Storage. Runs as an OpenClaw Skill, Claude Code integration, and Next.js dashboard.
 
 ---
 

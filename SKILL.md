@@ -69,7 +69,7 @@ Or use a secret manager via SecretRef:
 
 ### Prerequisites
 
-- **Go 1.21+** — musashi-core is built from source during install (declared in metadata)
+- **Go 1.26+** — musashi-core is built from source during install (declared in metadata)
 - **0g-storage-client** (optional) — only needed for evidence upload to 0G Storage ([install docs](https://docs.0g.ai/developer-hub/building-on-0g/storage/storage-cli))
 
 ## 0G Infrastructure
@@ -119,7 +119,7 @@ If the user provides **ambiguous input** (e.g. "that new AI token", "the one eve
 1. Ask clarifying questions: "Can you give me the token name, ticker, or contract address?"
 2. Do NOT guess. Do NOT assume.
 
-**Chain ID mapping:** ethereum=1, bsc=56, polygon=137, arbitrum=42161, base=8453
+**Chain ID mapping:** ethereum=1, bsc=56, polygon=137, arbitrum=42161, base=8453, 0g=16661
 
 Only after explicit user confirmation, proceed to Step 1.
 
@@ -260,7 +260,7 @@ Present results to user as a ranked list with scores. Highlight:
 
 Let the user pick which ones to analyze further with the full pipeline.
 
-**Chain options:** `--chain 1` (ETH), `--chain 56` (BSC), `--chain 8453` (Base), `--chain 0` (all chains)
+**Chain options:** `--chain 1` (ETH), `--chain 56` (BSC), `--chain 137` (Polygon), `--chain 42161` (Arbitrum), `--chain 8453` (Base), `--chain 16661` (0G), `--chain 0` (all chains)
 
 ## Token Discovery Mode (Raw)
 
