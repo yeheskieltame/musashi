@@ -4,6 +4,24 @@ import { resolve } from "path";
 import { readFileSync } from "fs";
 
 const PROJECT_ROOT = resolve(process.cwd(), "..");
+const MAX_MESSAGE_LENGTH = 4000;
+
+// Simple in-memory rate limiter (per-IP, 10 requests per minute)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 10;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
 
 // Load .env from project root for child processes
 function loadParentEnv(): Record<string, string> {
@@ -29,10 +47,32 @@ const parentEnv = loadParentEnv();
 const childEnv = { ...process.env, ...parentEnv };
 
 export async function POST(request: NextRequest) {
-  const { message, agent, sessionId } = await request.json();
+  // Rate limiting
+  const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!checkRateLimit(clientIp)) {
+    return Response.json({ error: "Rate limit exceeded. Try again in a minute." }, { status: 429 });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const { message, agent, sessionId } = body;
 
   if (!message || typeof message !== "string") {
     return Response.json({ error: "message required" }, { status: 400 });
+  }
+
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return Response.json({ error: `Message too long (max ${MAX_MESSAGE_LENGTH} chars)` }, { status: 400 });
+  }
+
+  // Sanitize sessionId to prevent argument injection
+  if (sessionId !== undefined && (typeof sessionId !== "string" || !/^[\w-]+$/.test(sessionId))) {
+    return Response.json({ error: "Invalid sessionId format" }, { status: 400 });
   }
 
   const agentType = agent === "openclaw" ? "openclaw" : "claude";
@@ -48,6 +88,7 @@ function streamClaude(message: string, sessionId?: string): Response {
   const args = [
     "-p",
     "--verbose",
+    "--model", "sonnet",
     "--output-format", "stream-json",
     "--allowedTools", "Bash,Read,Glob,Grep,WebSearch,WebFetch",
     "--no-session-persistence",

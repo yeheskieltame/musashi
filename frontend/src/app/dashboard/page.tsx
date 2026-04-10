@@ -8,16 +8,15 @@ import { GatePipeline } from "@/components/GatePipeline";
 import { TokenScanner } from "@/components/TokenScanner";
 import { ReputationPanel } from "@/components/ReputationPanel";
 import { StrikePublisher } from "@/components/StrikePublisher";
-import { AgentChat } from "@/components/AgentChat";
+import { StrikeLedger } from "@/components/StrikeLedger";
 import { GlassCard } from "@/components/GlassCard";
 import type { PipelineResult, SearchResult } from "@/types";
 
-type Tab = "scanner" | "gates" | "strike";
+type Tab = "scanner" | "gates" | "ledger" | "strike";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>("scanner");
   const [loading, setLoading] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
 
   // Gate results
   const [gateResult, setGateResult] = useState<PipelineResult | null>(null);
@@ -82,47 +81,35 @@ export default function DashboardPage() {
     handleGates(result.address, chain);
   }, [handleGates]);
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "scanner", label: "Scanner" },
-    { id: "gates", label: "Gates" },
-    { id: "strike", label: "Strike" },
+  const tabs: { id: Tab; label: string; icon: string }[] = [
+    { id: "scanner", label: "Scanner", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
+    { id: "gates", label: "Gates", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    { id: "ledger", label: "Ledger", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
+    { id: "strike", label: "Strike", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
   ];
 
   return (
-    <div className="dashboard-bg min-h-screen">
+    <div className="dashboard-bg min-h-screen grid-bg-light">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-strong">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-50 glass-strong shadow-lg shadow-blue-100/30">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-gradient font-bold text-lg hover:opacity-80 transition-opacity">
-              MUSASHI
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <img src="/musashi-logo.png" alt="MUSASHI" className="w-5 h-5" />
+              <span className="text-gradient font-bold text-lg">MUSASHI</span>
             </Link>
-            <span className="text-slate-300">|</span>
-            <span className="text-sm text-slate-500">Dashboard</span>
+            <div className="w-px h-5 bg-slate-200" />
+            <span className="text-sm font-medium text-slate-400">Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setChatOpen(!chatOpen)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all cursor-pointer ${
-                chatOpen
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "glass text-slate-600 hover:bg-blue-50"
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              Agent
-            </button>
             <WalletConnect />
           </div>
         </div>
       </header>
 
-      {/* Main layout: content + chat panel */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 flex gap-6">
-        {/* Left: Dashboard content */}
-        <main className={`space-y-6 min-w-0 transition-all duration-300 ${chatOpen ? "flex-1" : "w-full"}`}>
+      {/* Main content */}
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
+        <main className="space-y-6">
           {/* Reputation */}
           <section>
             <ReputationPanel />
@@ -135,26 +122,26 @@ export default function DashboardPage() {
 
           {/* Search Results Dropdown */}
           {showSearch && searchResults.length > 0 && (
-            <GlassCard strong className="p-4 -mt-2">
-              <h4 className="text-xs font-semibold text-slate-500 uppercase mb-3">Search Results</h4>
-              <div className="space-y-2">
+            <GlassCard strong className="p-5 -mt-2">
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Search Results</h4>
+              <div className="space-y-1">
                 {searchResults.map((r) => (
                   <button
                     key={`${r.address}-${r.chain}`}
                     onClick={() => handleSelectFromSearch(r)}
-                    className="w-full text-left flex items-center justify-between p-3 rounded-xl hover:bg-blue-50/50 transition-colors cursor-pointer"
+                    className="w-full text-left flex items-center justify-between p-3 rounded-xl hover:bg-blue-50/60 transition-all cursor-pointer group"
                   >
                     <div>
-                      <span className="font-medium text-slate-800">{r.name}</span>
-                      <span className="text-sm text-slate-500 ml-2">${r.symbol}</span>
-                      <span className="text-xs text-slate-400 ml-2">{r.chain}</span>
+                      <span className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{r.name}</span>
+                      <span className="text-sm text-slate-400 ml-2">${r.symbol}</span>
+                      <span className="text-[10px] ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{r.chain}</span>
                       <div className="text-xs font-mono text-slate-400 mt-0.5">
                         {r.address.slice(0, 10)}...{r.address.slice(-6)}
                       </div>
                     </div>
                     <div className="text-right text-xs text-slate-500 font-mono">
                       <div>${r.price_usd}</div>
-                      <div>Liq: ${(r.liquidity_usd || 0).toLocaleString()}</div>
+                      <div className="text-slate-400">Liq: ${(r.liquidity_usd || 0).toLocaleString()}</div>
                     </div>
                   </button>
                 ))}
@@ -163,17 +150,20 @@ export default function DashboardPage() {
           )}
 
           {/* Tabs */}
-          <div className="flex gap-1 glass rounded-full p-1 w-fit">
+          <div className="flex gap-1 glass rounded-full p-1 w-fit shadow-sm shadow-blue-100/30">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`rounded-full px-5 py-2 text-sm font-medium transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all cursor-pointer ${
                   activeTab === t.id
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-slate-600 hover:bg-blue-50/50"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-blue-50/50"
                 }`}
               >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={t.icon} />
+                </svg>
                 {t.label}
               </button>
             ))}
@@ -182,49 +172,65 @@ export default function DashboardPage() {
           {/* Tab Content */}
           <section>
             {activeTab === "scanner" && (
-              <GlassCard strong className="p-6">
-                <h2 className="text-lg font-semibold text-slate-800 mb-4">Token Scanner</h2>
-                <p className="text-sm text-slate-500 mb-6">
-                  Fetch, score, and rank token opportunities automatically. Select a token to run gate analysis.
-                </p>
-                <TokenScanner onSelectToken={handleSelectFromScanner} />
+              <GlassCard strong className="p-7">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-800">Token Scanner</h2>
+                    <p className="text-sm text-slate-400">
+                      Fetch, score, and rank token opportunities automatically.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <TokenScanner onSelectToken={handleSelectFromScanner} />
+                </div>
               </GlassCard>
             )}
 
             {activeTab === "gates" && (
-              <GlassCard strong className="p-6">
-                <h2 className="text-lg font-semibold text-slate-800 mb-4">Gate Analysis</h2>
-                {loading && (
-                  <div className="flex items-center gap-3 text-slate-500 py-8 justify-center">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              <GlassCard strong className="p-7">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    Running gates...
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-800">Gate Analysis</h2>
+                </div>
+
+                {loading && (
+                  <div className="flex items-center gap-3 text-slate-400 py-12 justify-center">
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                    <span className="text-sm">Running elimination gates...</span>
                   </div>
                 )}
 
                 {gateError && !loading && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="bg-red-50 border border-red-100 rounded-xl p-4">
                     <p className="text-sm text-red-600">{gateError}</p>
                   </div>
                 )}
 
                 {gateResult && !loading && (
                   <>
-                    <div className="mb-4 p-3 bg-slate-50 rounded-xl">
+                    <div className="mb-5 p-4 glass rounded-xl">
                       <div className="flex items-center justify-between">
-                        <div className="font-mono text-sm text-slate-700 truncate">
+                        <div className="font-mono text-sm text-slate-600 truncate">
                           {gateResult.token}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-500">
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
                             Chain: {gateResult.chain_id}
                           </span>
                           {gateResult.status === "PASS" && (
                             <button
                               onClick={() => setActiveTab("strike")}
-                              className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg px-3 py-1.5 hover:bg-emerald-100 transition-colors cursor-pointer"
+                              className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg px-3 py-1.5 hover:bg-emerald-100 transition-colors cursor-pointer font-medium"
                             >
                               Publish STRIKE
                             </button>
@@ -242,11 +248,22 @@ export default function DashboardPage() {
                 )}
 
                 {!gateResult && !loading && !gateError && (
-                  <p className="text-sm text-slate-400 text-center py-8">
-                    Enter a token address above or select from the Scanner to run gate analysis.
-                  </p>
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-slate-400">
+                      Enter a token address above or select from the Scanner to run gate analysis.
+                    </p>
+                  </div>
                 )}
               </GlassCard>
+            )}
+
+            {activeTab === "ledger" && (
+              <StrikeLedger />
             )}
 
             {activeTab === "strike" && (
@@ -258,28 +275,6 @@ export default function DashboardPage() {
             )}
           </section>
         </main>
-
-        {/* Right: Agent Chat Panel */}
-        {chatOpen && (
-          <aside className="w-[420px] shrink-0 hidden lg:block">
-            <div className="sticky top-20">
-              <GlassCard strong className="p-5 h-[calc(100vh-6rem)] flex flex-col">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-semibold text-slate-800">Agent Chat</h2>
-                  <button
-                    onClick={() => setChatOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <AgentChat />
-              </GlassCard>
-            </div>
-          </aside>
-        )}
       </div>
     </div>
   );
