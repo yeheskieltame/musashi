@@ -790,8 +790,8 @@ export default function LandingPage() {
                 <text x="360" y="228" textAnchor="middle" fill="#a78bfa" fontSize="9" fontWeight="600">ANALYSIS LAYER</text>
                 {[
                   ["7 Gates", "sequential elimination"],
-                  ["4 Specialists", "cross-domain"],
-                  ["4 Specialists", "multi-agent debate"],
+                  ["4 Specialists", "cross-domain analysis"],
+                  ["Opus Judge", "final conviction verdict"],
                   ["Conviction Judge", "final scoring"],
                   ["Age Tiers", "fresh/early/established"],
                 ].map(([name, detail], i) => (
