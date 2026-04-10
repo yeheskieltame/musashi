@@ -48,6 +48,7 @@ export function CommandBar({ onSearch, onGates, loading }: Props) {
         onChange={(e) => setChain(Number(e.target.value))}
         className="glass-strong rounded-xl px-3 py-3.5 text-sm text-slate-700 outline-none cursor-pointer"
       >
+        <option value={16661}>0G</option>
         <option value={1}>ETH</option>
         <option value={56}>BSC</option>
         <option value={8453}>Base</option>

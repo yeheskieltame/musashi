@@ -13,12 +13,14 @@ export function TokenScanner({ onSelectToken }: Props) {
   const [chain, setChain] = useState(0);
   const [loading, setLoading] = useState(false);
   const [tokens, setTokens] = useState<ScanToken[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [withGates, setWithGates] = useState(false);
   const [totalFound, setTotalFound] = useState(0);
 
   async function handleScan() {
     setLoading(true);
     setTokens([]);
+    setError(null);
     try {
       const params = new URLSearchParams({
         chain: String(chain),
@@ -30,8 +32,9 @@ export function TokenScanner({ onSelectToken }: Props) {
       if (data.error) throw new Error(data.error);
       setTokens(data.top_picks || []);
       setTotalFound(data.total_found || 0);
-    } catch {
+    } catch (e: unknown) {
       setTokens([]);
+      setError(e instanceof Error ? e.message : "Scan failed. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -93,6 +96,13 @@ export function TokenScanner({ onSelectToken }: Props) {
           </span>
         )}
       </div>
+
+      {/* Error */}
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       {/* Results */}
       {tokens.length > 0 && (

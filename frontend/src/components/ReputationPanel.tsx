@@ -8,9 +8,11 @@ export function ReputationPanel() {
   const [rep, setRep] = useState<ReputationResult | null>(null);
   const [agent, setAgent] = useState<AgentInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
+      setError(null);
       try {
         const [repRes, agentRes] = await Promise.all([
           fetch("/api/status"),
@@ -20,8 +22,11 @@ export function ReputationPanel() {
         const agentData = await agentRes.json();
         if (!repData.error) setRep(repData);
         if (!agentData.error) setAgent(agentData);
+        if (repData.error && agentData.error) {
+          setError("Could not load reputation data. The backend may be unreachable.");
+        }
       } catch {
-        // silently handle
+        setError("Failed to connect to the API. Check that the backend is running.");
       } finally {
         setLoading(false);
       }
@@ -37,6 +42,14 @@ export function ReputationPanel() {
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
         Loading reputation...
+      </div>
+    );
+  }
+
+  if (error && !rep && !agent) {
+    return (
+      <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-700">
+        {error}
       </div>
     );
   }

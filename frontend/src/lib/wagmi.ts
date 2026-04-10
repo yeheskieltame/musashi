@@ -1,4 +1,5 @@
 import { http, createConfig } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { defineChain } from "viem";
 
 export const ogMainnet = defineChain({
@@ -19,6 +20,7 @@ export const ogMainnet = defineChain({
 
 export const config = createConfig({
   chains: [ogMainnet],
+  connectors: [injected()],
   transports: {
     [ogMainnet.id]: http(),
   },

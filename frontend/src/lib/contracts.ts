@@ -46,6 +46,7 @@ export const CONVICTION_LOG_ABI = [
           { name: "chainId", type: "uint64" },
           { name: "timestamp", type: "uint48" },
           { name: "outcomeBps", type: "int128" },
+          { name: "agentId", type: "uint256" },
         ],
       },
     ],
@@ -76,6 +77,7 @@ export const CONVICTION_LOG_ABI = [
     inputs: [{ name: "_agentId", type: "uint256" }],
     outputs: [
       { name: "strikes", type: "uint256" },
+      { name: "filled", type: "uint256" },
       { name: "w", type: "uint256" },
       { name: "l", type: "uint256" },
       { name: "totalReturn", type: "int256" },

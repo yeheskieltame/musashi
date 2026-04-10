@@ -264,6 +264,7 @@ export function AgentChat() {
             type="button"
             onClick={handleCancel}
             className="bg-red-500 text-white rounded-xl px-5 py-3 text-sm font-medium hover:bg-red-600 transition-all cursor-pointer"
+            aria-label="Cancel request"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -274,6 +275,7 @@ export function AgentChat() {
             type="submit"
             disabled={!input.trim()}
             className={`bg-gradient-to-r ${cfg.color} text-white rounded-xl px-5 py-3 text-sm font-medium hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer`}
+            aria-label="Send message"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />

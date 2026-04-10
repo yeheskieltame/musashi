@@ -71,6 +71,8 @@ export function GatePipeline({ gates, tokenAge, overallStatus }: Props) {
               <button
                 onClick={() => setExpanded(isExpanded ? null : i)}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer text-left"
+                aria-expanded={isExpanded}
+                aria-label={`Gate ${i + 1}: ${label} - ${status}`}
               >
                 {/* Step number */}
                 <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">

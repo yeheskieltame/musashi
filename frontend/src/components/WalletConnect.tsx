@@ -1,11 +1,10 @@
 "use client";
 
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { injected } from "wagmi/connectors";
 
 export function WalletConnect({ compact = false }: { compact?: boolean }) {
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
   if (isConnected && address) {
@@ -19,7 +18,7 @@ export function WalletConnect({ compact = false }: { compact?: boolean }) {
         {!compact && (
           <button
             onClick={() => disconnect()}
-            className="text-xs text-slate-500 hover:text-red-500 transition-colors px-2 py-1"
+            className="text-xs text-slate-500 hover:text-red-500 transition-colors px-2 py-1 cursor-pointer"
           >
             Disconnect
           </button>
@@ -28,9 +27,16 @@ export function WalletConnect({ compact = false }: { compact?: boolean }) {
     );
   }
 
+  const handleConnect = () => {
+    const connector = connectors[0];
+    if (connector) {
+      connect({ connector });
+    }
+  };
+
   return (
     <button
-      onClick={() => connect({ connector: injected() })}
+      onClick={handleConnect}
       className="bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-full px-5 py-2.5 text-sm font-medium hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
     >
       Connect Wallet

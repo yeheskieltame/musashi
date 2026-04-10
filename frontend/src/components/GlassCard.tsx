@@ -6,6 +6,7 @@ interface GlassCardProps {
   hover?: boolean;
   dark?: boolean;
   strong?: boolean;
+  glow?: boolean;
 }
 
 export function GlassCard({
@@ -14,17 +15,22 @@ export function GlassCard({
   hover = false,
   dark = false,
   strong = false,
+  glow = false,
 }: GlassCardProps) {
   const base = dark
-    ? strong
-      ? "glass-dark-strong"
-      : "glass-dark"
+    ? glow
+      ? "glass-dark-glow"
+      : strong
+        ? "glass-dark-strong"
+        : "glass-dark"
     : strong
-      ? "glass-strong"
+      ? "glass-strong shadow-lg shadow-blue-100/50"
       : "glass";
 
   const hoverClass = hover
-    ? "transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-200/60"
+    ? dark
+      ? "transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-500/10 card-shine"
+      : "transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-200/60"
     : "";
 
   return (

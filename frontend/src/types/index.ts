@@ -105,7 +105,7 @@ export interface StoreResult {
   download_cmd: string;
 }
 
-export type ChainId = 0 | 1 | 56 | 137 | 42161 | 8453;
+export type ChainId = 0 | 1 | 56 | 137 | 42161 | 8453 | 16661;
 
 export const CHAIN_NAMES: Record<number, string> = {
   0: "All Chains",
@@ -114,6 +114,7 @@ export const CHAIN_NAMES: Record<number, string> = {
   137: "Polygon",
   42161: "Arbitrum",
   8453: "Base",
+  16661: "0G Chain",
 };
 
 export const CHAIN_ICONS: Record<number, string> = {
@@ -122,4 +123,5 @@ export const CHAIN_ICONS: Record<number, string> = {
   137: "MATIC",
   42161: "ARB",
   8453: "BASE",
+  16661: "0G",
 };
