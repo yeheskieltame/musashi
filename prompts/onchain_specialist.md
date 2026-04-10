@@ -29,8 +29,16 @@ Assess the token's holder distribution and trading behavior. Determine if real p
 
 3. **Smart Money Signals**
    - Are known smart money addresses accumulating?
-   - Is the deployer/creator still holding?
-   - Any notable wallet patterns (identical amounts, sequential timing)?
+   - Is the deployer/creator still holding or have they sold?
+   - Any notable wallet patterns (identical buy amounts, sequential timing, same-block transactions)?
+   - Wallet age distribution: are buyers established wallets or freshly created?
+   - Cross-reference: do top holders also hold related tokens in the same narrative?
+
+4. **Trend Analysis (beyond snapshots)**
+   - Activity acceleration: is 1h activity rate > 24h average? (bullish if growing)
+   - Buy/sell pressure trend: compare sell ratios across 1h, 6h, and 24h timeframes
+   - Holder growth rate: net new holders per hour
+   - Buy concentration warning: >90% buys with 50+ txns may indicate wash trading
 
 ## Output Format
 

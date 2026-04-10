@@ -28,10 +28,13 @@ Assess whether this token's smart contract and liquidity setup are safe for trad
    - Tax symmetry — does sell tax dramatically exceed buy tax?
 
 3. **Red Flags to Explicitly Call Out**
-   - Honeypot indicators
-   - Recently deployed with no lock
-   - Creator holding significant LP
-   - Blacklist functionality
+   - Honeypot indicators (can buy but cannot sell)
+   - Recently deployed with no LP lock or lock expiring within 30 days
+   - Creator holding significant LP (>50% of pool)
+   - Blacklist functionality (contract owner can block addresses from selling)
+   - Transfer pausable (owner can freeze all trading)
+   - Slippage modifiable (owner can change tax rates post-deployment)
+   - Unverified proxy contract (upgradeable with no audit trail)
 
 ## Output Format
 
