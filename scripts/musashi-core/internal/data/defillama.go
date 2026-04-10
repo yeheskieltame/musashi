@@ -11,12 +11,12 @@ import (
 const defiLlamaBaseURL = "https://api.llama.fi"
 
 type DefiLlamaClient struct {
-	client *http.Client
+	client *ResilientClient
 }
 
 func NewDefiLlamaClient() *DefiLlamaClient {
 	return &DefiLlamaClient{
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: NewResilientClient(15*time.Second, DefaultRetryConfig),
 	}
 }
 

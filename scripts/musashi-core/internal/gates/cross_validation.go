@@ -49,7 +49,12 @@ func (g *CrossValidationGate) Evaluate(token string, chainID int64) (*Result, er
 	}
 
 	if len(dexData.Pairs) == 0 {
-		return result.Fail("No DexScreener pairs for cross-validation"), nil
+		// DexScreener doesn't support this chain (e.g. 0G Chain).
+		// GeckoTerminal data alone is sufficient — no cross-source comparison possible.
+		result.AddEvidence("analysis", "context", "DexScreener does not index this chain — single-source validation via GeckoTerminal")
+		result.AddEvidence("geckoterminal", "token_name", geckoToken.Attributes.Name)
+		result.AddEvidence("geckoterminal", "price_usd", geckoToken.Attributes.PriceUsd)
+		return result.Warn("Cross-validation limited — DexScreener does not support this chain. GeckoTerminal data verified."), nil
 	}
 
 	// Get best DexScreener pair
@@ -60,6 +65,11 @@ func (g *CrossValidationGate) Evaluate(token string, chainID int64) (*Result, er
 		}
 	}
 
+	// Safety: bestPair should never be nil after the len check above, but guard anyway
+	if bestPair == nil {
+		return result.Warn("No valid trading pair found on DexScreener"), nil
+	}
+
 	// Compare prices
 	dexPrice, _ := strconv.ParseFloat(bestPair.PriceUsd, 64)
 	geckoPrice, _ := strconv.ParseFloat(geckoToken.Attributes.PriceUsd, 64)
@@ -68,7 +78,8 @@ func (g *CrossValidationGate) Evaluate(token string, chainID int64) (*Result, er
 	result.AddEvidence("geckoterminal", "price_usd", fmt.Sprintf("%.8f", geckoPrice))
 
 	if dexPrice > 0 && geckoPrice > 0 {
-		priceDiff := math.Abs(dexPrice-geckoPrice) / ((dexPrice + geckoPrice) / 2) * 100
+		avgPrice := (dexPrice + geckoPrice) / 2
+		priceDiff := math.Abs(dexPrice-geckoPrice) / avgPrice * 100
 		result.AddEvidence("analysis", "price_divergence_pct", fmt.Sprintf("%.2f%%", priceDiff))
 
 		if priceDiff > 10.0 {

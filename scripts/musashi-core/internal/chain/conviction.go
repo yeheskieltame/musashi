@@ -141,7 +141,20 @@ func PublishStrike(agentID uint64, tokenAddress string, tokenChainID int64, conv
 	calldata = append(calldata, evHash.Bytes()...)
 
 	contract := common.HexToAddress(contractAddr)
-	tx := types.NewTransaction(nonce, contract, big.NewInt(0), 200000, gasPrice, calldata)
+
+	// Estimate gas with 20% buffer, fallback to 200000
+	gasLimit, err := client.EstimateGas(ctx, ethereum.CallMsg{
+		From: fromAddress,
+		To:   &contract,
+		Data: calldata,
+	})
+	if err != nil {
+		gasLimit = 200000 // fallback
+	} else {
+		gasLimit = gasLimit * 120 / 100 // 20% buffer
+	}
+
+	tx := types.NewTransaction(nonce, contract, big.NewInt(0), gasLimit, gasPrice, calldata)
 
 	signer := types.NewEIP155Signer(chainID)
 	signedTx, err := types.SignTx(tx, signer, privateKey)
@@ -160,7 +173,7 @@ func PublishStrike(agentID uint64, tokenAddress string, tokenChainID int64, conv
 		return "", fmt.Errorf("transaction not mined: %w", err)
 	}
 	if receipt.Status == 0 {
-		return "", fmt.Errorf("transaction reverted: %s", signedTx.Hash().Hex())
+		return "", fmt.Errorf("transaction reverted (tx: %s) — check contract state and parameters", signedTx.Hash().Hex())
 	}
 
 	result := StrikeResult{
@@ -398,7 +411,20 @@ func SetINFT(inftAddress string) (string, error) {
 	calldata = append(calldata, common.LeftPadBytes(inft.Bytes(), 32)...)
 
 	contract := common.HexToAddress(contractAddr)
-	tx := types.NewTransaction(nonce, contract, big.NewInt(0), 200000, gasPrice, calldata)
+
+	// Estimate gas with 20% buffer, fallback to 200000
+	gasLimit, err := client.EstimateGas(ctx, ethereum.CallMsg{
+		From: fromAddress,
+		To:   &contract,
+		Data: calldata,
+	})
+	if err != nil {
+		gasLimit = 200000
+	} else {
+		gasLimit = gasLimit * 120 / 100
+	}
+
+	tx := types.NewTransaction(nonce, contract, big.NewInt(0), gasLimit, gasPrice, calldata)
 
 	signer := types.NewEIP155Signer(chainID)
 	signedTx, err := types.SignTx(tx, signer, privateKey)
@@ -416,7 +442,7 @@ func SetINFT(inftAddress string) (string, error) {
 		return "", fmt.Errorf("transaction not mined: %w", err)
 	}
 	if receipt.Status == 0 {
-		return "", fmt.Errorf("transaction reverted: %s", signedTx.Hash().Hex())
+		return "", fmt.Errorf("transaction reverted (tx: %s) — check contract state and parameters", signedTx.Hash().Hex())
 	}
 
 	result := StrikeResult{
@@ -506,7 +532,20 @@ func RecordOutcome(strikeID uint64, returnBps int64) (string, error) {
 	calldata = append(calldata, padded...)
 
 	contract := common.HexToAddress(contractAddr)
-	tx := types.NewTransaction(nonce, contract, big.NewInt(0), 200000, gasPrice, calldata)
+
+	// Estimate gas with 20% buffer, fallback to 200000
+	gasLimit, err := client.EstimateGas(ctx, ethereum.CallMsg{
+		From: fromAddress,
+		To:   &contract,
+		Data: calldata,
+	})
+	if err != nil {
+		gasLimit = 200000
+	} else {
+		gasLimit = gasLimit * 120 / 100
+	}
+
+	tx := types.NewTransaction(nonce, contract, big.NewInt(0), gasLimit, gasPrice, calldata)
 
 	signer := types.NewEIP155Signer(chainID)
 	signedTx, err := types.SignTx(tx, signer, privateKey)
@@ -524,7 +563,7 @@ func RecordOutcome(strikeID uint64, returnBps int64) (string, error) {
 		return "", fmt.Errorf("transaction not mined: %w", err)
 	}
 	if receipt.Status == 0 {
-		return "", fmt.Errorf("transaction reverted: %s", signedTx.Hash().Hex())
+		return "", fmt.Errorf("transaction reverted (tx: %s) — check contract state and parameters", signedTx.Hash().Hex())
 	}
 
 	result := StrikeResult{

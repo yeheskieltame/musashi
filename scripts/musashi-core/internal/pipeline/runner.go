@@ -129,7 +129,12 @@ func RunGates(token string, chainID int64) (*PipelineResult, error) {
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("gate %d (%s) error: %w", gate.Number(), gate.Name(), err)
+			// Gate encountered an unexpected error (e.g. all API retries exhausted).
+			// Record it as a SKIP rather than aborting the entire pipeline, so
+			// remaining gates can still provide signal.
+			gateResult = gates.NewResult(gate.Name(), gate.Number())
+			gateResult.Status = gates.StatusSkip
+			gateResult.Reason = fmt.Sprintf("gate error: %v", err)
 		}
 
 		result.Gates = append(result.Gates, gateResult)

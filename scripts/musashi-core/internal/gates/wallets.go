@@ -56,7 +56,10 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 	// GoPlus holder data
 	sec, err := g.goplus.GetTokenSecurity(chainID, token)
 	if err != nil {
-		return result.Fail(fmt.Sprintf("GoPlus API error: %v", err)), nil
+		// GoPlus doesn't support all chains (e.g., 0G Chain).
+		// For unsupported chains, skip holder analysis and warn.
+		result.AddEvidence("goplus", "error", err.Error())
+		return result.Warn("GoPlus does not support this chain — holder analysis skipped, agent should verify wallet behavior manually"), nil
 	}
 
 	result.AddEvidence("goplus", "holder_count", sec.HolderCount)

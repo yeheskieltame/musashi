@@ -12,12 +12,12 @@ import (
 const goPlusBaseURL = "https://api.gopluslabs.io/api/v1"
 
 type GoPlusClient struct {
-	client *http.Client
+	client *ResilientClient
 }
 
 func NewGoPlusClient() *GoPlusClient {
 	return &GoPlusClient{
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: NewResilientClient(15*time.Second, DefaultRetryConfig),
 	}
 }
 
@@ -72,19 +72,16 @@ type LPHolder struct {
 }
 
 // GetTokenSecurity fetches token security data from GoPlus.
+// Retries automatically on rate limits (429) and server errors.
 func (c *GoPlusClient) GetTokenSecurity(chainID int64, address string) (*TokenSecurityData, error) {
-	url := fmt.Sprintf("%s/token_security/%d?contract_addresses=%s",
+	reqURL := fmt.Sprintf("%s/token_security/%d?contract_addresses=%s",
 		goPlusBaseURL, chainID, strings.ToLower(address))
 
-	resp, err := c.client.Get(url)
+	resp, err := c.client.Get(reqURL)
 	if err != nil {
 		return nil, fmt.Errorf("goplus request failed: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode == 429 {
-		return nil, fmt.Errorf("goplus error: too many requests")
-	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -100,10 +97,10 @@ func (c *GoPlusClient) GetTokenSecurity(chainID int64, address string) (*TokenSe
 		return nil, fmt.Errorf("goplus error: %s", result.Message)
 	}
 
-	data, ok := result.Result[strings.ToLower(address)]
+	secData, ok := result.Result[strings.ToLower(address)]
 	if !ok {
 		return nil, fmt.Errorf("no data for address %s", address)
 	}
 
-	return &data, nil
+	return &secData, nil
 }

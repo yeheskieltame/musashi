@@ -286,12 +286,12 @@ var updateAgentCmd = &cobra.Command{
 }
 
 func init() {
-	gatesCmd.Flags().Int64("chain", 1, "Chain ID (1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base)")
+	gatesCmd.Flags().Int64("chain", 1, "Chain ID (1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base, 16661=0G)")
 	gatesCmd.Flags().String("output", "json", "Output format: json or pretty")
 
 	strikeCmd.Flags().Uint8("convergence", 3, "Convergence score (3 or 4)")
 	strikeCmd.Flags().String("evidence", "", "Evidence hash from 0G Storage")
-	strikeCmd.Flags().Int64("token-chain", 1, "Chain ID where the token lives (1=ETH, 56=BSC, 8453=Base)")
+	strikeCmd.Flags().Int64("token-chain", 1, "Chain ID where the token lives (1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base, 16661=0G)")
 	strikeCmd.Flags().Uint64("agent-id", 0, "INFT agent token ID")
 
 	mintAgentCmd.Flags().String("name", "MUSASHI", "Agent name")
@@ -314,7 +314,7 @@ func init() {
 
 	searchCmd.Flags().Int("limit", 5, "Max results to return")
 
-	scanCmd.Flags().Int64("chain", 0, "Filter by chain ID (0=all chains, 1=ETH, 56=BSC, 8453=Base)")
+	scanCmd.Flags().Int64("chain", 0, "Filter by chain ID (0=all, 1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base, 16661=0G)")
 	scanCmd.Flags().Int("limit", 10, "Max tokens to return")
 	scanCmd.Flags().Bool("gates", false, "Auto-run gate pipeline on top 5 candidates")
 

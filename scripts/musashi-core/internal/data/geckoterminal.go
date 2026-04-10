@@ -11,12 +11,12 @@ import (
 const geckoTerminalBaseURL = "https://api.geckoterminal.com/api/v2"
 
 type GeckoTerminalClient struct {
-	client *http.Client
+	client *ResilientClient
 }
 
 func NewGeckoTerminalClient() *GeckoTerminalClient {
 	return &GeckoTerminalClient{
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: NewResilientClient(15*time.Second, DefaultRetryConfig),
 	}
 }
 
@@ -41,14 +41,27 @@ type GeckoTokenData struct {
 	Attributes GeckoTokenAttributes `json:"attributes"`
 }
 
+type VolumeUSD struct {
+	H24 string `json:"h24"`
+}
+
 type GeckoPoolAttributes struct {
-	Name            string `json:"name"`
-	Address         string `json:"address"`
-	BaseTokenPrice  string `json:"base_token_price_usd"`
-	QuoteTokenPrice string `json:"quote_token_price_usd"`
-	VolumeH24       string `json:"volume_usd_h24"`
-	ReserveUsd      string `json:"reserve_in_usd"`
-	PoolCreatedAt   string `json:"pool_created_at"`
+	Name            string    `json:"name"`
+	Address         string    `json:"address"`
+	BaseTokenPrice  string    `json:"base_token_price_usd"`
+	QuoteTokenPrice string    `json:"quote_token_price_usd"`
+	VolumeH24       string    `json:"volume_usd_h24"`
+	VolumeUSD       VolumeUSD `json:"volume_usd"`
+	ReserveUsd      string    `json:"reserve_in_usd"`
+	PoolCreatedAt   string    `json:"pool_created_at"`
+}
+
+// GetVolumeH24 returns the 24h volume from either flat or nested field.
+func (a *GeckoPoolAttributes) GetVolumeH24() string {
+	if a.VolumeH24 != "" {
+		return a.VolumeH24
+	}
+	return a.VolumeUSD.H24
 }
 
 type GeckoPoolData struct {
@@ -70,6 +83,8 @@ func ChainIDToNetwork(chainID int64) string {
 		return "arbitrum"
 	case 8453:
 		return "base"
+	case 16661:
+		return "0g"
 	default:
 		return "eth"
 	}

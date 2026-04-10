@@ -113,7 +113,20 @@ func MintAgent(name string, configHash string, intelligenceHash string) (string,
 	calldata = append(calldata, namePadded...)
 
 	contract := common.HexToAddress(contractAddr)
-	tx := types.NewTransaction(nonce, contract, big.NewInt(0), 300000, gasPrice, calldata)
+
+	// Estimate gas with 20% buffer, fallback to 300000
+	gasLimit, err := client.EstimateGas(ctx, ethereum.CallMsg{
+		From: fromAddress,
+		To:   &contract,
+		Data: calldata,
+	})
+	if err != nil {
+		gasLimit = 300000
+	} else {
+		gasLimit = gasLimit * 120 / 100
+	}
+
+	tx := types.NewTransaction(nonce, contract, big.NewInt(0), gasLimit, gasPrice, calldata)
 
 	signer := types.NewEIP155Signer(chainID)
 	signedTx, err := types.SignTx(tx, signer, privateKey)
@@ -131,7 +144,7 @@ func MintAgent(name string, configHash string, intelligenceHash string) (string,
 		return "", fmt.Errorf("transaction not mined: %w", err)
 	}
 	if receipt.Status == 0 {
-		return "", fmt.Errorf("transaction reverted: %s", signedTx.Hash().Hex())
+		return "", fmt.Errorf("transaction reverted (tx: %s) — check contract state and parameters", signedTx.Hash().Hex())
 	}
 
 	result := INFTResult{
@@ -209,7 +222,20 @@ func UpdateAgentIntelligence(tokenID uint64, intelligenceHash string) (string, e
 	calldata = append(calldata, intHash.Bytes()...)
 
 	contract := common.HexToAddress(contractAddr)
-	tx := types.NewTransaction(nonce, contract, big.NewInt(0), 200000, gasPrice, calldata)
+
+	// Estimate gas with 20% buffer, fallback to 200000
+	gasLimit, err := client.EstimateGas(ctx, ethereum.CallMsg{
+		From: fromAddress,
+		To:   &contract,
+		Data: calldata,
+	})
+	if err != nil {
+		gasLimit = 200000
+	} else {
+		gasLimit = gasLimit * 120 / 100
+	}
+
+	tx := types.NewTransaction(nonce, contract, big.NewInt(0), gasLimit, gasPrice, calldata)
 
 	signer := types.NewEIP155Signer(ogChainID)
 	signedTx, err := types.SignTx(tx, signer, privateKey)
@@ -227,7 +253,7 @@ func UpdateAgentIntelligence(tokenID uint64, intelligenceHash string) (string, e
 		return "", fmt.Errorf("transaction not mined: %w", err)
 	}
 	if receipt.Status == 0 {
-		return "", fmt.Errorf("transaction reverted: %s", signedTx.Hash().Hex())
+		return "", fmt.Errorf("transaction reverted (tx: %s) — check contract state and parameters", signedTx.Hash().Hex())
 	}
 
 	result := INFTResult{

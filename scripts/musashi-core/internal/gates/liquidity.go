@@ -7,15 +7,17 @@ import (
 )
 
 // LiquidityGate implements Gate 2: Liquidity Structure.
-// Uses DexScreener + GoPlus LP data with age-tiered thresholds.
+// Uses DexScreener + GeckoTerminal fallback + GoPlus LP data with age-tiered thresholds.
 type LiquidityGate struct {
 	dex    *data.DexScreenerClient
+	gecko  *data.GeckoTerminalClient
 	goplus *data.GoPlusClient
 }
 
 func NewLiquidityGate() *LiquidityGate {
 	return &LiquidityGate{
 		dex:    data.NewDexScreenerClient(),
+		gecko:  data.NewGeckoTerminalClient(),
 		goplus: data.NewGoPlusClient(),
 	}
 }
@@ -54,14 +56,60 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 		result.AddEvidence("analysis", "thresholds", fmt.Sprintf("min_liq=$%.0f min_vol=$%.0f min_ratio=%.0f%% (tier: %s)", minLiq, minVol, minRatio*100, ctx.Age))
 	}
 
-	// Fetch DexScreener data
+	// Fetch DexScreener data (primary)
 	dexData, err := g.dex.GetTokenPairs(token)
-	if err != nil {
-		return result.Fail(fmt.Sprintf("DexScreener API error: %v", err)), nil
-	}
+	if err != nil || len(dexData.Pairs) == 0 {
+		// Fallback to GeckoTerminal (supports chains DexScreener doesn't, e.g. 0G)
+		network := data.ChainIDToNetwork(chainID)
+		geckoToken, geckoErr := g.gecko.GetToken(network, token)
+		if geckoErr != nil || geckoToken == nil {
+			if err != nil {
+				return result.Fail(fmt.Sprintf("DexScreener error: %v, GeckoTerminal fallback failed: %v", err, geckoErr)), nil
+			}
+			return result.Fail("No trading pairs found on DexScreener or GeckoTerminal"), nil
+		}
 
-	if len(dexData.Pairs) == 0 {
-		return result.Fail("No trading pairs found — token not listed on any DEX"), nil
+		// Use GeckoTerminal data for liquidity assessment
+		attr := geckoToken.Attributes
+		result.AddEvidence("geckoterminal", "source", "fallback (DexScreener unavailable for this chain)")
+		result.AddEvidence("geckoterminal", "token_name", attr.Name)
+		result.AddEvidence("geckoterminal", "token_symbol", attr.Symbol)
+		result.AddEvidence("geckoterminal", "price_usd", attr.PriceUsd)
+		result.AddEvidence("geckoterminal", "fdv_usd", attr.FDVUsd)
+		result.AddEvidence("geckoterminal", "volume_24h", attr.Volume24h)
+		result.AddEvidence("geckoterminal", "market_cap_usd", attr.MarketCapUsd)
+
+		// Get pool data for liquidity and volume
+		pools, poolErr := g.gecko.GetTokenPools(network, token)
+		totalLiquidity := 0.0
+		totalVolume := 0.0
+		if poolErr == nil {
+			for _, p := range pools {
+				var reserve, vol float64
+				fmt.Sscanf(p.Attributes.ReserveUsd, "%f", &reserve)
+				fmt.Sscanf(p.Attributes.GetVolumeH24(), "%f", &vol)
+				totalLiquidity += reserve
+				totalVolume += vol
+			}
+			result.AddEvidence("geckoterminal", "pool_count", fmt.Sprintf("%d", len(pools)))
+			result.AddEvidence("geckoterminal", "total_liquidity_usd", fmt.Sprintf("%.2f", totalLiquidity))
+			result.AddEvidence("geckoterminal", "total_volume_24h_usd", fmt.Sprintf("%.2f", totalVolume))
+		}
+
+		if totalLiquidity < minLiq {
+			return result.Fail(fmt.Sprintf("Total liquidity too low: $%.0f (min $%.0f for %s token) [via GeckoTerminal]", totalLiquidity, minLiq, ctx.Age)), nil
+		}
+
+		// Use pool-aggregated volume (more reliable than token-level for some chains)
+		vol24h := totalVolume
+		if vol24h == 0 && attr.Volume24h != "" {
+			fmt.Sscanf(attr.Volume24h, "%f", &vol24h)
+		}
+		if vol24h < minVol {
+			return result.Fail(fmt.Sprintf("24h volume too low: $%.0f (min $%.0f for %s token) [via GeckoTerminal]", vol24h, minVol, ctx.Age)), nil
+		}
+
+		return result.Pass(fmt.Sprintf("Liquidity structure healthy via GeckoTerminal (tier: %s, chain: %s)", ctx.Age, network)), nil
 	}
 
 	// Use the highest-liquidity pair as primary
@@ -106,7 +154,7 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 	}
 
 	// Check 3: Liquidity concentration
-	if bestPair.Liquidity.Usd/totalLiquidity > 0.95 && len(dexData.Pairs) > 1 {
+	if totalLiquidity > 0 && bestPair.Liquidity.Usd/totalLiquidity > 0.95 && len(dexData.Pairs) > 1 {
 		result.AddEvidence("analysis", "liquidity_concentration", fmt.Sprintf("%.1f%% on %s", bestPair.Liquidity.Usd/totalLiquidity*100, bestPair.DexID))
 	}
 
@@ -154,15 +202,20 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 	}
 
 	passMsg := fmt.Sprintf("Liquidity structure is healthy (tier: %s)", ctx.Age)
-	if ctx.Age == AgeFresh && sec != nil {
-		lpLocked := 0
-		for _, lp := range sec.LPHolders {
-			if lp.IsLocked == 1 {
-				lpLocked++
+	if ctx.Age == AgeFresh {
+		// sec may be nil if GoPlus call failed above — only check LP lock if we have data
+		if sec != nil && len(sec.LPHolders) > 0 {
+			lpLocked := 0
+			for _, lp := range sec.LPHolders {
+				if lp.IsLocked == 1 {
+					lpLocked++
+				}
 			}
-		}
-		if lpLocked == 0 {
-			return result.Warn(fmt.Sprintf("Liquidity acceptable for fresh token but LP not locked — monitor closely")), nil
+			if lpLocked == 0 {
+				return result.Warn("Liquidity acceptable for fresh token but LP not locked — monitor closely"), nil
+			}
+		} else {
+			return result.Warn("Liquidity acceptable for fresh token but LP lock status unknown — monitor closely"), nil
 		}
 	}
 	return result.Pass(passMsg), nil

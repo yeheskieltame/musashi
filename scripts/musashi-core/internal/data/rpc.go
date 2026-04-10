@@ -29,6 +29,8 @@ func ChainIDToRPC(chainID int64) string {
 		return "https://arb1.arbitrum.io/rpc"
 	case 8453:
 		return "https://mainnet.base.org"
+	case 16661:
+		return "https://evmrpc.0g.ai"
 	default:
 		return "https://eth.llamarpc.com"
 	}

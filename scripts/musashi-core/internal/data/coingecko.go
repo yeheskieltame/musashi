@@ -11,12 +11,12 @@ import (
 const coinGeckoBaseURL = "https://api.coingecko.com/api/v3"
 
 type CoinGeckoClient struct {
-	client *http.Client
+	client *ResilientClient
 }
 
 func NewCoinGeckoClient() *CoinGeckoClient {
 	return &CoinGeckoClient{
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: NewResilientClient(15*time.Second, DefaultRetryConfig),
 	}
 }
 

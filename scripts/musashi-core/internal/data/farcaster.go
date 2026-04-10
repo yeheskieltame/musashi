@@ -12,7 +12,7 @@ import (
 const neynarBaseURL = "https://api.neynar.com/v2/farcaster"
 
 type FarcasterClient struct {
-	client *http.Client
+	client *ResilientClient
 	apiKey string
 }
 
@@ -21,7 +21,7 @@ func NewFarcasterClient(apiKey string) *FarcasterClient {
 		apiKey = "NEYNAR_API_DOCS" // public demo key
 	}
 	return &FarcasterClient{
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: NewResilientClient(15*time.Second, DefaultRetryConfig),
 		apiKey: apiKey,
 	}
 }
@@ -52,17 +52,16 @@ type FarcasterSearchResponse struct {
 }
 
 // SearchCasts searches Farcaster for casts mentioning a query.
+// Retries automatically on rate limits and server errors.
 func (c *FarcasterClient) SearchCasts(query string) ([]FarcasterCast, error) {
 	u := fmt.Sprintf("%s/cast/search?q=%s&limit=25", neynarBaseURL, url.QueryEscape(query))
 
-	req, err := http.NewRequest("GET", u, nil)
-	if err != nil {
-		return nil, fmt.Errorf("farcaster request build failed: %w", err)
+	headers := map[string]string{
+		"accept":  "application/json",
+		"api_key": c.apiKey,
 	}
-	req.Header.Set("accept", "application/json")
-	req.Header.Set("api_key", c.apiKey)
 
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(nil, u, headers)
 	if err != nil {
 		return nil, fmt.Errorf("farcaster request failed: %w", err)
 	}

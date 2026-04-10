@@ -12,12 +12,12 @@ import (
 const dexScreenerBaseURL = "https://api.dexscreener.com"
 
 type DexScreenerClient struct {
-	client *http.Client
+	client *ResilientClient
 }
 
 func NewDexScreenerClient() *DexScreenerClient {
 	return &DexScreenerClient{
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: NewResilientClient(15*time.Second, DefaultRetryConfig),
 	}
 }
 
@@ -78,6 +78,7 @@ type DexVolume struct {
 }
 
 // GetTokenPairs fetches all pairs for a token address.
+// Retries automatically on rate limits and server errors.
 func (c *DexScreenerClient) GetTokenPairs(address string) (*DexPairsResponse, error) {
 	reqURL := fmt.Sprintf("%s/latest/dex/tokens/%s", dexScreenerBaseURL, address)
 

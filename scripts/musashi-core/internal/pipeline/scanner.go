@@ -390,6 +390,8 @@ func chainIDToName(chainID int64) string {
 		return "arbitrum"
 	case 8453:
 		return "base"
+	case 16661:
+		return "0g"
 	default:
 		return "eth"
 	}
@@ -408,6 +410,8 @@ func nameToChainID(name string) int64 {
 		return 42161
 	case "base":
 		return 8453
+	case "0g", "0g_chain", "0g-chain", "zero-gravity":
+		return 16661
 	default:
 		// Unknown or non-supported chain → skip (return 0)
 		return 0
