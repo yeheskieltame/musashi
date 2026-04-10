@@ -187,9 +187,9 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Tab Content */}
+          {/* Tab Content — all tabs stay mounted, hidden via CSS to preserve state */}
           <section>
-            {activeTab === "scanner" && (
+            <div className={activeTab === "scanner" ? "" : "hidden"}>
               <GlassCard strong className="p-7">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 flex items-center justify-center">
@@ -208,7 +208,7 @@ export default function DashboardPage() {
                   <TokenScanner onSelectToken={handleSelectFromScanner} />
                 </div>
               </GlassCard>
-            )}
+            </div>
 
             {activeTab === "gates" && (
               <GlassCard strong className="p-7">
@@ -286,8 +286,8 @@ export default function DashboardPage() {
               </GlassCard>
             )}
 
-            {activeTab === "debate" && (
-              debateToken ? (
+            <div className={activeTab === "debate" ? "" : "hidden"}>
+              {debateToken ? (
                 <DebateTerminal
                   token={debateToken}
                   chain={debateChain}
@@ -315,8 +315,8 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 </GlassCard>
-              )
-            )}
+              )}
+            </div>
 
             {activeTab === "ledger" && (
               <StrikeLedger />
