@@ -105,6 +105,39 @@ export interface StoreResult {
   download_cmd: string;
 }
 
+// Debate types
+export interface DebateEvent {
+  type: "phase" | "gates" | "agent_start" | "agent_stream" | "agent_report" | "agent_error" | "judge_start" | "judge_stream" | "verdict" | "error" | "done";
+  phase?: "gates" | "specialists" | "judgment";
+  status?: "start" | "done";
+  data?: PipelineResult;
+  agent?: "safety" | "technical" | "narrative" | "market";
+  model?: string;
+  content?: string;
+  report?: string;
+  error?: string;
+  result?: DebateVerdict;
+}
+
+export interface DebateVerdict {
+  pass: boolean;
+  convergence: number;
+  confidence?: string;
+  reasoning: string;
+  decisive_factor?: string;
+  cross_examination?: string;
+}
+
+export type AgentStatus = "waiting" | "running" | "done" | "error";
+
+export interface TerminalLine {
+  id: number;
+  agent: "safety" | "technical" | "narrative" | "market" | "judge" | "system";
+  content: string;
+  timestamp: Date;
+  type: "stream" | "report" | "phase" | "error" | "verdict";
+}
+
 export type ChainId = 0 | 1 | 56 | 137 | 42161 | 8453 | 16661;
 
 export const CHAIN_NAMES: Record<number, string> = {
