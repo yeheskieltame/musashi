@@ -208,6 +208,8 @@ function spawnAgent(opts: {
         if (!line.trim()) continue;
         try {
           const event = JSON.parse(line);
+
+          // Handle assistant message (full message with content array)
           if (event.type === "assistant" && event.message?.content) {
             for (const block of event.message.content) {
               if (block.type === "text") {
@@ -215,8 +217,22 @@ function spawnAgent(opts: {
                 if (chunkCallback) chunkCallback(block.text);
               }
             }
-          } else if (event.type === "result") {
-            // Final result — prefer result text if present
+          }
+
+          // Handle content_block_delta (streaming text chunks)
+          if (event.type === "content_block_delta" && event.delta?.text) {
+            accumulated += event.delta.text;
+            if (chunkCallback) chunkCallback(event.delta.text);
+          }
+
+          // Handle content_block_start with text type
+          if (event.type === "content_block_start" && event.content_block?.type === "text" && event.content_block?.text) {
+            accumulated += event.content_block.text;
+            if (chunkCallback) chunkCallback(event.content_block.text);
+          }
+
+          // Handle final result
+          if (event.type === "result") {
             if (event.result) {
               accumulated = event.result;
             }

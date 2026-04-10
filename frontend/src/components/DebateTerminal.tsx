@@ -215,14 +215,23 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
             const buf = (streamBufferRef.current[key] || "") + event.content;
             streamBufferRef.current[key] = buf;
 
-            // Flush complete sentences
-            const sentenceEnd = buf.search(/[.!?\n]\s*/);
-            if (sentenceEnd !== -1) {
-              const cut = buf.indexOf("\n", sentenceEnd) !== -1
-                ? buf.indexOf("\n", sentenceEnd) + 1
-                : sentenceEnd + 2;
-              const flushed = buf.slice(0, cut).trim();
-              streamBufferRef.current[key] = buf.slice(cut);
+            // Flush on newlines or when buffer gets long enough
+            const lines = buf.split("\n");
+            if (lines.length > 1) {
+              // Flush all complete lines
+              const complete = lines.slice(0, -1).join("\n").trim();
+              streamBufferRef.current[key] = lines[lines.length - 1];
+              if (complete) {
+                for (const l of complete.split("\n")) {
+                  if (l.trim()) {
+                    addLine(l.trim(), "stream", key as TerminalLine["agent"]);
+                  }
+                }
+              }
+            } else if (buf.length > 120) {
+              // Flush long buffers even without newline
+              const flushed = buf.trim();
+              streamBufferRef.current[key] = "";
               if (flushed) {
                 addLine(flushed, "stream", key as TerminalLine["agent"]);
               }
@@ -232,7 +241,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
 
         case "agent_report":
           if (event.agent) {
-            // Flush remaining buffer
+            // Flush remaining stream buffer
             const remaining = streamBufferRef.current[event.agent];
             if (remaining?.trim()) {
               addLine(
@@ -240,11 +249,19 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
                 "stream",
                 event.agent as TerminalLine["agent"],
               );
-              streamBufferRef.current[event.agent] = "";
             }
+            streamBufferRef.current[event.agent] = "";
             setStatus(event.agent, "done");
+
+            // Show the full report content if available
+            if (event.report) {
+              const reportLines = event.report.split("\n").filter((l: string) => l.trim());
+              for (const l of reportLines) {
+                addLine(l.trim(), "report", event.agent as TerminalLine["agent"]);
+              }
+            }
             addLine(
-              `Analysis complete.`,
+              `--- Analysis complete ---`,
               "report",
               event.agent as TerminalLine["agent"],
             );
@@ -273,13 +290,20 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
             const buf = (streamBufferRef.current[key] || "") + event.content;
             streamBufferRef.current[key] = buf;
 
-            const sentenceEnd = buf.search(/[.!?\n]\s*/);
-            if (sentenceEnd !== -1) {
-              const cut = buf.indexOf("\n", sentenceEnd) !== -1
-                ? buf.indexOf("\n", sentenceEnd) + 1
-                : sentenceEnd + 2;
-              const flushed = buf.slice(0, cut).trim();
-              streamBufferRef.current[key] = buf.slice(cut);
+            const lines = buf.split("\n");
+            if (lines.length > 1) {
+              const complete = lines.slice(0, -1).join("\n").trim();
+              streamBufferRef.current[key] = lines[lines.length - 1];
+              if (complete) {
+                for (const l of complete.split("\n")) {
+                  if (l.trim()) {
+                    addLine(l.trim(), "stream", "judge");
+                  }
+                }
+              }
+            } else if (buf.length > 120) {
+              const flushed = buf.trim();
+              streamBufferRef.current[key] = "";
               if (flushed) {
                 addLine(flushed, "stream", "judge");
               }
