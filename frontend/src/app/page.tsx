@@ -206,27 +206,63 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="landing-bg min-h-screen">
       {/* Nav */}
-      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-        <div className="glass-dark rounded-full px-2 py-2 flex items-center gap-1 shadow-lg shadow-blue-900/20">
-          <a href="/" className="flex items-center gap-2 px-3 py-1.5">
+      <nav className="fixed top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50">
+        <div className="glass-dark rounded-full px-2 py-2 flex items-center justify-between sm:justify-center gap-1 shadow-lg shadow-zinc-900/40">
+          <a href="/" className="flex items-center gap-2 px-3 py-1.5 focus:outline-none">
             <img src="/musashi-logo.png" alt="" className="w-5 h-5" />
             <span className="text-white font-bold text-sm tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
           </a>
-          <a href="#problem" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">Problem</a>
-          <a href="#pipeline" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">Pipeline</a>
-          <a href="#protocol" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">0G Protocol</a>
-          <a href="#deploy-agent" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">Deploy</a>
-          <a href="#setup" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">Setup</a>
-          <Link
-            href="/dashboard"
-            className="bg-amber-600/80 border border-amber-500/50 text-white rounded-full px-5 py-1.5 text-sm font-medium hover:shadow-[0_0_15px_rgba(217,119,6,0.4)] hover:bg-amber-500/80 transition-all ml-1 backdrop-blur"
+          
+          <div className="hidden sm:flex items-center gap-1">
+            <a href="#problem" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Problem</a>
+            <a href="#pipeline" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Pipeline</a>
+            <a href="#protocol" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">0G Protocol</a>
+            <a href="#deploy-agent" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Deploy</a>
+            <a href="#setup" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Setup</a>
+            <Link
+              href="/dashboard"
+              className="bg-amber-600/80 border border-amber-500/50 text-white rounded-full px-5 py-1.5 text-sm font-medium hover:shadow-[0_0_15px_rgba(217,119,6,0.4)] hover:bg-amber-500/80 transition-all ml-1 backdrop-blur"
+            >
+              Dashboard
+            </Link>
+          </div>
+
+          <button 
+            className="sm:hidden px-3 py-1.5 text-white/80 hover:text-white focus:outline-none"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            Dashboard
-          </Link>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+              )}
+            </svg>
+          </button>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden mt-2 p-4 bg-[#050505]/95 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+            <a href="#problem" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">Problem</a>
+            <a href="#pipeline" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">Pipeline</a>
+            <a href="#protocol" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">0G Protocol</a>
+            <a href="#deploy-agent" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">Deploy</a>
+            <a href="#setup" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">Setup</a>
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-2 text-center bg-amber-600/80 border border-amber-500/50 text-white rounded-xl px-5 py-2.5 text-sm font-medium"
+            >
+              Dashboard
+            </Link>
+          </div>
+        )}
       </nav>
 
       {/* Hero */}
@@ -1036,12 +1072,12 @@ export default function LandingPage() {
             <div className="mt-8 rounded-2xl bg-white/[0.02] border border-white/5 p-6 text-center">
               <p className="text-xs text-white/40 mb-2">Contract Addresses (0G Mainnet)</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-[11px] font-mono">
-                <a href={`https://chainscan.0g.ai/address/0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed`} target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-zinc-300 transition-colors">
-                  ConvictionLog: 0xdB5E...1Ed
+                <a href={`https://chainscan.0g.ai/address/0x2B84aC25498FF0157fAB04fEa9e3544A14882A15`} target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-zinc-300 transition-colors">
+                  ConvictionLog: 0x2B84...2A15
                 </a>
                 <span className="text-white/20 hidden sm:inline">|</span>
-                <a href={`https://chainscan.0g.ai/address/0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32`} target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 transition-colors">
-                  MusashiINFT: 0xfFE8...c32
+                <a href={`https://chainscan.0g.ai/address/0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c`} target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 transition-colors">
+                  MusashiINFT (ERC-7857): 0x74BC...1d4c
                 </a>
               </div>
             </div>
@@ -1171,8 +1207,8 @@ claude login`} />
           </div>
           <div className="flex items-center gap-6 text-sm text-white/30">
             <a href="https://github.com/yeheskieltame/musashi" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">GitHub</a>
-            <a href="https://chainscan.0g.ai/address/0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">ConvictionLog</a>
-            <a href="https://chainscan.0g.ai/address/0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">MusashiINFT</a>
+            <a href="https://chainscan.0g.ai/address/0x2B84aC25498FF0157fAB04fEa9e3544A14882A15" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">ConvictionLog</a>
+            <a href="https://chainscan.0g.ai/address/0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">MusashiINFT</a>
             <a href="https://docs.0g.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">0G Docs</a>
           </div>
           <span className="text-[11px] text-white/15 tracking-wider">0G APAC Hackathon 2026</span>

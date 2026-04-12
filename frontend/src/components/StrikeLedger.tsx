@@ -9,6 +9,7 @@ import {
   OG_RPC,
   OG_EXPLORER,
   OG_CHAIN_ID,
+  storageScanUrl,
 } from "@/lib/contracts";
 
 const OG_STORAGE_INDEXER = "https://indexer-storage-turbo.0g.ai";
@@ -333,35 +334,45 @@ export function StrikeLedger() {
 
                   <div className="space-y-3">
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Evidence Hash (0G Storage)</span>
-                      <div className="mt-0.5 bg-black/50 rounded-lg border border-white/10 p-2.5">
-                        <p className="font-mono text-[11px] text-slate-300 break-all">{s.evidenceHash}</p>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
+                        0G Storage merkle root <span className="text-emerald-400 normal-case tracking-normal ml-1">(evidence pointer on-chain)</span>
+                      </span>
+                      <div className="mt-0.5 bg-black/50 rounded-lg border border-emerald-500/20 p-2.5">
+                        <p className="font-mono text-[11px] text-emerald-300 break-all">{s.evidenceHash}</p>
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-1.5">
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                        This is the actual 0G Storage merkle root written into <code className="text-slate-400">ConvictionLog.Strike.evidenceHash</code>.
+                        Downloading it with <code className="text-slate-400">0g-storage-client --proof</code> cryptographically
+                        verifies every byte against this hash — tamper-evident retrieval.
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <a
+                          href={storageScanUrl(s.evidenceHash)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors"
+                        >
+                          Open in StorageScan ↗
+                        </a>
                         <a
                           href={`${OG_STORAGE_INDEXER}/file?root=${s.evidenceHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] px-2.5 py-1 rounded-lg bg-zinc-500/10 text-zinc-400 hover:bg-zinc-500/20 border border-zinc-500/20 transition-colors"
-                        >
-                          Download Evidence JSON
-                        </a>
-                        <a
-                          href={`${OG_STORAGE_INDEXER}/file/info/${s.evidenceHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="text-[10px] px-2.5 py-1 rounded-lg bg-zinc-500/10 text-zinc-300 hover:bg-zinc-500/20 border border-zinc-500/20 transition-colors"
                         >
-                          File Info (Metadata)
+                          Raw download
                         </a>
-                        <a
-                          href="https://storagescan.0g.ai"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void navigator.clipboard.writeText(
+                              `0g-storage-client download --indexer https://indexer-storage-turbo.0g.ai --root ${s.evidenceHash} --file strike-${s.id}.json --proof`
+                            );
+                          }}
                           className="text-[10px] px-2.5 py-1 rounded-lg bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10 transition-colors"
                         >
-                          0G Explorer
-                        </a>
+                          Copy verify command
+                        </button>
                       </div>
                     </div>
                     <div>

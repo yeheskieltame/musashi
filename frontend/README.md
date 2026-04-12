@@ -17,8 +17,10 @@ Contract addresses and chain config are in `src/lib/contracts.ts` and `src/lib/w
 
 | Contract | Address |
 |----------|---------|
-| ConvictionLog | `0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed` |
-| MusashiINFT | `0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32` |
+| ConvictionLog | `0x2B84aC25498FF0157fAB04fEa9e3544A14882A15` |
+| MusashiINFT (ERC-7857) | `0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c` |
+
+Override via env vars if you redeploy: `NEXT_PUBLIC_CONVICTION_LOG_ADDRESS`, `NEXT_PUBLIC_MUSASHI_INFT_ADDRESS`.
 
 ## Components
 

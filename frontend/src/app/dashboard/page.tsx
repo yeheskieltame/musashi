@@ -7,6 +7,7 @@ import { CommandBar } from "@/components/CommandBar";
 import { GatePipeline } from "@/components/GatePipeline";
 import { TokenScanner } from "@/components/TokenScanner";
 import { ReputationPanel } from "@/components/ReputationPanel";
+import { AgentIntelligencePanel } from "@/components/AgentIntelligencePanel";
 import { StrikePublisher } from "@/components/StrikePublisher";
 import { StrikeLedger } from "@/components/StrikeLedger";
 import { DebateTerminal } from "@/components/DebateTerminal";
@@ -108,6 +109,11 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-bg min-h-screen grid-bg-dark glow-top glow-bottom relative overflow-hidden">
+      {/* Background layers */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-20 mix-blend-screen" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#030303]/70 via-[#030303]/80 to-[#030303]" />
+      </div>
       {/* Header */}
       <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
         <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -116,8 +122,8 @@ export default function DashboardPage() {
               <img src="/musashi-logo.png" alt="MUSASHI" className="w-5 h-5" />
               <span className="text-white font-bold text-lg tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
             </Link>
-            <div className="w-px h-5 bg-white/20" />
-            <span className="text-sm font-medium text-slate-400">Dashboard</span>
+            <div className="w-px h-5 bg-white/20 hidden sm:block" />
+            <span className="text-sm font-medium text-slate-400 hidden sm:block">Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
             <WalletConnect />
@@ -128,6 +134,11 @@ export default function DashboardPage() {
       {/* Main content */}
       <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
         <main className="space-y-6">
+          {/* ERC-7857 Intelligence state (encrypted storage + sealed key + oracle) */}
+          <section>
+            <AgentIntelligencePanel tokenId={0} />
+          </section>
+
           {/* Reputation */}
           <section>
             <ReputationPanel />

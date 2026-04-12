@@ -78,13 +78,15 @@ export interface AgentInfo {
   owner: string;
   active: boolean;
   win_rate_bps: number;
-  config_hash: string;
-  intelligence_hash: string;
+  version: number;              // ERC-7857 re-seal generation counter
+  storage_root: string;         // 0G Storage merkle root of the encrypted intelligence bundle
+  metadata_hash: string;        // public descriptor commitment
   total_strikes: number;
   name: string;
   agent_count: number;
   contract_address: string;
   explorer_url: string;
+  storage_scan_url?: string;    // direct link to 0G StorageScan for storage_root
 }
 
 export interface StrikeResult {
