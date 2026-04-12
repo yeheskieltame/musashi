@@ -7,7 +7,7 @@ export interface GateEvidence {
 export interface GateResult {
   gate: string;
   gate_num: number;
-  status: "PASS" | "FAIL" | "WARN";
+  status: "PASS" | "FAIL" | "WARN" | "SKIP";
   reason: string;
   evidence: GateEvidence[];
 }
@@ -16,7 +16,7 @@ export interface PipelineResult {
   token: string;
   chain_id: number;
   timestamp: string;
-  status: "PASS" | "FAIL" | "WARN";
+  status: "PASS" | "FAIL" | "WARN" | "SKIP";
   failed_at: number;
   token_age: "fresh" | "early" | "established";
   age_hours: number;

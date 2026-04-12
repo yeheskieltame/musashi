@@ -20,6 +20,8 @@ function StatusIcon({ status }: { status: string }) {
     return <span className="text-red-500 font-bold text-lg">&#10007;</span>;
   if (status === "WARN")
     return <span className="text-amber-500 font-bold text-lg">!</span>;
+  if (status === "SKIP")
+    return <span className="text-blue-400 font-bold text-lg">&#8594;</span>;
   return <span className="text-slate-400 text-lg">&#8226;</span>;
 }
 

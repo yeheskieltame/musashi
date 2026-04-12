@@ -32,7 +32,7 @@ function run(args: string[]): Promise<string> {
     execFile(
       BINARY,
       args,
-      { timeout: 60_000, maxBuffer: 1024 * 1024, env: { ...process.env, ...parentEnv } },
+      { timeout: 120_000, maxBuffer: 2 * 1024 * 1024, env: { ...process.env, ...parentEnv } },
       (err, stdout, stderr) => {
         if (err) {
           reject(new Error(stderr || err.message));
@@ -83,7 +83,8 @@ function validateQuery(query: string, maxLen = 200): string {
 export async function runGates(token: string, chainId: number) {
   const safeToken = validateAddress(token);
   const safeChain = validateChainId(chainId);
-  const out = await run(["gates", safeToken, "--chain", String(safeChain), "--output", "json"]);
+  const args = ["gates", safeToken, "--chain", String(safeChain), "--output", "json"];
+  const out = await run(args);
   return JSON.parse(out);
 }
 

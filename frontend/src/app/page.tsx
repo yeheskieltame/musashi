@@ -863,6 +863,64 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Agent Memory: On-Chain Learning */}
+      <section id="agent-memory" className="relative py-28 px-6 overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
+        <div className="max-w-4xl mx-auto relative z-10">
+          <SectionHeading
+            title="Agent Memory"
+            subtitle="MUSASHI doesn't just analyze — it learns from its own on-chain track record. Every STRIKE outcome feeds back into future decisions."
+          />
+
+          <Reveal>
+            <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-8">
+              {/* Learning Loop Diagram */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                {[
+                  { label: "Analyze", sub: "7 gates + debate", color: "from-blue-500/20 to-blue-500/5", border: "border-blue-500/20" },
+                  { label: "STRIKE", sub: "publish on-chain", color: "from-violet-500/20 to-violet-500/5", border: "border-violet-500/20" },
+                  { label: "Outcome", sub: "record result", color: "from-amber-500/20 to-amber-500/5", border: "border-amber-500/20" },
+                  { label: "Learn", sub: "calibrate threshold", color: "from-emerald-500/20 to-emerald-500/5", border: "border-emerald-500/20" },
+                ].map((step, i) => (
+                  <div key={step.label} className="flex items-center gap-4">
+                    <div className={`w-28 h-20 rounded-xl bg-gradient-to-b ${step.color} border ${step.border} flex flex-col items-center justify-center`}>
+                      <span className="text-sm font-semibold text-white">{step.label}</span>
+                      <span className="text-[10px] text-white/50 mt-0.5">{step.sub}</span>
+                    </div>
+                    {i < 3 && (
+                      <svg className="w-5 h-5 text-white/20 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+                  <div className="text-xs font-semibold text-blue-400 mb-2">Self-Calibration</div>
+                  <p className="text-[11px] text-white/50 leading-relaxed">
+                    Judge queries on-chain win rate before every decision. High win rate = maintain threshold. Low win rate = apply maximum hesitation.
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+                  <div className="text-xs font-semibold text-violet-400 mb-2">Pattern Recall</div>
+                  <p className="text-[11px] text-white/50 leading-relaxed">
+                    Pattern detector cross-references current analysis against past strikes. &ldquo;Similar to Strike #3 which returned +5.0%&rdquo;
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+                  <div className="text-xs font-semibold text-emerald-400 mb-2">Verifiable</div>
+                  <p className="text-[11px] text-white/50 leading-relaxed">
+                    All memory is on-chain. Anyone can query agentReputation(0) and verify the track record. No self-reported stats.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Deploy Your Own Agent */}
       <section id="deploy-agent" className="relative py-28 px-6 overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
@@ -1059,6 +1117,48 @@ claude login`} />
               </AccordionItem>
             </Reveal>
           </div>
+        </div>
+      </section>
+
+      {/* Demo Video */}
+      <section id="demo" className="relative py-28 px-6 overflow-hidden">
+        <div className="max-w-4xl mx-auto">
+          <SectionHeading
+            title="See It In Action"
+            subtitle="Watch MUSASHI analyze tokens in real-time — from gate elimination to on-chain STRIKE publishing."
+          />
+
+          <Reveal>
+            <div className="rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
+              {/* Video embed area */}
+              <div id="demo-video-container" className="relative aspect-video bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-7 h-7 text-white/40 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-white/40">Demo video coming soon</p>
+                  <p className="text-[11px] text-white/20 mt-1">3-minute walkthrough of the full pipeline</p>
+                </div>
+              </div>
+
+              {/* Quick stats bar below video */}
+              <div className="grid grid-cols-4 divide-x divide-white/5 border-t border-white/5">
+                {[
+                  { label: "Strikes On-Chain", value: "12" },
+                  { label: "Win Rate", value: "66.7%" },
+                  { label: "Total Return", value: "+124.5%" },
+                  { label: "0G Components", value: "3" },
+                ].map((stat) => (
+                  <div key={stat.label} className="p-4 text-center">
+                    <div className="text-lg font-bold text-white">{stat.value}</div>
+                    <div className="text-[10px] text-white/40 mt-0.5">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
