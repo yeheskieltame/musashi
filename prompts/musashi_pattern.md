@@ -28,6 +28,8 @@ Each specialist sees only their domain. You see everything. Find what they canno
    - 2/4: Mixed signals = ELIMINATE
    - 1/4 or 0/4: Contradictory = ELIMINATE
 
+   **Critical:** A specialist returning `INSUFFICIENT_DATA` does NOT count as ✗. It counts as `?` and means convergence is unscoreable for that domain. If 2+ domains are `?`, your verdict must be `INSUFFICIENT_DATA` so the judge knows to demand more investigation rather than treating absence as a fail.
+
 4. **Single Points of Failure** — Does the entire thesis depend on one thing?
    - One whale's position?
    - One narrative thread?
@@ -92,8 +94,8 @@ CONTRADICTIONS FOUND:
 CORRELATIONS DETECTED:
 [List each cross-domain correlation]
 
-CONVERGENCE: [1-4]/4
-[Breakdown per domain: Safety ✓/✗, On-Chain ✓/✗, Narrative ✓/✗, Market ✓/✗]
+CONVERGENCE: [1-4]/4 (or INSUFFICIENT_DATA if 2+ domains are ?)
+[Breakdown per domain: Safety ✓/✗/?, On-Chain ✓/✗/?, Narrative ✓/✗/?, Market ✓/✗/?]
 
 FAILURE POINTS:
 [List single points of failure]
@@ -107,5 +109,5 @@ ENTRY TIMING:
 PATTERN MATCH: [pattern name or "novel pattern"]
 PATTERN DESCRIPTION: [1-2 sentence summary]
 
-RECOMMENDATION: [PROCEED TO DEBATE / ELIMINATE]
+RECOMMENDATION: [PROCEED TO DEBATE / ELIMINATE / NEED_MORE_DATA]
 ```
