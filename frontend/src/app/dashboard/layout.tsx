@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       "Token scanner, 7-gate pipeline, adversarial debate, ConvictionLog STRIKEs and 0G Storage evidence — live on 0G Mainnet.",
     images: [
       {
-        url: "/musashi-logo.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "MUSASHI Dashboard — Token Intelligence on 0G",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: "MUSASHI Dashboard — Token Intelligence on 0G",
     description:
       "Scan, gate, debate, strike. The conviction-weighted dashboard on 0G Mainnet.",
-    images: ["/musashi-logo.png"],
+    images: ["/og-image.png"],
   },
 };
 

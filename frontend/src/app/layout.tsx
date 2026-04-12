@@ -135,10 +135,15 @@ export const metadata: Metadata = {
     icon: [
       { url: "/musashi-favicon-16.png", sizes: "16x16", type: "image/png" },
       { url: "/musashi-favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/musashi-icon-144.png", sizes: "144x144", type: "image/png" },
       { url: "/musashi-icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/musashi-icon-256.png", sizes: "256x256", type: "image/png" },
+      { url: "/musashi-icon-384.png", sizes: "384x384", type: "image/png" },
       { url: "/musashi-icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.png",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
     shortcut: "/favicon.ico",
   },
   manifest: "/site.webmanifest",
@@ -151,7 +156,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "/musashi-logo.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "MUSASHI 武蔵 — Conviction-Weighted Token Intelligence on 0G",
@@ -164,7 +169,7 @@ export const metadata: Metadata = {
     creator: "@YeheskielTame",
     title: TITLE,
     description: SHORT_DESCRIPTION,
-    images: ["/musashi-logo.png"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -195,7 +200,7 @@ const jsonLd = {
       name: "MUSASHI",
       alternateName: ["MUSASHI 武蔵", "Musashi Agent"],
       url: SITE_URL,
-      logo: `${SITE_URL}/musashi-logo.png`,
+      logo: `${SITE_URL}/musashi-icon-512.png`,
       sameAs: [
         "https://github.com/yeheskieltame/musashi",
         "https://x.com/YeheskielTame",
