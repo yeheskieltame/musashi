@@ -31,6 +31,8 @@ var (
 	setINFTSig = crypto.Keccak256([]byte("setINFT(address)"))[:4]
 	// agentReputation(uint256) selector — per-agent reputation
 	agentReputationSig = crypto.Keccak256([]byte("agentReputation(uint256)"))[:4]
+	// getStrike(uint256) selector — read individual strike
+	getStrikeSig = crypto.Keccak256([]byte("getStrike(uint256)"))[:4]
 )
 
 // StrikeResult is the output after publishing a STRIKE on-chain.
@@ -450,6 +452,165 @@ func SetINFT(inftAddress string) (string, error) {
 		BlockNumber:     receipt.BlockNumber.Uint64(),
 		ContractAddress: contractAddr,
 		ExplorerURL:     fmt.Sprintf("%s/tx/%s", OGExplorerBase(), signedTx.Hash().Hex()),
+	}
+
+	b, _ := json.MarshalIndent(result, "", "  ")
+	return string(b), nil
+}
+
+// StrikeData holds a single on-chain strike record.
+type StrikeData struct {
+	ID            uint64 `json:"id"`
+	Token         string `json:"token"`
+	Convergence   uint8  `json:"convergence"`
+	OutcomeFilled bool   `json:"outcome_filled"`
+	EvidenceHash  string `json:"evidence_hash"`
+	ChainID       uint64 `json:"chain_id"`
+	Timestamp     uint64 `json:"timestamp"`
+	OutcomeBps    int64  `json:"outcome_bps"`
+	AgentID       uint64 `json:"agent_id"`
+}
+
+// HistoryResult holds the full strike history with reputation context.
+type HistoryResult struct {
+	Strikes    []StrikeData          `json:"strikes"`
+	Reputation AgentReputationResult `json:"reputation"`
+}
+
+// QueryStrike reads a single strike from ConvictionLog by ID.
+func QueryStrike(id uint64) (*StrikeData, error) {
+	rpcURL := os.Getenv("OG_CHAIN_RPC")
+	if rpcURL == "" {
+		rpcURL = DefaultOGChainRPC
+	}
+
+	contractAddr := os.Getenv("CONVICTION_LOG_ADDRESS")
+	if contractAddr == "" {
+		return nil, fmt.Errorf("CONVICTION_LOG_ADDRESS not set")
+	}
+
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to 0G Chain: %w", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	contract := common.HexToAddress(contractAddr)
+
+	calldata := make([]byte, 0, 4+32)
+	calldata = append(calldata, getStrikeSig...)
+	calldata = append(calldata, common.LeftPadBytes(new(big.Int).SetUint64(id).Bytes(), 32)...)
+
+	result, err := client.CallContract(ctx, ethereum.CallMsg{
+		To:   &contract,
+		Data: calldata,
+	}, nil)
+	if err != nil {
+		return nil, fmt.Errorf("getStrike(%d) call failed: %w", id, err)
+	}
+
+	// getStrike returns Strike struct (8 fields packed into ABI encoding):
+	// address token (32 bytes), uint8 convergence (32), bool outcomeFilled (32),
+	// bytes32 evidenceHash (32), uint64 chainId (32), uint48 timestamp (32),
+	// int128 outcomeBps (32), uint256 agentId (32)
+	if len(result) < 256 {
+		return nil, fmt.Errorf("getStrike(%d) returned %d bytes, expected 256", id, len(result))
+	}
+
+	token := common.BytesToAddress(result[0:32])
+	convergence := uint8(new(big.Int).SetBytes(result[32:64]).Uint64())
+	outcomeFilled := new(big.Int).SetBytes(result[64:96]).Uint64() != 0
+	evidenceHash := common.BytesToHash(result[96:128])
+	chainID := new(big.Int).SetBytes(result[128:160]).Uint64()
+	timestamp := new(big.Int).SetBytes(result[160:192]).Uint64()
+
+	outcomeBpsVal := new(big.Int).SetBytes(result[192:224])
+	if outcomeBpsVal.Bit(255) == 1 {
+		outcomeBpsVal.Sub(outcomeBpsVal, new(big.Int).Lsh(big.NewInt(1), 256))
+	}
+	outcomeBps := outcomeBpsVal.Int64()
+
+	agentID := new(big.Int).SetBytes(result[224:256]).Uint64()
+
+	return &StrikeData{
+		ID:            id,
+		Token:         token.Hex(),
+		Convergence:   convergence,
+		OutcomeFilled: outcomeFilled,
+		EvidenceHash:  evidenceHash.Hex(),
+		ChainID:       chainID,
+		Timestamp:     timestamp,
+		OutcomeBps:    outcomeBps,
+		AgentID:       agentID,
+	}, nil
+}
+
+// QueryHistory reads the last N strikes + agent reputation from ConvictionLog.
+// Returns structured data suitable for injecting into agent prompts.
+func QueryHistory(agentID uint64, limit int) (string, error) {
+	rpcURL := os.Getenv("OG_CHAIN_RPC")
+	if rpcURL == "" {
+		rpcURL = DefaultOGChainRPC
+	}
+
+	contractAddr := os.Getenv("CONVICTION_LOG_ADDRESS")
+	if contractAddr == "" {
+		return "", fmt.Errorf("CONVICTION_LOG_ADDRESS not set")
+	}
+
+	client, err := ethclient.Dial(rpcURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to connect to 0G Chain: %w", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	contract := common.HexToAddress(contractAddr)
+
+	// Get strike count
+	scResult, err := client.CallContract(ctx, ethereum.CallMsg{
+		To:   &contract,
+		Data: strikeCountSig,
+	}, nil)
+	if err != nil {
+		return "", fmt.Errorf("strikeCount() call failed: %w", err)
+	}
+	total := new(big.Int).SetBytes(scResult).Uint64()
+
+	// Fetch strikes (newest first)
+	var strikes []StrikeData
+	start := int64(0)
+	if int64(total) > int64(limit) {
+		start = int64(total) - int64(limit)
+	}
+
+	for i := int64(total) - 1; i >= start; i-- {
+		s, err := QueryStrike(uint64(i))
+		if err != nil {
+			continue // skip individual failures
+		}
+		// Filter by agent if specified
+		if s.AgentID == agentID {
+			strikes = append(strikes, *s)
+		}
+	}
+
+	// Get agent reputation
+	repJSON, err := QueryAgentReputation(agentID)
+	if err != nil {
+		return "", fmt.Errorf("agent reputation query failed: %w", err)
+	}
+	var rep AgentReputationResult
+	json.Unmarshal([]byte(repJSON), &rep)
+
+	result := HistoryResult{
+		Strikes:    strikes,
+		Reputation: rep,
 	}
 
 	b, _ := json.MarshalIndent(result, "", "  ")

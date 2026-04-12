@@ -36,6 +36,11 @@ type TokenContext struct {
 	GoPlusData     *data.TokenSecurityData // Cached GoPlus result (nil if fetch failed)
 	GoPlusError    error                   // Error from GoPlus fetch (nil if success)
 	GoPlusFetched  bool                    // Whether GoPlus was already fetched
+
+	// Cached CoinGecko data: shared between Gate 4 (Social) and Gate 5 (Narrative)
+	CoinGeckoDetail  *data.CoinDetail // Cached coin detail (nil if not fetched)
+	CoinGeckoID      string           // Resolved CoinGecko coin ID
+	CoinGeckoFetched bool             // Whether CoinGecko was already fetched
 }
 
 // ClassifyAge determines the token's age tier from pairCreatedAt timestamp (milliseconds).

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/data"
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/gates"
 )
@@ -87,10 +88,12 @@ func fetchTokenAge(token string) gates.TokenContext {
 }
 
 // RunGates executes the gate pipeline sequentially with fail-fast behavior.
-// Gates 4 (social) and 5 (narrative) are agent-driven and skipped here.
+// Gates 4 (social) and 5 (narrative) are agent-driven.
+// When skipAI is true, Gates 4-5 are marked SKIP (useful for fast quantitative screening).
 // Token age is automatically detected and used for tiered thresholds.
 // GoPlus data is fetched ONCE and shared across all gates to avoid rate limits.
-func RunGates(token string, chainID int64) (*PipelineResult, error) {
+func RunGates(token string, chainID int64, skipAI ...bool) (*PipelineResult, error) {
+	shouldSkipAI := len(skipAI) > 0 && skipAI[0]
 	// Fetch token age context first
 	tokenCtx := fetchTokenAge(token)
 
@@ -101,6 +104,39 @@ func RunGates(token string, chainID int64) (*PipelineResult, error) {
 	tokenCtx.GoPlusFetched = true
 	tokenCtx.GoPlusData = sec
 	tokenCtx.GoPlusError = err
+
+	// Pre-fetch CoinGecko data for Gates 4-5 (Social + Narrative share it).
+	// This avoids duplicate searches that would hit CoinGecko rate limits.
+	if !shouldSkipAI {
+		searchTerm := ""
+		if sec != nil && sec.TokenSymbol != "" {
+			searchTerm = sec.TokenSymbol
+		} else if sec != nil && sec.TokenName != "" {
+			searchTerm = sec.TokenName
+		}
+		if searchTerm != "" {
+			cg := data.NewCoinGeckoClient()
+			searchResult, searchErr := cg.SearchCoins(searchTerm)
+			if searchErr == nil && len(searchResult.Coins) > 0 {
+				// Find best match (prefer exact symbol match)
+				coinID := searchResult.Coins[0].ID
+				if sec != nil {
+					for _, coin := range searchResult.Coins {
+						if strings.EqualFold(coin.Symbol, sec.TokenSymbol) {
+							coinID = coin.ID
+							break
+						}
+					}
+				}
+				tokenCtx.CoinGeckoID = coinID
+				detail, detailErr := cg.GetCoinDetail(coinID)
+				if detailErr == nil {
+					tokenCtx.CoinGeckoDetail = detail
+				}
+			}
+			tokenCtx.CoinGeckoFetched = true
+		}
+	}
 
 	result := &PipelineResult{
 		Token:     token,
@@ -130,6 +166,16 @@ func RunGates(token string, chainID int64) (*PipelineResult, error) {
 	for _, gate := range gateList {
 		var gateResult *gates.Result
 		var err error
+
+		// Skip AI-powered gates (4, 5) when requested — they'll be handled
+		// by the debate route's specialist agents instead.
+		if shouldSkipAI && (gate.Number() == 4 || gate.Number() == 5) {
+			gateResult = gates.NewResult(gate.Name(), gate.Number())
+			gateResult.Status = gates.StatusSkip
+			gateResult.Reason = "Skipped (AI gates run during debate)"
+			result.Gates = append(result.Gates, gateResult)
+			continue
+		}
 
 		// Use age-aware evaluation for gates that support it
 		if ageGate, ok := gate.(gates.AgeAwareGate); ok {

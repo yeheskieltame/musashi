@@ -25,8 +25,9 @@ var gatesCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		chainID, _ := cmd.Flags().GetInt64("chain")
 		output, _ := cmd.Flags().GetString("output")
+		skipAI, _ := cmd.Flags().GetBool("skip-ai")
 
-		result, err := pipeline.RunGates(args[0], chainID)
+		result, err := pipeline.RunGates(args[0], chainID, skipAI)
 		if err != nil {
 			return fmt.Errorf("gate pipeline failed: %w", err)
 		}
@@ -258,6 +259,23 @@ var recordOutcomeCmd = &cobra.Command{
 	},
 }
 
+var historyCmd = &cobra.Command{
+	Use:   "history",
+	Short: "Query strike history + reputation for an agent (memory/learning data source)",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		agentID, _ := cmd.Flags().GetUint64("agent-id")
+		limit, _ := cmd.Flags().GetInt("limit")
+
+		result, err := chain.QueryHistory(agentID, limit)
+		if err != nil {
+			return fmt.Errorf("history query failed: %w", err)
+		}
+
+		fmt.Println(result)
+		return nil
+	},
+}
+
 var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan, score, and rank tokens — find the best opportunities automatically",
@@ -314,6 +332,7 @@ var updateAgentCmd = &cobra.Command{
 func init() {
 	gatesCmd.Flags().Int64("chain", 1, "Chain ID (1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base, 16661=0G)")
 	gatesCmd.Flags().String("output", "json", "Output format: json or pretty")
+	gatesCmd.Flags().Bool("skip-ai", false, "Skip AI-powered gates 4-5 (faster, use when debate handles social/narrative)")
 
 	strikeCmd.Flags().Uint8("convergence", 3, "Convergence score (3 or 4)")
 	strikeCmd.Flags().String("evidence", "", "Evidence hash from 0G Storage")
@@ -346,7 +365,10 @@ func init() {
 	scanCmd.Flags().Int("limit", 10, "Max tokens to return")
 	scanCmd.Flags().Bool("gates", false, "Auto-run gate pipeline on top 5 candidates")
 
-	rootCmd.AddCommand(gatesCmd, strikeCmd, storeCmd, discoveryCmd, mintAgentCmd, updateAgentCmd, statusCmd, agentInfoCmd, recordOutcomeCmd, searchCmd, setINFTCmd, scanCmd)
+	historyCmd.Flags().Uint64("agent-id", 0, "INFT agent token ID")
+	historyCmd.Flags().Int("limit", 20, "Max strikes to fetch")
+
+	rootCmd.AddCommand(gatesCmd, strikeCmd, storeCmd, discoveryCmd, mintAgentCmd, updateAgentCmd, statusCmd, agentInfoCmd, recordOutcomeCmd, searchCmd, setINFTCmd, scanCmd, historyCmd)
 }
 
 func main() {
