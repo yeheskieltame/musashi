@@ -305,7 +305,7 @@ Persists full pipeline output to 0G Storage for cross-session memory.
 
 ### Phase 1: Go Binary — Gate Pipeline [DONE]
 
-12 CLI commands implemented: `scan`, `gates`, `search`, `discover`, `strike`, `store`, `status`, `record-outcome`, `mint-agent`, `update-agent`, `agent-info`, `set-inft`.
+13 CLI commands implemented: `scan`, `gates`, `search`, `discover`, `strike`, `store`, `status`, `record-outcome`, `mint-agent`, `update-agent`, `agent-info`, `set-inft`, `history`.
 
 5 automated gates (1,2,3,6,7) with real API data + age-tiered thresholds + trend analysis. Gates 4-5 are agent-driven. `scan` command auto-discovers, scores, and ranks tokens.
 
@@ -320,6 +320,14 @@ SKILL.md written with full 8-step pipeline. All 8 agent prompts in prompts/.
 - MUSASHI minted as INFT (token ID 0)
 - Full pipeline wired: gates → store evidence → strike with real evidence hash
 - Multiple STRIKEs + outcomes recorded on-chain (verifiable activity on Explorer)
+
+### Phase 3.5: Agent Memory — On-Chain Learning [DONE]
+
+- `history` command queries last N strikes + outcomes from ConvictionLog
+- Judge prompt receives on-chain track record (win rate, returns, past strikes)
+- Judge self-calibrates conviction threshold based on historical performance
+- Pattern detector cross-references current analysis against past strike outcomes
+- Full feedback loop: analyze → strike → outcome → reputation → calibrate → analyze
 
 ### Phase 4: Demo & Polish [CURRENT]
 
@@ -708,6 +716,7 @@ OG_STORAGE_INDEXER=https://indexer-storage-turbo.0g.ai
 8. **Free APIs only.** No Twitter API key. Agent browses public X/Twitter via OpenClaw browser.
 9. **Frontend dashboard exists.** Next.js app with wallet connect, strike ledger, reputation panel, token scanner. 3-min demo video should show both CLI and dashboard.
 10. **Ship working code.** Judges check commits. Better to have 5 gates working perfectly than 7 gates half-broken.
+11. **Agent Memory is on-chain.** `history` command reads past strikes + outcomes from ConvictionLog. Judge uses this to self-calibrate. This is the learning loop that makes MUSASHI a true agent, not just an automation script.
 11. **Go binary accepts 0x prefix on private keys.** `stripHexPrefix()` handles both formats.
 12. **GoPlus returns holder_count as string, not int.** All GoPlus numeric fields use string type in the Go struct.
 

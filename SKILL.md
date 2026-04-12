@@ -183,9 +183,24 @@ Load `prompts/bull_researcher.md` and `prompts/bear_researcher.md`.
 Both receive: 4 specialist reports + pattern report.
 Run 2 debate rounds sequentially (bull opening → bear opening → bull rebuttal → bear rebuttal). Each side may use `browser` and `web_search` for live evidence.
 
+### Step 5.5: Recall Agent Memory (On-Chain Track Record)
+
+Before the judge runs, query your on-chain performance history:
+
+```
+exec {baseDir}/scripts/musashi-core/musashi-core history --agent-id 0 --limit 12
+```
+
+This returns your strike history with outcomes + reputation stats (win rate, cumulative return, recent wins/losses). Include this data in the judge's context so it can calibrate its conviction threshold based on past performance.
+
+The judge uses this to self-calibrate:
+- Win rate >70%: maintain current threshold
+- Win rate 50-70%: tighten standards
+- Win rate <50%: maximum hesitation, only 4/4 convergence should PASS
+
 ### Step 6: Conviction Judge
 
-Load `prompts/conviction_judge.md`. Inject debate transcript + pattern report.
+Load `prompts/conviction_judge.md`. Inject debate transcript + pattern report + **agent memory (history output)**.
 Output: **PASS** or **FAIL**. Hesitation = FAIL.
 Only convergence 3/4 or 4/4 proceeds to STRIKE.
 
@@ -279,8 +294,12 @@ Discovery includes automatic pre-screening:
 
 ```
 exec {baseDir}/scripts/musashi-core/musashi-core status
+exec {baseDir}/scripts/musashi-core/musashi-core status --per-agent --agent-id 0
+exec {baseDir}/scripts/musashi-core/musashi-core history --agent-id 0 --limit 12
 exec {baseDir}/scripts/musashi-core/musashi-core agent-info --token-id 0
 ```
+
+The `history` command returns structured JSON with all strikes + outcomes + reputation stats. This is the data source for the agent's on-chain learning loop.
 
 ## Reference files
 
