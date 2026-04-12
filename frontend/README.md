@@ -2,6 +2,8 @@
 
 Next.js dashboard for the MUSASHI reputation protocol on 0G Mainnet.
 
+**Live:** [https://musashi-agent.xyz](https://musashi-agent.xyz)
+
 ## Setup
 
 ```bash

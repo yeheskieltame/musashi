@@ -568,6 +568,8 @@ Both contracts deployed on 0G Mainnet (Chain ID: 16661):
 | ConvictionLog | `0x2B84aC25498FF0157fAB04fEa9e3544A14882A15` |
 | MusashiINFT | `0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c` |
 
+**Live frontend:** https://musashi-agent.xyz (custom domain on Vercel — canonical hosted dashboard).
+
 ### ConvictionLog.sol (deployed version)
 
 Packed storage (4 slots per strike). O(1) cached reputation (no loops). Ownable2Step + Pausable.

@@ -676,7 +676,9 @@ Claude Code uses `Bash` to run musashi-core (instead of OpenClaw's `exec`) and `
 
 ## Frontend Dashboard
 
-MUSASHI includes a Next.js web dashboard that connects directly to the deployed contracts on 0G Mainnet.
+**Live:** [https://musashi-agent.xyz](https://musashi-agent.xyz)
+
+MUSASHI includes a Next.js web dashboard that connects directly to the deployed contracts on 0G Mainnet. The hosted dashboard above is the canonical deployment — connect MetaMask to 0G Mainnet (Chain ID 16661) and start scanning.
 
 ### Features
 
@@ -698,6 +700,8 @@ pnpm install
 pnpm dev
 # Open http://localhost:3000
 ```
+
+> Production deployment: [musashi-agent.xyz](https://musashi-agent.xyz) (custom domain on Vercel).
 
 The dashboard reads from the same mainnet contracts:
 - ConvictionLog: `0x2B84aC25498FF0157fAB04fEa9e3544A14882A15`
