@@ -11,11 +11,21 @@ import (
 type Status string
 
 const (
-	StatusPass Status = "PASS"
-	StatusFail Status = "FAIL"
-	StatusWarn Status = "WARN"
-	StatusSkip Status = "SKIP"
+	StatusPass             Status = "PASS"
+	StatusFail             Status = "FAIL"
+	StatusWarn             Status = "WARN"
+	StatusSkip             Status = "SKIP"
+	StatusDataInsufficient Status = "DATA_INSUFFICIENT"
 )
+
+// IsEmpty reports whether a string field returned by an upstream API should be
+// treated as "not analyzed yet" rather than "verified false". GoPlus returns
+// "1" for true, "0" for false, and "" for fields it has not yet scanned. The
+// empty case must NOT silently pass through as a negative — it is a data gap
+// the agent specialist needs to fill via fallback investigation.
+func IsEmpty(s string) bool {
+	return s == "" || s == "null"
+}
 
 // TokenAge represents the maturity stage of a token.
 type TokenAge string
@@ -83,6 +93,10 @@ type Result struct {
 	Status   Status     `json:"status"`
 	Reason   string     `json:"reason"`
 	Evidence []Evidence `json:"evidence"`
+	// Gaps lists field names the agent specialist must investigate via
+	// fallback sources (block explorers, Nitter, DeFiLlama, etc). Populated
+	// whenever the gate could not verify a critical field from primary APIs.
+	Gaps []string `json:"gaps,omitempty"`
 }
 
 // Gate is the interface all gates must implement.
@@ -131,6 +145,24 @@ func (r *Result) Fail(reason string) *Result {
 func (r *Result) Warn(reason string) *Result {
 	r.Status = StatusWarn
 	r.Reason = reason
+	return r
+}
+
+// DataInsufficient marks the result as needing agent gap-fill investigation.
+// The gaps slice should list the specific field names the specialist must
+// chase via fallback sources. This status is NOT a fail — it tells the judge
+// "data is missing, ask the user whether to dig deeper."
+func (r *Result) DataInsufficient(reason string, gaps ...string) *Result {
+	r.Status = StatusDataInsufficient
+	r.Reason = reason
+	r.Gaps = append(r.Gaps, gaps...)
+	return r
+}
+
+// AddGap appends a single field name to the gap list without changing status.
+// Useful when a gate passes overall but had to fall back for one optional field.
+func (r *Result) AddGap(field string) *Result {
+	r.Gaps = append(r.Gaps, field)
 	return r
 }
 

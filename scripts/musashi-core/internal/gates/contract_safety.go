@@ -38,13 +38,16 @@ func (g *ContractSafetyGate) EvaluateWithContext(token string, chainID int64, ct
 
 	if err != nil {
 		result.AddEvidence("goplus", "error", err.Error())
-		return result.Warn("GoPlus has no security data for this token — agent should verify contract manually"), nil
+		return result.DataInsufficient(
+			"GoPlus has no security data for this token — agent specialist must verify contract via block explorer",
+			"is_honeypot", "is_mintable", "can_take_back_ownership", "is_open_source", "lp_lock_status", "deployer_prior_tokens",
+		), nil
 	}
 
 	result.AddEvidence("goplus", "token_name", sec.TokenName)
 	result.AddEvidence("goplus", "token_symbol", sec.TokenSymbol)
 
-	// Instant kill checks
+	// Instant kill checks (only fire on VERIFIED true, never on empty)
 	if sec.IsHoneypot == "1" {
 		result.AddEvidence("goplus", "is_honeypot", "true")
 		return result.Fail("Honeypot detected — token cannot be sold"), nil
@@ -60,6 +63,30 @@ func (g *ContractSafetyGate) EvaluateWithContext(token string, chainID int64, ct
 	if sec.CanTakeBackOwnership == "1" {
 		result.AddEvidence("goplus", "can_take_back_ownership", "true")
 		return result.Fail("Owner can reclaim ownership — rug risk"), nil
+	}
+
+	// Gap detection — collect every critical field GoPlus left empty so the
+	// safety specialist can chase them via Etherscan-family explorers. We do
+	// NOT fail or pass on these here; they bubble up via result.Gaps and the
+	// status is decided after collecting all gaps.
+	criticalEmpty := []string{}
+	if IsEmpty(sec.IsHoneypot) {
+		criticalEmpty = append(criticalEmpty, "is_honeypot")
+	}
+	if IsEmpty(sec.IsMintable) {
+		criticalEmpty = append(criticalEmpty, "is_mintable")
+	}
+	if IsEmpty(sec.CanTakeBackOwnership) {
+		criticalEmpty = append(criticalEmpty, "can_take_back_ownership")
+	}
+	if IsEmpty(sec.IsOpenSource) {
+		criticalEmpty = append(criticalEmpty, "is_open_source")
+	}
+	if IsEmpty(sec.BuyTax) || IsEmpty(sec.SellTax) {
+		criticalEmpty = append(criticalEmpty, "tax_structure")
+	}
+	if len(sec.LPHolders) == 0 {
+		criticalEmpty = append(criticalEmpty, "lp_holders")
 	}
 
 	// Track warnings for context-dependent checks
@@ -128,6 +155,22 @@ func (g *ContractSafetyGate) EvaluateWithContext(token string, chainID int64, ct
 	result.AddEvidence("goplus", "owner_address", sec.OwnerAddress)
 	result.AddEvidence("goplus", "creator_address", sec.CreatorAddress)
 	result.AddEvidence("goplus", "holder_count", sec.HolderCount)
+
+	// If GoPlus left a substantial number of critical fields empty, escalate
+	// to DATA_INSUFFICIENT so the specialist runs the fallback playbook
+	// (Etherscan-family getsourcecode + creator address history) before the
+	// judge even sees this report. Threshold: 3+ empty critical fields.
+	if len(criticalEmpty) >= 3 {
+		return result.DataInsufficient(
+			fmt.Sprintf("GoPlus left %d critical safety fields empty — specialist must verify via block explorer", len(criticalEmpty)),
+			criticalEmpty...,
+		), nil
+	}
+
+	// Smaller gap count: still pass/warn but record the gaps for the specialist.
+	for _, g := range criticalEmpty {
+		result.AddGap(g)
+	}
 
 	if len(warnings) > 0 {
 		return result.Warn(fmt.Sprintf("Contract has %v — flagged but likely safe (high holder count)", warnings)), nil

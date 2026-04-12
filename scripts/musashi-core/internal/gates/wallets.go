@@ -55,7 +55,10 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 	sec := ctx.GoPlusData
 	if ctx.GoPlusFetched && ctx.GoPlusError != nil {
 		result.AddEvidence("goplus", "error", ctx.GoPlusError.Error())
-		return result.Warn("GoPlus does not support this chain — holder analysis skipped, agent should verify wallet behavior manually"), nil
+		return result.DataInsufficient(
+			"GoPlus has no holder data for this chain — specialist must fetch holder list via block explorer tokenholderlist endpoint",
+			"holder_count", "top_10_concentration", "creator_balance_pct",
+		), nil
 	}
 	if sec == nil {
 		// Fallback: fetch directly if not cached (standalone gate execution)
@@ -64,12 +67,25 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 		sec, err = goplus.GetTokenSecurity(chainID, token)
 		if err != nil {
 			result.AddEvidence("goplus", "error", err.Error())
-			return result.Warn("GoPlus does not support this chain — holder analysis skipped, agent should verify wallet behavior manually"), nil
+			return result.DataInsufficient(
+				"GoPlus has no holder data for this chain — specialist must fetch holder list via block explorer tokenholderlist endpoint",
+				"holder_count", "top_10_concentration", "creator_balance_pct",
+			), nil
 		}
 	}
 
 	result.AddEvidence("goplus", "holder_count", sec.HolderCount)
 	result.AddEvidence("goplus", "creator_address", sec.CreatorAddress)
+
+	// If GoPlus returned an empty holder count (common on fresh tokens it
+	// hasn't indexed yet), don't fail on a missing number — escalate to
+	// DATA_INSUFFICIENT so the specialist can pull holders from the explorer.
+	if IsEmpty(sec.HolderCount) {
+		return result.DataInsufficient(
+			"GoPlus returned empty holder_count — likely not indexed yet, specialist must fetch from block explorer",
+			"holder_count", "top_10_concentration",
+		), nil
+	}
 
 	// Check 1: Minimum holders (tiered by age)
 	holderCount, _ := strconv.Atoi(sec.HolderCount)

@@ -3,6 +3,7 @@ package pipeline
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -12,15 +13,28 @@ import (
 )
 
 // PipelineResult holds the results of all gate evaluations.
+//
+// Status values:
+//   - PASS              — every gate passed cleanly (or only WARN with sufficient data)
+//   - FAIL              — at least one gate returned a verified-true kill (honeypot, mintable, etc.)
+//   - DATA_INSUFFICIENT — gates that need agent gap-fill before judging conviction
+//   - WARN              — soft flags only; conviction debate still proceeds
+//
+// The runner is NOT fail-fast except for verified Gate 1 kills. All other
+// gates run regardless so the agent gets the complete picture in one shot.
 type PipelineResult struct {
 	Token     string          `json:"token"`
 	ChainID   int64           `json:"chain_id"`
 	Timestamp string          `json:"timestamp"`
-	Status    string          `json:"status"` // PASS, FAIL, WARN
+	Status    string          `json:"status"`
 	FailedAt  int             `json:"failed_at,omitempty"`
 	TokenAge  string          `json:"token_age,omitempty"`
 	AgeHours  float64         `json:"age_hours,omitempty"`
 	Gates     []*gates.Result `json:"gates"`
+	// Gaps aggregates every gap from every gate, deduplicated. The agent
+	// specialists chase these via fallback sources (block explorers,
+	// Nitter, DefiLlama, etc.) before submitting their reports.
+	Gaps []string `json:"gaps,omitempty"`
 }
 
 // JSON serializes the pipeline result.
@@ -50,11 +64,16 @@ func (p *PipelineResult) Pretty() string {
 			icon = "⚠"
 		case gates.StatusSkip:
 			icon = "○"
+		case gates.StatusDataInsufficient:
+			icon = "?"
 		}
 
 		sb.WriteString(fmt.Sprintf("[%s] Gate %d: %s — %s\n", icon, g.GateNum, g.Gate, g.Status))
 		if g.Reason != "" {
 			sb.WriteString(fmt.Sprintf("    %s\n", g.Reason))
+		}
+		if len(g.Gaps) > 0 {
+			sb.WriteString(fmt.Sprintf("    gaps: %s\n", strings.Join(g.Gaps, ", ")))
 		}
 	}
 
@@ -63,6 +82,13 @@ func (p *PipelineResult) Pretty() string {
 
 	if p.Status == "FAIL" && p.FailedAt > 0 {
 		sb.WriteString(fmt.Sprintf("Failed at Gate %d — pipeline stopped.\n", p.FailedAt))
+	}
+
+	if len(p.Gaps) > 0 {
+		sb.WriteString("\nDATA GAPS — specialists must investigate before judging:\n")
+		for _, gap := range p.Gaps {
+			sb.WriteString(fmt.Sprintf("  - %s\n", gap))
+		}
 	}
 
 	return sb.String()
@@ -163,6 +189,15 @@ func RunGates(token string, chainID int64, skipAI ...bool) (*PipelineResult, err
 		gates.NewCrossValidationGate(), // Gate 7
 	}
 
+	// Collect-all execution: every gate runs and produces a result, even if
+	// earlier gates returned FAIL or DATA_INSUFFICIENT. The only exception is
+	// a verified Gate 1 honeypot kill — once that's confirmed there's nothing
+	// for downstream gates to add, so we abort early to save API calls.
+	gapSet := map[string]struct{}{}
+	hasFail := false
+	hasDataInsufficient := false
+	hasWarn := false
+
 	for _, gate := range gateList {
 		var gateResult *gates.Result
 		var err error
@@ -185,28 +220,65 @@ func RunGates(token string, chainID int64, skipAI ...bool) (*PipelineResult, err
 		}
 
 		if err != nil {
-			// Gate encountered an unexpected error (e.g. all API retries exhausted).
-			// Record it as a SKIP rather than aborting the entire pipeline, so
-			// remaining gates can still provide signal.
+			// Gate hit an unexpected error (all retries exhausted, network
+			// blip, etc.). Treat as DATA_INSUFFICIENT so the specialist
+			// knows to retry the lookup themselves.
 			gateResult = gates.NewResult(gate.Name(), gate.Number())
-			gateResult.Status = gates.StatusSkip
+			gateResult.Status = gates.StatusDataInsufficient
 			gateResult.Reason = fmt.Sprintf("gate error: %v", err)
 		}
 
 		result.Gates = append(result.Gates, gateResult)
 
-		// Fail-fast: stop pipeline on first failure
-		if gateResult.Status == gates.StatusFail {
-			result.Status = "FAIL"
-			result.FailedAt = gate.Number()
-			return result, nil
+		// Aggregate gaps for the pipeline-level summary
+		for _, gap := range gateResult.Gaps {
+			tag := fmt.Sprintf("gate%d:%s", gate.Number(), gap)
+			gapSet[tag] = struct{}{}
 		}
 
-		// Track warnings
-		if gateResult.Status == gates.StatusWarn && result.Status != "FAIL" {
-			result.Status = "WARN"
+		switch gateResult.Status {
+		case gates.StatusFail:
+			hasFail = true
+			if result.FailedAt == 0 {
+				result.FailedAt = gate.Number()
+			}
+			// Verified Gate 1 honeypot kill: abort the pipeline. Downstream
+			// gates have nothing to add when the contract is provably evil.
+			if gate.Number() == 1 {
+				result.Status = "FAIL"
+				result.Gaps = flattenGapSet(gapSet)
+				return result, nil
+			}
+		case gates.StatusDataInsufficient:
+			hasDataInsufficient = true
+		case gates.StatusWarn:
+			hasWarn = true
 		}
 	}
 
+	// Final status precedence: FAIL > DATA_INSUFFICIENT > WARN > PASS.
+	// FAIL means at least one gate verified a kill condition.
+	// DATA_INSUFFICIENT means specialists must investigate before the judge can rule.
+	// WARN means soft flags only; conviction debate proceeds.
+	switch {
+	case hasFail:
+		result.Status = "FAIL"
+	case hasDataInsufficient:
+		result.Status = "DATA_INSUFFICIENT"
+	case hasWarn:
+		result.Status = "WARN"
+	}
+
+	result.Gaps = flattenGapSet(gapSet)
 	return result, nil
+}
+
+// flattenGapSet returns a deterministic, sorted slice of gap tags.
+func flattenGapSet(set map[string]struct{}) []string {
+	out := make([]string, 0, len(set))
+	for k := range set {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }
