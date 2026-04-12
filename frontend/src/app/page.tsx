@@ -1110,7 +1110,35 @@ export default function LandingPage() {
               </AccordionItem>
             </Reveal>
 
-            <Reveal delay={80}>
+            <Reveal delay={60}>
+              <AccordionItem title="Install as OpenClaw Skill" tag="Agent Runtime" defaultOpen={false}>
+                <p className="text-xs text-white/60 mb-4">
+                  MUSASHI ships as an installable OpenClaw skill. Point your local OpenClaw runtime at this repo and the agent pulls SKILL.md, the prompts, and the Go binary automatically.
+                </p>
+
+                <div className="text-[10px] font-mono text-white/30 mb-1.5 uppercase tracking-wider">Install OpenClaw + skill</div>
+                <CodeBlock label="Terminal" code={`# 1. Install OpenClaw runtime (one-time)
+npm i -g openclaw
+
+# 2. Install MUSASHI skill from GitHub
+openclaw skills install yeheskieltame/musashi
+
+# 3. Pull the prebuilt Go binary
+curl -L https://github.com/yeheskieltame/musashi/releases/latest/download/musashi-core-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m) \\
+  -o musashi-core && chmod +x musashi-core
+
+# 4. Talk to the agent
+openclaw chat "musashi analyze 0x..."`} />
+
+                <div className="mt-3 p-3 rounded-lg bg-amber-500/[0.04] border border-amber-500/20">
+                  <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                    <strong className="text-amber-200">Why local?</strong> OpenClaw is a local-first agent runtime — it browses the web, runs the binary, and reasons in your machine. The dashboard above is a hosted preview; the OpenClaw skill is the full sovereign agent experience.
+                  </p>
+                </div>
+              </AccordionItem>
+            </Reveal>
+
+            <Reveal delay={120}>
               <AccordionItem title="Self-Host (full installation)" tag="Step 1">
                 <p className="text-xs text-white/60 mb-4">Clone the repository and build the Go binary. Requires Go 1.22+.</p>
                 <CodeBlock label="Terminal" code={`git clone https://github.com/yeheskieltame/musashi.git

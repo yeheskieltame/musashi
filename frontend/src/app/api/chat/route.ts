@@ -69,10 +69,28 @@ function loadParentEnv(): Record<string, string> {
 const parentEnv = loadParentEnv();
 const childEnv = { ...process.env, ...parentEnv };
 
+// Hosted preview environments (Vercel, etc.) cannot spawn the local
+// `claude` / `openclaw` binaries the chat route depends on. We detect that
+// case and return an actionable message pointing the user at the local
+// install path instead of letting child_process throw an opaque ENOENT.
+const IS_HOSTED_PREVIEW = !!process.env.VERCEL || !!process.env.MUSASHI_HOSTED_PREVIEW;
+
 export async function POST(request: NextRequest) {
   const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (!checkRateLimit(clientIp)) {
     return Response.json({ error: "Rate limit exceeded. Try again in a minute." }, { status: 429 });
+  }
+
+  if (IS_HOSTED_PREVIEW) {
+    return Response.json(
+      {
+        error:
+          "The MUSASHI agent runs locally — this hosted preview only serves the dashboard and on-chain reads. " +
+          "To talk to the agent, install OpenClaw + the musashi skill, or clone the repo and run `./musashi-core serve`. " +
+          "Setup guide: https://github.com/yeheskieltame/musashi#install",
+      },
+      { status: 503 },
+    );
   }
 
   let body: Record<string, unknown>;
