@@ -10,14 +10,30 @@ contract ConvictionLogTest is Test {
     MusashiINFT public inft;
     address public attacker = address(0xdead);
 
-    bytes32 constant CONFIG = keccak256("musashi-config-v1");
-    bytes32 constant INTEL = keccak256("prompts-v1");
+    bytes32 constant ROOT = keccak256("0g-storage-root-v1");
+    bytes32 constant META = keccak256("descriptor");
+    bytes constant SEAL = hex"00112233445566778899aabbccddeeff";
+
+    uint256 internal oraclePk = 0xA11CE;
 
     function setUp() public {
         clog = new ConvictionLog();
         inft = new MusashiINFT(address(clog));
         clog.setINFT(address(inft));
-        inft.mint("MUSASHI", CONFIG, INTEL); // agent #0, owned by this contract
+        inft.setOracle(vm.addr(oraclePk));
+        inft.mint("MUSASHI", ROOT, META, SEAL); // agent #0
+    }
+
+    // Helper: produce an oracle-signed transfer proof for the new INFT API.
+    function _sealProof(uint256 tokenId, uint16 version, bytes32 oldRoot, bytes32 newRoot, address to)
+        internal
+        view
+        returns (bytes memory)
+    {
+        bytes32 inner = inft.transferDigest(tokenId, version, oldRoot, newRoot, to);
+        bytes32 prefixed = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", inner));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(oraclePk, prefixed);
+        return abi.encodePacked(r, s, v);
     }
 
     // ─── Basic Strike Logging ───
@@ -216,8 +232,11 @@ contract ConvictionLogTest is Test {
         address agent1Owner = address(0xBEEF);
 
         // Transfer agent #0 to keep it, mint agent #1 and transfer to agent1Owner
-        inft.mint("AGENT_TWO", CONFIG, INTEL); // agent #1, owned by this contract
-        inft.transfer(1, agent1Owner);
+        bytes32 newRoot = keccak256("0g-storage-root-v2");
+        bytes memory newSeal = hex"ffeeddccbbaa99887766554433221100";
+        inft.mint("AGENT_TWO", ROOT, META, SEAL); // agent #1
+        bytes memory proof = _sealProof(1, 1, ROOT, newRoot, agent1Owner);
+        inft.transfer(1, agent1Owner, newRoot, newSeal, proof);
 
         // agent1Owner logs a strike for agent #1
         vm.prank(agent1Owner);
