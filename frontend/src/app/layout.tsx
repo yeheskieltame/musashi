@@ -179,10 +179,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // Fill these once Search Console / Bing / Yandex tokens are available
-    // google: "",
-    // yandex: "",
-    // other: { "msvalidate.01": "" },
+    google: "3S_QH_QsQ1We6j6VCgukuQpVLmvZZ08z3kIulV7gz7o",
   },
   other: {
     "theme-color": "#0a0e1a",
