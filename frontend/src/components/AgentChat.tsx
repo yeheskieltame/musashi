@@ -13,17 +13,17 @@ interface Message {
 }
 
 const AGENT_CONFIG: Record<Agent, { name: string; label: string; color: string; placeholder: string }> = {
-  openclaw: {
-    name: "OpenClaw",
-    label: "OC",
-    color: "from-emerald-500 to-teal-500",
-    placeholder: "Ask anything... e.g. \"scan base chain for opportunities\"",
-  },
   "claude-code": {
     name: "Claude Code",
     label: "CC",
-    color: "from-blue-500 to-violet-500",
-    placeholder: "Ask anything... e.g. \"analyze this token on ethereum\"",
+    color: "bg-amber-600 hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.4)] border border-amber-500/50",
+    placeholder: "Ask MUSASHI core... e.g. \"analyze 0x...\"",
+  },
+  openclaw: {
+    name: "OpenClaw",
+    label: "OC",
+    color: "bg-amber-600 hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.4)] border border-amber-500/50",
+    placeholder: "Ask specialized modules... e.g. \"scan base\"",
   },
 };
 
@@ -181,10 +181,10 @@ export function AgentChat() {
             <button
               key={a}
               onClick={() => handleSwitchAgent(a)}
-              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+              className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all cursor-pointer border ${
                 agent === a
-                  ? `bg-gradient-to-r ${AGENT_CONFIG[a].color} text-white shadow-md`
-                  : "text-slate-500 hover:text-slate-700"
+                  ? `${AGENT_CONFIG[a].color} text-white shadow-md`
+                  : "border-white/10 text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
               {AGENT_CONFIG[a].name}
@@ -207,18 +207,18 @@ export function AgentChat() {
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+              className={`max-w-[85%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed whitespace-pre-wrap font-mono ${
                 msg.role === "user"
-                  ? "bg-gradient-to-r from-blue-500 to-violet-500 text-white"
+                  ? "bg-amber-600 border border-amber-500/50 text-white shadow-[0_4px_15px_rgba(217,119,6,0.3)]"
                   : msg.role === "system"
-                    ? "bg-slate-100 text-slate-500 text-xs italic"
-                    : "glass-strong text-slate-700"
+                    ? "bg-white/5 text-slate-400 text-xs italic border border-white/10"
+                    : "bg-white/[0.04] border border-white/10 text-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
               }`}
             >
               {msg.role === "assistant" && (
                 <div className="flex items-center gap-1.5 mb-1">
                   <span
-                    className={`w-5 h-5 rounded-full bg-gradient-to-br ${cfg.color} flex items-center justify-center text-[9px] text-white font-bold`}
+                    className={`w-5 h-5 rounded-full ${cfg.color} flex items-center justify-center text-[9px] text-white font-bold`}
                   >
                     {cfg.label}
                   </span>
@@ -228,9 +228,9 @@ export function AgentChat() {
               <div className="whitespace-pre-wrap text-[13px] leading-relaxed">
                 {msg.content || (
                   <span className="flex items-center gap-1.5 text-slate-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                   </span>
                 )}
               </div>
@@ -257,13 +257,13 @@ export function AgentChat() {
           onChange={(e) => setInput(e.target.value)}
           placeholder={cfg.placeholder}
           disabled={processing}
-          className="flex-1 glass-strong rounded-xl px-4 py-3 text-sm text-slate-700 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50"
+          className="flex-1 bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-500 outline-none focus:ring-2 focus:ring-amber-500/30 disabled:opacity-50"
         />
         {processing ? (
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-red-500 text-white rounded-xl px-5 py-3 text-sm font-medium hover:bg-red-600 transition-all cursor-pointer"
+            className="bg-amber-600 text-white rounded-xl px-5 py-3 text-sm font-medium hover:bg-amber-500 transition-all cursor-pointer"
             aria-label="Cancel request"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -274,7 +274,7 @@ export function AgentChat() {
           <button
             type="submit"
             disabled={!input.trim()}
-            className={`bg-gradient-to-r ${cfg.color} text-white rounded-xl px-5 py-3 text-sm font-medium hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer`}
+            className={`${cfg.color} text-white rounded-xl px-5 py-3 text-sm font-medium hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer`}
             aria-label="Send message"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

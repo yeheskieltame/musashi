@@ -15,13 +15,13 @@ const GATE_LABELS = [
 
 function StatusIcon({ status }: { status: string }) {
   if (status === "PASS")
-    return <span className="text-emerald-500 font-bold text-lg">&#10003;</span>;
+    return <span className="text-zinc-500 font-bold text-lg">&#10003;</span>;
   if (status === "FAIL")
-    return <span className="text-red-500 font-bold text-lg">&#10007;</span>;
+    return <span className="text-amber-500 font-bold text-lg">&#10007;</span>;
   if (status === "WARN")
     return <span className="text-amber-500 font-bold text-lg">!</span>;
   if (status === "SKIP")
-    return <span className="text-blue-400 font-bold text-lg">&#8594;</span>;
+    return <span className="text-zinc-300 font-bold text-lg">&#8594;</span>;
   return <span className="text-slate-400 text-lg">&#8226;</span>;
 }
 
@@ -51,7 +51,7 @@ export function GatePipeline({ gates, tokenAge, overallStatus }: Props) {
                 overallStatus === "PASS"
                   ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
                   : overallStatus === "FAIL"
-                    ? "bg-red-50 text-red-600 border border-red-200"
+                    ? "bg-amber-50 text-amber-600 border border-amber-200"
                     : "bg-amber-50 text-amber-600 border border-amber-200"
               }`}
             >

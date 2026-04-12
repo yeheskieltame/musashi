@@ -44,9 +44,9 @@ interface RepData {
 
 function calibrationStatus(winRate: number, totalFilled: number): { label: string; color: string; desc: string } {
   if (totalFilled < 3) return { label: "Calibrating", color: "text-amber-500", desc: "Building track record..." };
-  if (winRate >= 70) return { label: "Well-Tuned", color: "text-emerald-500", desc: "Conviction threshold calibrated" };
-  if (winRate >= 50) return { label: "Adjusting", color: "text-blue-500", desc: "Tightening conviction threshold" };
-  return { label: "Recalibrating", color: "text-red-500", desc: "Applying maximum hesitation" };
+  if (winRate >= 70) return { label: "Well-Tuned", color: "text-zinc-500", desc: "Conviction threshold calibrated" };
+  if (winRate >= 50) return { label: "Adjusting", color: "text-zinc-400", desc: "Tightening conviction threshold" };
+  return { label: "Recalibrating", color: "text-amber-500", desc: "Applying maximum hesitation" };
 }
 
 export function ReputationPanel() {
@@ -137,7 +137,7 @@ export function ReputationPanel() {
     return (
       <GlassCard strong className="p-7">
         <div className="flex items-center justify-center py-12 gap-3 text-slate-400">
-          <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          <div className="w-5 h-5 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
           <span className="text-sm">Loading agent memory from 0G Chain...</span>
         </div>
       </GlassCard>
@@ -165,15 +165,15 @@ export function ReputationPanel() {
       {/* Agent Identity + Calibration Status */}
       <GlassCard strong className="p-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_20px_rgba(139,92,246,0.4)] border border-white/10">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-transparent flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(217,119,6,0.2)] border border-amber-500/30 font-mono">
               {agent?.name?.[0] || "M"}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-white tracking-wide">{agent?.name || "MUSASHI"}</span>
                 {agent?.active && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">Active</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">Active</span>
                 )}
               </div>
               <div className="text-xs font-mono text-slate-400 mt-0.5">
@@ -193,19 +193,19 @@ export function ReputationPanel() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-zinc-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Strikes</div>
           <div className="flex items-center gap-2">
             <div className="text-3xl font-bold text-white tracking-tight">{rep?.strikeCount ?? 0}</div>
             <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10 ml-auto">
-              <span className="text-blue-400 font-bold block text-xs">S</span>
+              <span className="text-zinc-300 font-bold block text-xs">S</span>
             </div>
           </div>
           <div className="text-[10px] text-slate-500 mt-1">{rep?.totalFilled ?? 0} outcomes recorded</div>
         </GlassCard>
 
         <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-zinc-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">W / L</div>
           <div className="flex items-center gap-2">
             <div className="text-3xl font-bold tracking-tight">
@@ -214,21 +214,21 @@ export function ReputationPanel() {
               <span className="text-slate-400">{rep?.losses ?? 0}</span>
             </div>
             <div className="flex ml-auto gap-0.5 items-end h-4">
-              <div className="w-1.5 h-3 bg-emerald-500/80 rounded-t-sm" />
-              <div className="w-1.5 h-4 bg-purple-500/80 rounded-t-sm" />
-              <div className="w-1.5 h-2 bg-red-500/80 rounded-t-sm" />
+              <div className="w-1.5 h-3 bg-zinc-500/80 rounded-t-sm" />
+              <div className="w-1.5 h-4 bg-amber-500/80 rounded-t-sm" />
+              <div className="w-1.5 h-2 bg-amber-500/80 rounded-t-sm" />
             </div>
           </div>
           <div className="text-[10px] text-slate-500 mt-1">
             <div className="flex overflow-hidden h-1 rounded-full w-full max-w-[120px]">
-               <div className="bg-emerald-500 h-full" style={{width: `${rep ? (rep.wins / rep.totalFilled)*100 : 0}%`}} />
-               <div className="bg-red-500 h-full" style={{width: `${rep ? (rep.losses / rep.totalFilled)*100 : 0}%`}} />
+               <div className="bg-zinc-500 h-full" style={{width: `${rep ? (rep.wins / rep.totalFilled)*100 : 0}%`}} />
+               <div className="bg-amber-500 h-full" style={{width: `${rep ? (rep.losses / rep.totalFilled)*100 : 0}%`}} />
             </div>
           </div>
         </GlassCard>
 
         <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Win Rate</div>
           <div className="flex items-center justify-between">
             <div className="text-3xl font-bold tracking-tight text-white">
@@ -249,13 +249,13 @@ export function ReputationPanel() {
         </GlassCard>
 
         <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-zinc-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Total Return</div>
           <div className="flex items-center justify-between">
-            <div className={`text-3xl font-bold tracking-tight ${totalReturnPct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            <div className={`text-3xl font-bold tracking-tight ${totalReturnPct >= 0 ? "text-zinc-400" : "text-amber-400"}`}>
               {totalReturnPct >= 0 ? "+" : ""}{totalReturnPct.toFixed(1)}%
             </div>
-            <svg className={`w-5 h-5 ${totalReturnPct >= 0 ? "text-emerald-400" : "text-red-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className={`w-5 h-5 ${totalReturnPct >= 0 ? "text-zinc-400" : "text-amber-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               {totalReturnPct >= 0 
                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 : <path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
@@ -298,8 +298,8 @@ export function ReputationPanel() {
                   <div
                     className={`w-full max-w-[24px] rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(0,0,0,0.5)] ${
                       !isFilled ? "bg-slate-700 animate-pulse border border-slate-600" :
-                      isWin ? "bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]" :
-                      isLoss ? "bg-gradient-to-t from-rose-600 to-rose-400 shadow-[0_0_15px_rgba(225,29,72,0.3)]" :
+                      isWin ? "bg-zinc-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" :
+                      isLoss ? "bg-rose-500 shadow-[0_0_15px_rgba(225,29,72,0.3)]" :
                       "bg-slate-600"
                     }`}
                     style={{ height: `${height}px`, width: '8px' }}
@@ -326,11 +326,11 @@ export function ReputationPanel() {
           {/* Legend */}
           <div className="flex items-center gap-4 text-[10px] text-slate-400">
             <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-zinc-400" />
               <span>Win</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-red-400" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
               <span>Loss</span>
             </div>
             <div className="flex items-center gap-1">
@@ -346,10 +346,10 @@ export function ReputationPanel() {
 
       {/* Learning Insight */}
       {rep && rep.totalFilled >= 3 && (
-        <GlassCard strong className="p-5 border-l-2 border-l-purple-500/50">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-              <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <GlassCard strong className="p-5 border-l-2 border-l-amber-500/50">
+          <div className="flex gap-4">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_15px_rgba(217,119,6,0.2)]">
+              <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
               </svg>
             </div>
@@ -363,7 +363,7 @@ export function ReputationPanel() {
                   : `Win rate at ${winRate.toFixed(0)}% across ${rep.totalFilled} outcomes. The judge has entered maximum hesitation mode — only 4/4 convergence with pristine fundamentals will PASS.`
                 }
                 {" "}All data is on-chain and verifiable on{" "}
-                <a href={`${OG_EXPLORER}/address/${CONVICTION_LOG_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                <a href={`${OG_EXPLORER}/address/${CONVICTION_LOG_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:underline">
                   0G Explorer
                 </a>.
               </p>

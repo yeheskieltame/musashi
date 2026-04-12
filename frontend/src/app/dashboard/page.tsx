@@ -114,7 +114,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img src="/musashi-logo.png" alt="MUSASHI" className="w-5 h-5" />
-              <span className="text-gradient font-bold text-lg drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]">MUSASHI</span>
+              <span className="text-white font-bold text-lg tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
             </Link>
             <div className="w-px h-5 bg-white/20" />
             <span className="text-sm font-medium text-slate-400">Dashboard</span>
@@ -168,7 +168,7 @@ export default function DashboardPage() {
           )}
 
           {/* Tabs */}
-          <div className="flex gap-1 glass-strong rounded-full p-1.5 w-fit mx-auto border border-white/10 shadow-[0_0_30px_rgba(139,92,246,0.1)] relative z-20">
+          <div className="flex overflow-x-auto sm:overflow-visible gap-1 glass-strong rounded-full p-1.5 w-fit max-w-[95vw] sm:max-w-full mx-auto border border-white/10 shadow-[0_0_30px_rgba(139,92,246,0.1)] relative z-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {tabs.map((t) => (
               <button
                 key={t.id}
@@ -192,8 +192,8 @@ export default function DashboardPage() {
             <div className={activeTab === "scanner" ? "" : "hidden"}>
               <GlassCard strong className="p-7">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-8 h-8 rounded-lg bg-zinc-500/20 flex items-center justify-center border border-zinc-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                    <svg className="w-4 h-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -213,8 +213,8 @@ export default function DashboardPage() {
             {activeTab === "gates" && (
               <GlassCard strong className="p-7">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                    <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-8 h-8 rounded-lg bg-zinc-500/20 flex items-center justify-center border border-zinc-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
@@ -223,14 +223,14 @@ export default function DashboardPage() {
 
                 {loading && (
                   <div className="flex items-center gap-3 text-slate-400 py-12 justify-center">
-                    <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                    <div className="w-5 h-5 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
                     <span className="text-sm">Running elimination gates...</span>
                   </div>
                 )}
 
                 {gateError && !loading && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                    <p className="text-sm text-red-400">{gateError}</p>
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+                    <p className="text-sm text-amber-400">{gateError}</p>
                   </div>
                 )}
 
@@ -247,14 +247,14 @@ export default function DashboardPage() {
                           </span>
                           <button
                             onClick={() => handleStartDebate(gateResult.token, gateResult.chain_id)}
-                            className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-lg px-3 py-1.5 hover:bg-purple-500/20 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all cursor-pointer font-medium"
+                            className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg px-3 py-1.5 hover:bg-amber-500/20 hover:shadow-[0_0_15px_rgba(217,119,6,0.3)] transition-all cursor-pointer font-medium"
                           >
                             Run Debate
                           </button>
                           {gateResult.status === "PASS" && (
                             <button
                               onClick={() => setActiveTab("strike")}
-                              className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg px-3 py-1.5 hover:bg-emerald-500/20 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer font-medium"
+                              className="text-xs bg-zinc-500/10 text-zinc-400 border border-zinc-500/30 rounded-lg px-3 py-1.5 hover:bg-zinc-500/20 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer font-medium"
                             >
                               Publish STRIKE
                             </button>
@@ -296,7 +296,7 @@ export default function DashboardPage() {
               ) : (
                 <GlassCard strong className="p-7">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
                       <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>

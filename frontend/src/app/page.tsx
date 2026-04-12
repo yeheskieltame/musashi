@@ -213,7 +213,7 @@ export default function LandingPage() {
         <div className="glass-dark rounded-full px-2 py-2 flex items-center gap-1 shadow-lg shadow-blue-900/20">
           <a href="/" className="flex items-center gap-2 px-3 py-1.5">
             <img src="/musashi-logo.png" alt="" className="w-5 h-5" />
-            <span className="text-gradient font-bold text-sm">MUSASHI</span>
+            <span className="text-white font-bold text-sm tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
           </a>
           <a href="#problem" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">Problem</a>
           <a href="#pipeline" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">Pipeline</a>
@@ -222,7 +222,7 @@ export default function LandingPage() {
           <a href="#setup" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all hidden sm:block">Setup</a>
           <Link
             href="/dashboard"
-            className="bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-full px-5 py-1.5 text-sm font-medium hover:shadow-lg hover:shadow-blue-500/30 transition-all ml-1"
+            className="bg-amber-600/80 border border-amber-500/50 text-white rounded-full px-5 py-1.5 text-sm font-medium hover:shadow-[0_0_15px_rgba(217,119,6,0.4)] hover:bg-amber-500/80 transition-all ml-1 backdrop-blur"
           >
             Dashboard
           </Link>
@@ -245,7 +245,7 @@ export default function LandingPage() {
             <div className="w-full lg:w-[400px] flex-shrink-0 order-2 lg:order-1 animate-[fadeIn_1s_ease-out_0.4s_both]">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-blue-400/60" />
+                  <div className="w-2 h-2 rounded-full bg-zinc-400/60" />
                   <span className="text-xs font-semibold text-white/80 uppercase tracking-widest">System Metrics</span>
                 </div>
 
@@ -289,7 +289,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-1">
                     {GATES.map((g) => (
                       <div key={g.num} className="flex-1 group relative">
-                        <div className={`h-1.5 rounded-full ${g.tag === "AI agent" ? "bg-gradient-to-r from-violet-500 to-purple-500" : g.tag === "age-tiered" ? "bg-gradient-to-r from-blue-500 to-cyan-500" : "bg-gradient-to-r from-emerald-500 to-teal-500"} opacity-40 group-hover:opacity-80 transition-opacity`} />
+                        <div className={`h-1.5 rounded-full ${g.tag === "AI agent" ? "bg-amber-500" : g.tag === "age-tiered" ? "bg-zinc-500" : "bg-zinc-500"} opacity-40 group-hover:opacity-80 transition-opacity`} />
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-white/10 text-[7px] text-white/90 font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                           {g.num}. {g.name}
                         </div>
@@ -305,7 +305,7 @@ export default function LandingPage() {
             <div className="flex-1 order-1 lg:order-2">
               <div className="animate-[fadeIn_0.8s_ease-out]">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-white mb-6">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />
                   Built on 0G Chain
                 </div>
               </div>
@@ -317,7 +317,7 @@ export default function LandingPage() {
 
               <div className="animate-[fadeIn_1s_ease-out_0.2s_both]">
                 <div className="inline-block px-4 py-2 rounded-lg bg-white/[0.04] border border-white/10 mb-5">
-                  <p className="text-base sm:text-lg font-semibold text-blue-300">
+                  <p className="text-base sm:text-lg font-semibold text-zinc-300">
                     Conviction-Weighted Token Intelligence
                   </p>
                 </div>
@@ -330,7 +330,7 @@ export default function LandingPage() {
               </p>
 
               <div className="flex items-center gap-3 flex-wrap animate-[fadeIn_1s_ease-out_0.5s_both]">
-                <Link href="/dashboard" className="px-7 py-3 rounded-full font-semibold text-sm bg-blue-500 text-white hover:bg-blue-400 shadow-xl shadow-blue-500/25 transition-all">
+                <Link href="/dashboard" className="px-7 py-3 rounded-full font-semibold text-sm bg-zinc-500 text-white hover:bg-zinc-400 shadow-xl shadow-blue-500/25 transition-all">
                   Open Dashboard
                 </Link>
                 <a href="https://github.com/yeheskieltame/musashi" target="_blank" rel="noopener noreferrer" className="px-7 py-3 rounded-full font-semibold text-sm text-white/80 border border-white/15 hover:border-white/30 hover:bg-white/5 transition-all">
@@ -425,7 +425,7 @@ export default function LandingPage() {
             <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-6 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <img src="/musashi-logo.png" alt="" className="w-5 h-5" />
-                <span className="text-sm font-bold text-white">MUSASHI</span>
+                <span className="text-white font-bold text-sm tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
               </div>
               <p className="text-sm text-white/70 max-w-2xl mx-auto leading-relaxed">
                 MUSASHI solves these by applying <span className="text-white">elimination, not accumulation</span>. 7 sequential gates filter 97% of tokens. 4 independent AI specialists cross-validate domains. An Opus-powered Judge cross-examines all findings. Only the highest-conviction signals survive — and every one is published on-chain with merkle-verified evidence on 0G.
@@ -447,7 +447,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {GATES.slice(0, 4).map((g, i) => (
               <Reveal key={g.num} delay={i * 80}>
-                <div className="rounded-2xl bg-white/[0.02] border border-white/5 overflow-hidden hover:border-blue-500/20 transition-all group">
+                <div className="rounded-2xl bg-white/[0.02] border border-white/5 overflow-hidden hover:border-zinc-500/20 transition-all group">
                   <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
                     <span className="w-7 h-7 rounded-full border border-white/15 flex items-center justify-center text-xs font-medium text-white">{g.num}</span>
                     <span className="text-sm font-bold text-white">{g.name}</span>
@@ -458,8 +458,8 @@ export default function LandingPage() {
                       {g.viz}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${g.tag === "AI agent" ? "border-violet-500/20 text-violet-400" : g.tag === "age-tiered" ? "border-blue-500/20 text-blue-400" : "border-white/10 text-white/40"}`}>{g.tag}</span>
-                      <span className="text-[9px] text-blue-400 font-mono">{g.badge}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${g.tag === "AI agent" ? "border-violet-500/20 text-violet-400" : g.tag === "age-tiered" ? "border-zinc-500/20 text-zinc-300" : "border-white/10 text-white/40"}`}>{g.tag}</span>
+                      <span className="text-[9px] text-zinc-300 font-mono">{g.badge}</span>
                     </div>
                   </div>
                 </div>
@@ -469,7 +469,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {GATES.slice(4).map((g, i) => (
               <Reveal key={g.num} delay={(i + 4) * 80}>
-                <div className="rounded-2xl bg-white/[0.02] border border-white/5 overflow-hidden hover:border-blue-500/20 transition-all group">
+                <div className="rounded-2xl bg-white/[0.02] border border-white/5 overflow-hidden hover:border-zinc-500/20 transition-all group">
                   <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
                     <span className="w-7 h-7 rounded-full border border-white/15 flex items-center justify-center text-xs font-medium text-white">{g.num}</span>
                     <span className="text-sm font-bold text-white">{g.name}</span>
@@ -480,8 +480,8 @@ export default function LandingPage() {
                       {g.viz}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${g.tag === "AI agent" ? "border-violet-500/20 text-violet-400" : g.tag === "age-tiered" ? "border-blue-500/20 text-blue-400" : "border-white/10 text-white/40"}`}>{g.tag}</span>
-                      <span className="text-[9px] text-blue-400 font-mono">{g.badge}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${g.tag === "AI agent" ? "border-violet-500/20 text-violet-400" : g.tag === "age-tiered" ? "border-zinc-500/20 text-zinc-300" : "border-white/10 text-white/40"}`}>{g.tag}</span>
+                      <span className="text-[9px] text-zinc-300 font-mono">{g.badge}</span>
                     </div>
                   </div>
                 </div>
@@ -694,9 +694,9 @@ export default function LandingPage() {
                       <tr key={a.name} className="border-b border-white/5">
                         <td className="py-2.5 px-3 font-mono font-semibold text-white/80">{a.name}</td>
                         <td className="text-right py-2.5 px-3 text-white/60">{a.strikes}</td>
-                        <td className="text-right py-2.5 px-3 text-emerald-400">{a.wins}</td>
-                        <td className="text-right py-2.5 px-3 text-red-400">{a.losses}</td>
-                        <td className={`text-right py-2.5 px-3 font-mono ${a.ret.startsWith("+") ? "text-emerald-400" : "text-red-400"}`}>{a.ret}</td>
+                        <td className="text-right py-2.5 px-3 text-zinc-400">{a.wins}</td>
+                        <td className="text-right py-2.5 px-3 text-amber-400">{a.losses}</td>
+                        <td className={`text-right py-2.5 px-3 font-mono ${a.ret.startsWith("+") ? "text-zinc-400" : "text-amber-400"}`}>{a.ret}</td>
                         <td className="text-right py-2.5 px-3 text-white/70">{a.rate}</td>
                       </tr>
                     ))}
@@ -853,7 +853,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-10">
               {["0G Chain", "Ethereum", "BSC", "Polygon", "Arbitrum", "Base"].map((chain, i) => (
                 <Reveal key={chain} delay={i * 50}>
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center hover:border-emerald-500/15 transition-all">
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center hover:border-zinc-500/15 transition-all">
                     <p className="text-[11px] font-semibold text-white">{chain}</p>
                   </div>
                 </Reveal>
@@ -877,10 +877,10 @@ export default function LandingPage() {
               {/* Learning Loop Diagram */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
                 {[
-                  { label: "Analyze", sub: "7 gates + debate", color: "from-blue-500/20 to-blue-500/5", border: "border-blue-500/20" },
+                  { label: "Analyze", sub: "7 gates + debate", color: "from-blue-500/20 to-blue-500/5", border: "border-zinc-500/20" },
                   { label: "STRIKE", sub: "publish on-chain", color: "from-violet-500/20 to-violet-500/5", border: "border-violet-500/20" },
                   { label: "Outcome", sub: "record result", color: "from-amber-500/20 to-amber-500/5", border: "border-amber-500/20" },
-                  { label: "Learn", sub: "calibrate threshold", color: "from-emerald-500/20 to-emerald-500/5", border: "border-emerald-500/20" },
+                  { label: "Learn", sub: "calibrate threshold", color: "from-zinc-500/20 to-zinc-500/5", border: "border-zinc-500/20" },
                 ].map((step, i) => (
                   <div key={step.label} className="flex items-center gap-4">
                     <div className={`w-28 h-20 rounded-xl bg-gradient-to-b ${step.color} border ${step.border} flex flex-col items-center justify-center`}>
@@ -898,7 +898,7 @@ export default function LandingPage() {
 
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
-                  <div className="text-xs font-semibold text-blue-400 mb-2">Self-Calibration</div>
+                  <div className="text-xs font-semibold text-zinc-300 mb-2">Self-Calibration</div>
                   <p className="text-[11px] text-white/50 leading-relaxed">
                     Judge queries on-chain win rate before every decision. High win rate = maintain threshold. Low win rate = apply maximum hesitation.
                   </p>
@@ -910,7 +910,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
-                  <div className="text-xs font-semibold text-emerald-400 mb-2">Verifiable</div>
+                  <div className="text-xs font-semibold text-zinc-400 mb-2">Verifiable</div>
                   <p className="text-[11px] text-white/50 leading-relaxed">
                     All memory is on-chain. Anyone can query agentReputation(0) and verify the track record. No self-reported stats.
                   </p>
@@ -935,7 +935,7 @@ export default function LandingPage() {
               <AccordionItem title="1. Mint an Agent INFT (ERC-7857)" tag="Identity" defaultOpen>
                 <p className="text-xs text-white/60 mb-4">
                   Each agent needs an Intelligent NFT on 0G Chain. The INFT holds your agent&apos;s identity, configuration hash, and reputation — all on-chain.
-                  Based on the <span className="text-blue-400">ERC-7857</span> standard for tokenized AI agents.
+                  Based on the <span className="text-zinc-300">ERC-7857</span> standard for tokenized AI agents.
                 </p>
                 <CodeBlock label="CLI" code={`# Mint your agent INFT on 0G Mainnet
 ./musashi-core mint-agent \\
@@ -1036,7 +1036,7 @@ export default function LandingPage() {
             <div className="mt-8 rounded-2xl bg-white/[0.02] border border-white/5 p-6 text-center">
               <p className="text-xs text-white/40 mb-2">Contract Addresses (0G Mainnet)</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-[11px] font-mono">
-                <a href={`https://chainscan.0g.ai/address/0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <a href={`https://chainscan.0g.ai/address/0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed`} target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-zinc-300 transition-colors">
                   ConvictionLog: 0xdB5E...1Ed
                 </a>
                 <span className="text-white/20 hidden sm:inline">|</span>
@@ -1065,7 +1065,7 @@ export default function LandingPage() {
                 <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 text-center">
                   <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-600 to-violet-600 text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold bg-amber-600/80 border border-amber-500/50 text-white hover:shadow-[0_0_15px_rgba(217,119,6,0.4)] hover:bg-amber-500/80 transition-all backdrop-blur"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     Open Dashboard
@@ -1167,8 +1167,7 @@ claude login`} />
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img src="/musashi-logo.png" alt="" className="w-5 h-5" />
-            <span className="text-gradient font-bold">MUSASHI</span>
-            <span className="text-white/20 text-sm">武蔵</span>
+            <span className="text-white font-bold text-sm tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
           </div>
           <div className="flex items-center gap-6 text-sm text-white/30">
             <a href="https://github.com/yeheskieltame/musashi" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">GitHub</a>

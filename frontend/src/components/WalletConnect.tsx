@@ -12,13 +12,13 @@ export function WalletConnect({ compact = false }: { compact?: boolean }) {
     return (
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 glass-strong rounded-full px-4 py-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-zinc-400 animate-pulse" />
           <span className="font-mono text-sm text-slate-700">{short}</span>
         </div>
         {!compact && (
           <button
             onClick={() => disconnect()}
-            className="text-xs text-slate-500 hover:text-red-500 transition-colors px-2 py-1 cursor-pointer"
+            className="text-xs text-slate-500 hover:text-amber-500 transition-colors px-2 py-1 cursor-pointer"
           >
             Disconnect
           </button>
@@ -37,7 +37,7 @@ export function WalletConnect({ compact = false }: { compact?: boolean }) {
   return (
     <button
       onClick={handleConnect}
-      className="bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-full px-5 py-2.5 text-sm font-medium hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
+      className="bg-transparent border border-white/20 text-white rounded-full px-5 py-2.5 text-sm font-medium hover:bg-white/5 hover:border-white/40 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all duration-300 cursor-pointer"
     >
       Connect Wallet
     </button>

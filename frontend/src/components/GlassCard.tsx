@@ -25,7 +25,7 @@ export function GlassCard({
       : "glass";
 
   const hoverClass = hover
-    ? "transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] card-shine cursor-pointer"
+    ? "transition-all duration-300 hover:-translate-y-1 hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(217,119,6,0.15)] card-shine cursor-pointer"
     : "";
 
   return (

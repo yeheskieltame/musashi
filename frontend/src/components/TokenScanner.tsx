@@ -41,9 +41,9 @@ export function TokenScanner({ onSelectToken }: Props) {
   }
 
   function scoreColor(score: number) {
-    if (score >= 70) return "text-emerald-400";
+    if (score >= 70) return "text-zinc-400";
     if (score >= 50) return "text-amber-400";
-    return "text-red-400";
+    return "text-amber-400";
   }
 
   return (
@@ -53,7 +53,7 @@ export function TokenScanner({ onSelectToken }: Props) {
         <select
           value={chain}
           onChange={(e) => setChain(Number(e.target.value))}
-          className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none cursor-pointer hover:bg-white/10 transition-colors focus:border-purple-500/50 appearance-none pr-8 relative"
+          className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none cursor-pointer hover:bg-white/10 transition-colors focus:border-amber-500/50 appearance-none pr-8 relative"
           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23a1a1aa\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
         >
           {Object.entries(CHAIN_NAMES).map(([id, name]) => (
@@ -68,7 +68,7 @@ export function TokenScanner({ onSelectToken }: Props) {
             type="checkbox"
             checked={withGates}
             onChange={(e) => setWithGates(e.target.checked)}
-            className="rounded accent-purple-500 border-white/20 bg-white/5"
+            className="rounded accent-amber-500 border-white/20 bg-white/5"
           />
           Auto-gates top 5
         </label>
@@ -76,9 +76,9 @@ export function TokenScanner({ onSelectToken }: Props) {
         <button
           onClick={handleScan}
           disabled={loading}
-          className="relative group overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.5)] transition-all disabled:opacity-50 cursor-pointer"
+          className="relative group overflow-hidden rounded-xl bg-amber-600/80 border border-amber-500/50 backdrop-blur px-6 py-2.5 text-sm font-medium text-white shadow-[0_0_15px_rgba(217,119,6,0.3)] hover:shadow-[0_0_25px_rgba(217,119,6,0.5)] hover:bg-amber-500/80 transition-all disabled:opacity-50 cursor-pointer"
         >
-          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
           <span className="relative">
             {loading ? (
               <span className="flex items-center gap-2">
@@ -103,8 +103,8 @@ export function TokenScanner({ onSelectToken }: Props) {
 
       {/* Error */}
       {error && !loading && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+          <p className="text-sm text-amber-400">{error}</p>
         </div>
       )}
 
@@ -125,7 +125,7 @@ export function TokenScanner({ onSelectToken }: Props) {
                       {t.chain}
                     </span>
                     {t.token_age && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-500/10 text-zinc-300 border border-zinc-500/20">
                         {t.token_age}
                       </span>
                     )}
@@ -156,7 +156,7 @@ export function TokenScanner({ onSelectToken }: Props) {
 
                   <button
                     onClick={() => onSelectToken(t.address, t.chain_id)}
-                    className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-lg px-3 py-2 hover:bg-purple-500/20 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all cursor-pointer whitespace-nowrap font-medium"
+                    className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg px-3 py-2 hover:bg-amber-500/20 hover:shadow-[0_0_15px_rgba(217,119,6,0.3)] transition-all cursor-pointer whitespace-nowrap font-medium"
                   >
                     Run Gates
                   </button>
@@ -168,9 +168,9 @@ export function TokenScanner({ onSelectToken }: Props) {
                   <span
                     className={`text-xs font-bold ${
                       t.gate_result === "PASS"
-                        ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                        ? "text-zinc-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                         : t.gate_result === "FAIL"
-                          ? "text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]"
+                          ? "text-amber-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]"
                           : "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
                     }`}
                   >

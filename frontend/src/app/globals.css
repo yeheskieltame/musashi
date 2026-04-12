@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-   inline {
+@theme inline {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --color-blue-accent: #2563eb;
@@ -15,21 +15,21 @@ html {
 }
 
 body {
-  background-color: #0b0c16;
+  background-color: #030303;
 }
 
 /* Landing page: dark with depth */
 .landing-bg {
-  background: linear-gradient(135deg, #0b0c16 0%, #151124 50%, #0d1421 100%);
+  background: linear-gradient(135deg, #050505 0%, #110505 50%, #080303 100%);
   color: #e2e8f0;
 }
 
 /* Dashboard: Deep space glassmorphism matching the redesign */
 .dashboard-bg {
-  background: radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.15), transparent 30%), 
-              radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 30%),
-              radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.1), transparent 40%),
-              #070811;
+  background: radial-gradient(circle at 15% 50%, rgba(217, 119, 6, 0.15), transparent 30%), 
+              radial-gradient(circle at 85% 30%, rgba(161, 161, 170, 0.15), transparent 30%),
+              radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.05), transparent 40%),
+              #030303;
   color: #f1f5f9;
 }
 
@@ -66,26 +66,21 @@ body {
 
 /* Glow variant for featured cards */
 .glass-dark-glow {
-  background: linear-gradient(180deg, rgba(40, 50, 90, 0.5) 0%, rgba(20, 25, 45, 0.4) 100%);
+  background: linear-gradient(180deg, rgba(90, 60, 20, 0.5) 0%, rgba(45, 30, 10, 0.4) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
-/* Text gradients */
+/* Text colors (formerly gradients) */
 .text-gradient {
-  background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #d97706; /* amber-600 */
+  text-shadow: 0 0 10px rgba(217, 119, 6, 0.4);
 }
 
 .text-gradient-subtle {
-  background: linear-gradient(135deg, #93c5fd 0%, #d8b4fe 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #a1a1aa; /* zinc-400 */
 }
 
 /* Grid background patterns */
@@ -139,7 +134,7 @@ body {
   transform: translateX(-50%);
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(96,165,250,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(217,119,6,0.1) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -154,7 +149,7 @@ body {
   transform: translateX(-50%);
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(161,161,170,0.08) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -176,8 +171,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
-  50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.4); }
+  0%, 100% { box-shadow: 0 0 15px rgba(217, 119, 6, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(217, 119, 6, 0.4); }
 }
 
 @keyframes float {
@@ -219,7 +214,7 @@ body {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, rgba(96,165,250,0.2), rgba(167,139,250,0.2));
+  background: linear-gradient(to bottom, rgba(217,119,6,0.2), rgba(161,161,170,0.2));
 }
 
 /* Hover card shine effect */

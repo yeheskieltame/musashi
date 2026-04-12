@@ -60,9 +60,9 @@ const AGENTS = ["safety", "technical", "narrative", "market"] as const;
 
 const AGENT_COLORS: Record<string, string> = {
   safety: "text-orange-400",
-  technical: "text-blue-400",
-  narrative: "text-purple-400",
-  market: "text-emerald-400",
+  technical: "text-zinc-300",
+  narrative: "text-amber-400",
+  market: "text-zinc-400",
   judge: "text-amber-300",
   system: "text-slate-400",
 };
@@ -80,14 +80,14 @@ const BADGE_STYLES: Record<AgentStatus, string> = {
   waiting: "bg-slate-100 text-slate-400 border-slate-200",
   running: "bg-blue-50 text-blue-600 border-blue-200 animate-pulse",
   done: "bg-emerald-50 text-emerald-600 border-emerald-200",
-  error: "bg-red-50 text-red-600 border-red-200",
+  error: "bg-amber-50 text-amber-600 border-amber-200",
 };
 
 const JUDGE_BADGE_STYLES: Record<AgentStatus, string> = {
   waiting: "bg-amber-50/50 text-amber-300 border-amber-200",
   running: "bg-amber-50 text-amber-600 border-amber-300 animate-pulse",
   done: "bg-amber-50 text-amber-700 border-amber-400",
-  error: "bg-red-50 text-red-600 border-red-200",
+  error: "bg-amber-50 text-amber-600 border-amber-200",
 };
 
 /* ------------------------------------------------------------------ */
@@ -442,23 +442,23 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
         : "Ready";
 
   const statusColor = running
-    ? "text-blue-500"
+    ? "text-zinc-400"
     : verdict
       ? verdict.pass
         ? "text-emerald-600"
-        : "text-red-600"
+        : "text-amber-600"
       : events.some((e) => e.type === "error")
-        ? "text-red-500"
+        ? "text-amber-500"
         : "text-slate-400";
 
   const statusDot = running
-    ? "bg-blue-500 animate-pulse"
+    ? "bg-zinc-500 animate-pulse"
     : verdict
       ? verdict.pass
-        ? "bg-emerald-500"
-        : "bg-red-500"
+        ? "bg-zinc-500"
+        : "bg-amber-500"
       : events.some((e) => e.type === "error")
-        ? "bg-red-500"
+        ? "bg-amber-500"
         : "bg-slate-300";
 
   /* ---------------------------------------------------------------- */
@@ -560,7 +560,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium capitalize transition-all duration-300 ${BADGE_STYLES[agentStatuses[agent]]}`}
             >
               {agentStatuses[agent] === "running" && (
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-zinc-500 animate-pulse" />
               )}
               {agentStatuses[agent] === "done" && (
                 <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
@@ -629,7 +629,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
 
             if (line.type === "error") {
               return (
-                <div key={line.id} className="text-red-400 py-0.5">
+                <div key={line.id} className="text-amber-400 py-0.5">
                   {label && (
                     <span className="font-semibold">[{label}] </span>
                   )}
@@ -675,7 +675,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
             className={`px-4 py-3 border-t ${
               verdict.pass
                 ? "border-emerald-200 bg-emerald-50/80"
-                : "border-red-200 bg-red-50/80"
+                : "border-amber-200 bg-amber-50/80"
             }`}
           >
             <div className="flex items-center gap-3 flex-wrap">
@@ -684,7 +684,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-sm ${
                   verdict.pass
                     ? "bg-emerald-600 text-white"
-                    : "bg-red-600 text-white"
+                    : "bg-amber-600 text-white"
                 }`}
               >
                 {verdict.pass ? (

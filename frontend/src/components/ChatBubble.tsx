@@ -15,13 +15,13 @@ const AGENT_CONFIG: Record<Agent, { name: string; label: string; color: string; 
   "claude-code": {
     name: "Claude Code",
     label: "CC",
-    color: "from-blue-500 to-violet-500",
+    color: "bg-amber-600 hover:bg-amber-500 shadow-[0_0_15px_rgba(217,119,6,0.4)] border border-amber-500/50",
     placeholder: "Ask anything... e.g. \"analyze 0x... on Base\"",
   },
   openclaw: {
     name: "OpenClaw",
     label: "OC",
-    color: "from-emerald-500 to-teal-500",
+    color: "bg-emerald-600 hover:bg-zinc-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] border border-zinc-500/50",
     placeholder: "Ask anything... e.g. \"scan base chain\"",
   },
 };
@@ -200,7 +200,7 @@ export default function ChatBubble() {
               <div>
                 <span className="text-sm font-semibold text-white">MUSASHI</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />
                   <span className="text-[10px] text-white/40">Online</span>
                 </div>
               </div>
@@ -220,7 +220,7 @@ export default function ChatBubble() {
                   }}
                   className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-all cursor-pointer ${
                     agent === a
-                      ? `bg-gradient-to-r ${AGENT_CONFIG[a].color} text-white`
+                      ? `${AGENT_CONFIG[a].color} text-white`
                       : "text-white/40 hover:text-white/70"
                   }`}
                 >
@@ -247,7 +247,7 @@ export default function ChatBubble() {
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-blue-500 text-white"
+                      ? "bg-zinc-500 text-white"
                       : msg.role === "system"
                         ? "bg-white/[0.04] border border-white/[0.08] text-white/50 text-xs italic"
                         : "bg-white/[0.04] border border-white/[0.08] text-white/85"
@@ -255,7 +255,7 @@ export default function ChatBubble() {
                 >
                   {msg.role === "assistant" && (
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className={`w-4 h-4 rounded-full bg-gradient-to-br ${cfg.color} flex items-center justify-center text-[8px] text-white font-bold`}>
+                      <span className={`w-4 h-4 rounded-full ${cfg.color.split(' ')[0]} flex items-center justify-center text-[8px] text-white font-bold`}>
                         {cfg.label}
                       </span>
                       <span className="text-[10px] text-white/30">{cfg.name}</span>
@@ -266,9 +266,9 @@ export default function ChatBubble() {
                       <FormatText text={msg.content} />
                     ) : (
                       <span className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                       </span>
                     )}
                   </div>
@@ -302,13 +302,13 @@ export default function ChatBubble() {
               onChange={(e) => setInput(e.target.value)}
               placeholder={cfg.placeholder}
               disabled={processing}
-              className="flex-1 bg-white/[0.06] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-blue-500/40 disabled:opacity-50"
+              className="flex-1 bg-white/[0.06] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-amber-500/40 disabled:opacity-50"
             />
             {processing ? (
               <button
                 type="button"
                 onClick={() => abortRef.current?.abort()}
-                className="bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl px-4 py-2.5 hover:bg-red-500/30 transition-all cursor-pointer"
+                className="bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-xl px-4 py-2.5 hover:bg-amber-500/30 transition-all cursor-pointer"
                 aria-label="Cancel request"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -319,7 +319,7 @@ export default function ChatBubble() {
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className={`bg-gradient-to-r ${cfg.color} text-white rounded-xl px-4 py-2.5 hover:shadow-lg transition-all disabled:opacity-30 cursor-pointer`}
+                className={`${cfg.color} text-white rounded-xl px-4 py-2.5 transition-all disabled:opacity-30 cursor-pointer`}
                 aria-label="Send message"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -335,22 +335,23 @@ export default function ChatBubble() {
       <button
         onClick={() => setOpen(!open)}
         aria-label={open ? "Close chat" : "Open chat"}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-xl transition-all duration-300 cursor-pointer ${
+        className={`fixed bottom-6 right-6 z-50 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center ${
           open
-            ? "bg-white/10 border border-white/20 scale-90"
-            : "bg-gradient-to-br from-blue-600 to-violet-600 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-105"
+            ? "w-16 h-16 bg-transparent hover:scale-90"
+            : "w-16 h-16 bg-transparent hover:scale-110"
         }`}
       >
         {open ? (
-          <svg className="w-5 h-5 mx-auto text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
+          <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-full flex items-center justify-center backdrop-blur">
+            <svg className="w-6 h-6 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         ) : (
-          <>
-            <img src="/musashi-logo.png" alt="MUSASHI" className="w-7 h-7 mx-auto" />
-            {/* Pulse ring */}
-            <span className="absolute inset-0 rounded-full border-2 border-blue-400/40 animate-ping" style={{ animationDuration: "2s" }} />
-          </>
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img src="/musashi-logo.png" alt="MUSASHI" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <span className="absolute inset-2 rounded-full border border-amber-500/20 blur-[2px] animate-ping" style={{ animationDuration: "2s" }} />
+          </div>
         )}
       </button>
 
