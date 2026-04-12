@@ -110,6 +110,7 @@ Anyone can build their own analysis pipeline (different gates, different strateg
 |-------|-----------|------|
 | Skill | SKILL.md + .claude/commands/ | Teaches agents HOW to investigate tokens (OpenClaw + Claude Code) |
 | Engine | musashi-core (Go) | High-performance data engine. Gates 1-3, 6-7. Publishes STRIKEs. |
+| Memory | musashi-core history | On-chain learning: reads past strikes + outcomes, feeds into judge |
 | Agent | OpenClaw or Claude Code | Gates 4-5 (social investigation), specialists, debate, judge |
 | Protocol | ConvictionLog.sol | Multi-agent STRIKE log. Per-agent + global reputation. |
 | Identity | MusashiINFT.sol | ERC-7857 agent INFT. Identity + reputation + intelligence on-chain. |
@@ -172,6 +173,47 @@ Then:
 3. **Conviction Judge** -- PASS or FAIL. Hesitation = FAIL.
 
 If PASS: evidence stored to 0G Storage, STRIKE published to ConvictionLog on 0G Chain.
+
+---
+
+## Agent Memory: On-Chain Learning
+
+MUSASHI doesn't just analyze — it **learns from its own track record**. This is what separates a true agent from an automation script.
+
+### The Learning Loop
+
+```
+Analyze token → PASS → Publish STRIKE on-chain → Time passes → Record outcome
+       ↑                                                              ↓
+       └──── history command reads back ←── reputation updates on-chain
+```
+
+### How It Works
+
+1. **On-Chain Track Record** — Every STRIKE and its outcome is recorded permanently on ConvictionLog. The `history` command reads the last N strikes with outcomes and reputation stats.
+
+2. **Judge Self-Calibration** — Before making a PASS/FAIL decision, the Conviction Judge receives the agent's on-chain track record: win rate, cumulative return, recent strike outcomes. It calibrates its conviction threshold accordingly:
+   - Win rate >70%: threshold well-calibrated, maintain standards
+   - Win rate 50-70%: tighten standards, require stronger convergence
+   - Win rate <50%: agent has been too permissive, apply maximum hesitation
+
+3. **Historical Pattern Matching** — The Musashi Pattern Detector cross-references the current token's gate signature against past strikes. "This pattern resembles Strike #3 which returned +5.0%" or "Similar to Strike #4 which returned -8.0% — the narrative had peaked."
+
+4. **Verifiable Performance** — All of this is on-chain. Anyone can query `agentReputation(0)` and verify the agent's track record. No self-reported stats. No trust-me-bro.
+
+### Example: Agent Memory in Action
+
+```bash
+# Query agent's on-chain memory
+./scripts/musashi-core/musashi-core history --agent-id 0 --limit 12
+
+# Output includes:
+# - 12 strikes with outcomes (wins/losses/pending)
+# - Agent reputation: 66.7% win rate, +52.5% cumulative return
+# - This data is injected into the judge's context before every decision
+```
+
+The judge might reason: *"My track record shows 4 wins and 2 losses with a 66.7% win rate. My losses came from tokens where the narrative had already peaked. This current token shows a forming narrative with strong on-chain accumulation — similar to Strike #3 which returned +5.0%. Maintaining current conviction threshold."*
 
 ---
 
@@ -339,6 +381,7 @@ set -a && source .env && set +a
 | `set-inft` | Link MusashiINFT to ConvictionLog (one-time) | `./scripts/musashi-core/musashi-core set-inft 0xFB1C...488` |
 | `mint-agent` | Mint agent INFT | `./scripts/musashi-core/musashi-core mint-agent --name MUSASHI --config-hash <hash> --intelligence-hash <hash>` |
 | `update-agent` | Update agent intelligence + sync reputation | `./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <hash>` |
+| `history` | Query strike history + reputation (agent memory) | `./scripts/musashi-core/musashi-core history --agent-id 0 --limit 12` |
 | `agent-info` | Query INFT agent state | `./scripts/musashi-core/musashi-core agent-info --token-id 0` |
 
 ### Full flag reference
@@ -388,6 +431,10 @@ musashi-core mint-agent
 musashi-core update-agent
   --token-id uint64          INFT token ID (default 0)
   --intelligence-hash string New intelligence hash
+
+musashi-core history
+  --agent-id uint64    INFT agent token ID (default 0)
+  --limit int          Max strikes to fetch (default 20)
 
 musashi-core agent-info
   --token-id uint64          INFT token ID to query (default 0)
@@ -449,7 +496,11 @@ set -a && source .env && set +a
 # 6. Record outcome later (owner only — outcomes are objective facts)
 ./scripts/musashi-core/musashi-core record-outcome --strike-id 0 --return-bps 1200
 
-# 7. Sync reputation to INFT
+# 7. Query agent memory (history + reputation for learning)
+./scripts/musashi-core/musashi-core history --agent-id 0 --limit 12
+# Returns: strikes with outcomes + reputation stats — fed into judge for self-calibration
+
+# 8. Sync reputation to INFT
 ./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <new_hash>
 ```
 
@@ -630,7 +681,7 @@ musashi/
 │   └── src/lib/wagmi.ts             0G Mainnet chain definition (ID: 16661)
 ├── scripts/
 │   ├── musashi-core/                Go binary source
-│   │   ├── cmd/musashi/main.go      CLI entry point (12 commands)
+│   │   ├── cmd/musashi/main.go      CLI entry point (13 commands)
 │   │   └── internal/
 │   │       ├── data/                API clients: goplus, dexscreener, geckoterminal,
 │   │       │                        coingecko, defillama, farcaster, rpc

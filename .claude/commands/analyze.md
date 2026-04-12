@@ -75,9 +75,19 @@ Both receive: 4 specialist reports + pattern report.
 Run 2 rounds: bull opening → bear opening → bull rebuttal → bear rebuttal.
 Each side may use WebSearch for live evidence.
 
+### Step 5.5: Recall Agent Memory (On-Chain Track Record)
+
+Before the judge runs, query your on-chain performance history:
+
+```bash
+./scripts/musashi-core/musashi-core history --agent-id 0 --limit 12
+```
+
+This returns your strike history with outcomes + reputation stats (win rate, total return). Include this data in the judge's context so it can calibrate its conviction threshold based on past performance.
+
 ### Step 6: Conviction Judge
 
-Read `prompts/conviction_judge.md`. Inject debate transcript + pattern report.
+Read `prompts/conviction_judge.md`. Inject debate transcript + pattern report + **agent memory (history output)**.
 Output: **PASS** or **FAIL**. Hesitation = FAIL.
 
 ### Step 7: If PASS → Store Evidence + Publish STRIKE

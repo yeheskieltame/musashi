@@ -70,6 +70,15 @@ High volume but sell-heavy → price declining despite "activity" → concentrat
 ### "Whale Dependency"
 Single wallet >30% supply → entire thesis depends on one holder's decision → one sell = price collapse. ELIMINATE regardless of other signals.
 
+## Agent Memory: Historical Pattern Matching
+
+If you receive strike history data, use it to enhance pattern detection:
+
+- **Compare current token's gate signature against past strikes.** Same chain + similar convergence + similar age category = relevant comparison.
+- **Reference past outcomes.** "This pattern resembles Strike #3 (token on ETH, convergence 4/4) which returned +5.0%." Or: "Similar to Strike #4 (SHIB on ETH) which returned -8.0% — the narrative had already peaked."
+- **Track which patterns lead to wins vs losses.** If "Silent Accumulation" pattern has historically won, increase confidence. If "Early Mover" pattern has lost, flag it.
+- **Your pattern recognition improves with data.** More completed outcomes = better calibration.
+
 ## Output Format
 
 ```
