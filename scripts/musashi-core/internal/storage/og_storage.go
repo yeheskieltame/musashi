@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -72,26 +70,13 @@ func NewOGStorageClient() *OGStorageClient {
 	}
 }
 
-func HashEvidence(evidence interface{}) (string, error) {
-	b, err := json.Marshal(evidence)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal evidence: %w", err)
-	}
-	hash := sha256.Sum256(b)
-	return hex.EncodeToString(hash[:]), nil
-}
-
-// upload file to 0G Storage, returns merkle root hash
+// upload file to 0G Storage, returns the merkle root hash. Refuses to proceed
+// without OG_CHAIN_PRIVATE_KEY — we intentionally no longer fall back to a
+// local SHA256 "fake root" because that hash can never be used to retrieve
+// the file from 0G Storage, which defeats the entire point of using it.
 func (c *OGStorageClient) UploadFile(filePath string) (*StoreResult, error) {
 	if c.privateKey == "" {
-		hash, err := hashFile(filePath)
-		if err != nil {
-			return nil, err
-		}
-		return &StoreResult{
-			RootHash: hash,
-			Status:   "local_only (OG_CHAIN_PRIVATE_KEY not set)",
-		}, nil
+		return nil, fmt.Errorf("OG_CHAIN_PRIVATE_KEY not set — cannot upload to 0G Storage. Set the env var or use --dry-run mode upstream")
 	}
 
 	out, err := runCLI("upload",
@@ -232,13 +217,4 @@ func isHex(s string) bool {
 		}
 	}
 	return true
-}
-
-func hashFile(path string) (string, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	hash := sha256.Sum256(data)
-	return hex.EncodeToString(hash[:]), nil
 }

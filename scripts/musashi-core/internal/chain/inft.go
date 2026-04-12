@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"reflect"
+	"strings"
 	"time"
 
 	ethereum "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -17,17 +20,79 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// MusashiINFT ABI function selectors
-var (
-	// mint(string,bytes32,bytes32)
-	mintSig = crypto.Keccak256([]byte("mint(string,bytes32,bytes32)"))[:4]
-	// updateIntelligence(uint256,bytes32)
-	updateIntelligenceSig = crypto.Keccak256([]byte("updateIntelligence(uint256,bytes32)"))[:4]
-	// getAgent(uint256)
-	getAgentSig = crypto.Keccak256([]byte("getAgent(uint256)"))[:4]
-	// agentCount()
-	agentCountSig = crypto.Keccak256([]byte("agentCount()"))[:4]
-)
+// MusashiINFT ABI — only the functions the Go binary actually calls.
+// Using the ABI package eliminates hand-rolled encoding bugs (old inft.go
+// had to manually compute string offsets, pad dynamic fields, etc.).
+const musashiINFTABI = `[
+  {"type":"function","name":"mint","stateMutability":"nonpayable","inputs":[
+    {"name":"_name","type":"string"},
+    {"name":"_storageRoot","type":"bytes32"},
+    {"name":"_metadataHash","type":"bytes32"},
+    {"name":"_sealedKey","type":"bytes"}
+  ],"outputs":[{"name":"id","type":"uint256"}]},
+
+  {"type":"function","name":"updateIntelligence","stateMutability":"nonpayable","inputs":[
+    {"name":"tokenId","type":"uint256"},
+    {"name":"newStorageRoot","type":"bytes32"},
+    {"name":"newSealedKey","type":"bytes"}
+  ],"outputs":[]},
+
+  {"type":"function","name":"transfer","stateMutability":"nonpayable","inputs":[
+    {"name":"tokenId","type":"uint256"},
+    {"name":"to","type":"address"},
+    {"name":"newStorageRoot","type":"bytes32"},
+    {"name":"newSealedKey","type":"bytes"},
+    {"name":"oracleProof","type":"bytes"}
+  ],"outputs":[]},
+
+  {"type":"function","name":"setOracle","stateMutability":"nonpayable","inputs":[
+    {"name":"_oracle","type":"address"}
+  ],"outputs":[]},
+
+  {"type":"function","name":"transferDigest","stateMutability":"view","inputs":[
+    {"name":"tokenId","type":"uint256"},
+    {"name":"version","type":"uint16"},
+    {"name":"oldRoot","type":"bytes32"},
+    {"name":"newRoot","type":"bytes32"},
+    {"name":"to","type":"address"}
+  ],"outputs":[{"name":"","type":"bytes32"}]},
+
+  {"type":"function","name":"agentCount","stateMutability":"view","inputs":[],
+   "outputs":[{"name":"","type":"uint256"}]},
+
+  {"type":"function","name":"getAgent","stateMutability":"view","inputs":[
+    {"name":"tokenId","type":"uint256"}
+  ],"outputs":[{"name":"","type":"tuple","components":[
+    {"name":"owner","type":"address"},
+    {"name":"active","type":"bool"},
+    {"name":"winRate","type":"uint16"},
+    {"name":"convergenceAvg","type":"uint8"},
+    {"name":"version","type":"uint16"},
+    {"name":"storageRoot","type":"bytes32"},
+    {"name":"metadataHash","type":"bytes32"},
+    {"name":"totalStrikes","type":"uint64"},
+    {"name":"createdAt","type":"uint48"},
+    {"name":"updatedAt","type":"uint48"},
+    {"name":"name","type":"string"}
+  ]}]},
+
+  {"type":"function","name":"getSealedKey","stateMutability":"view","inputs":[
+    {"name":"tokenId","type":"uint256"}
+  ],"outputs":[{"name":"","type":"bytes"}]},
+
+  {"type":"function","name":"oracle","stateMutability":"view","inputs":[],
+   "outputs":[{"name":"","type":"address"}]}
+]`
+
+var musashiINFT = mustParseABI(musashiINFTABI)
+
+func mustParseABI(s string) abi.ABI {
+	parsed, err := abi.JSON(strings.NewReader(s))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse MusashiINFT ABI: %v", err))
+	}
+	return parsed
+}
 
 // INFTResult is returned after an INFT operation.
 type INFTResult struct {
@@ -36,260 +101,236 @@ type INFTResult struct {
 	Contract    string `json:"contract_address"`
 	ExplorerURL string `json:"explorer_url"`
 	Action      string `json:"action"`
+	TokenID     uint64 `json:"token_id,omitempty"`
 }
 
-// MintAgent mints a new MUSASHI agent INFT on 0G Chain.
-func MintAgent(name string, configHash string, intelligenceHash string) (string, error) {
+// sendINFTTx is the common transaction plumbing used by all write calls.
+func sendINFTTx(ctx context.Context, action string, calldata []byte) (*INFTResult, error) {
 	rpcURL := os.Getenv("OG_CHAIN_RPC")
 	if rpcURL == "" {
 		rpcURL = DefaultOGChainRPC
 	}
-
 	privateKeyHex := os.Getenv("OG_CHAIN_PRIVATE_KEY")
 	if privateKeyHex == "" {
-		return "", fmt.Errorf("OG_CHAIN_PRIVATE_KEY not set")
+		return nil, fmt.Errorf("OG_CHAIN_PRIVATE_KEY not set")
 	}
-
 	contractAddr := os.Getenv("MUSASHI_INFT_ADDRESS")
 	if contractAddr == "" {
-		return "", fmt.Errorf("MUSASHI_INFT_ADDRESS not set")
+		return nil, fmt.Errorf("MUSASHI_INFT_ADDRESS not set")
 	}
 
 	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to 0G Chain: %w", err)
+		return nil, fmt.Errorf("failed to connect to 0G Chain: %w", err)
 	}
 	defer client.Close()
 
 	privateKey, err := crypto.HexToECDSA(stripHexPrefix(privateKeyHex))
 	if err != nil {
-		return "", fmt.Errorf("invalid private key: %w", err)
+		return nil, fmt.Errorf("invalid private key: %w", err)
 	}
-
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
-		return "", fmt.Errorf("error casting public key")
+		return nil, fmt.Errorf("error casting public key")
 	}
-
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
 
 	nonce, err := client.PendingNonceAt(ctx, fromAddress)
 	if err != nil {
-		return "", fmt.Errorf("failed to get nonce: %w", err)
+		return nil, fmt.Errorf("failed to get nonce: %w", err)
 	}
-
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to get gas price: %w", err)
+		return nil, fmt.Errorf("failed to get gas price: %w", err)
 	}
-
 	chainID, err := client.ChainID(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to get chain ID: %w", err)
+		return nil, fmt.Errorf("failed to get chain ID: %w", err)
 	}
 
-	// ABI-encode mint(string, bytes32, bytes32)
-	// String encoding: offset(32) + bytes32 + bytes32 + string_length(32) + string_data(padded)
-	nameBytes := []byte(name)
-	nameLen := len(nameBytes)
-	namePadded := make([]byte, ((nameLen+31)/32)*32)
-	copy(namePadded, nameBytes)
-
-	cfgHash := common.HexToHash(configHash)
-	intHash := common.HexToHash(intelligenceHash)
-
-	calldata := make([]byte, 0)
-	calldata = append(calldata, mintSig...)
-	// offset for string param (3 * 32 = 96)
-	calldata = append(calldata, common.LeftPadBytes(big.NewInt(96).Bytes(), 32)...)
-	calldata = append(calldata, cfgHash.Bytes()...)
-	calldata = append(calldata, intHash.Bytes()...)
-	// string: length + padded data
-	calldata = append(calldata, common.LeftPadBytes(big.NewInt(int64(nameLen)).Bytes(), 32)...)
-	calldata = append(calldata, namePadded...)
-
 	contract := common.HexToAddress(contractAddr)
-
-	// Estimate gas with 20% buffer, fallback to 300000
 	gasLimit, err := client.EstimateGas(ctx, ethereum.CallMsg{
 		From: fromAddress,
 		To:   &contract,
 		Data: calldata,
 	})
 	if err != nil {
-		gasLimit = 300000
+		gasLimit = 500000 // fallback for dynamic-bytes calls
 	} else {
 		gasLimit = gasLimit * 120 / 100
 	}
 
 	tx := types.NewTransaction(nonce, contract, big.NewInt(0), gasLimit, gasPrice, calldata)
-
-	signer := types.NewEIP155Signer(chainID)
-	signedTx, err := types.SignTx(tx, signer, privateKey)
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
 	if err != nil {
-		return "", fmt.Errorf("failed to sign transaction: %w", err)
+		return nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
-
-	err = client.SendTransaction(ctx, signedTx)
-	if err != nil {
-		return "", fmt.Errorf("failed to send transaction: %w", err)
+	if err := client.SendTransaction(ctx, signedTx); err != nil {
+		return nil, fmt.Errorf("failed to send transaction: %w", err)
 	}
 
 	receipt, err := bind.WaitMined(ctx, client, signedTx)
 	if err != nil {
-		return "", fmt.Errorf("transaction not mined: %w", err)
+		return nil, fmt.Errorf("transaction not mined: %w", err)
 	}
 	if receipt.Status == 0 {
-		return "", fmt.Errorf("transaction reverted (tx: %s) — check contract state and parameters", signedTx.Hash().Hex())
+		return nil, fmt.Errorf("transaction reverted (tx: %s)", signedTx.Hash().Hex())
 	}
 
-	result := INFTResult{
+	return &INFTResult{
 		TxHash:      signedTx.Hash().Hex(),
 		BlockNumber: receipt.BlockNumber.Uint64(),
 		Contract:    contractAddr,
 		ExplorerURL: fmt.Sprintf("%s/tx/%s", OGExplorerBase(), signedTx.Hash().Hex()),
-		Action:      "mint_agent",
+		Action:      action,
+	}, nil
+}
+
+// hexToBytes32 converts a 0x-prefixed hex root to a [32]byte.
+func hexToBytes32(h string) ([32]byte, error) {
+	var out [32]byte
+	b := common.FromHex(h)
+	if len(b) != 32 {
+		return out, fmt.Errorf("expected 32 bytes, got %d (input: %s)", len(b), h)
+	}
+	copy(out[:], b)
+	return out, nil
+}
+
+// MintAgent mints a new MUSASHI INFT. Requires an encrypted intelligence bundle
+// already uploaded to 0G Storage (pass its merkle root as `storageRoot`) and a
+// sealed symmetric key wrapped to the deployer's pubkey (from `seal-intelligence`).
+func MintAgent(name, storageRoot, metadataHash string, sealedKey []byte) (string, error) {
+	if len(sealedKey) == 0 {
+		return "", fmt.Errorf("sealedKey required (run `musashi-core seal-intelligence` first)")
 	}
 
+	root, err := hexToBytes32(storageRoot)
+	if err != nil {
+		return "", fmt.Errorf("storageRoot: %w", err)
+	}
+	meta, err := hexToBytes32(metadataHash)
+	if err != nil {
+		return "", fmt.Errorf("metadataHash: %w", err)
+	}
+
+	calldata, err := musashiINFT.Pack("mint", name, root, meta, sealedKey)
+	if err != nil {
+		return "", fmt.Errorf("pack mint: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	result, err := sendINFTTx(ctx, "mint_agent", calldata)
+	if err != nil {
+		return "", err
+	}
 	b, _ := json.MarshalIndent(result, "", "  ")
 	return string(b), nil
 }
 
-// UpdateAgentIntelligence updates the INFT's intelligence hash after new analysis cycles.
-// If OG_CHAIN_PRIVATE_KEY is not set, returns a skip message instead of an error.
-func UpdateAgentIntelligence(tokenID uint64, intelligenceHash string) (string, error) {
-	rpcURL := os.Getenv("OG_CHAIN_RPC")
-	if rpcURL == "" {
-		rpcURL = DefaultOGChainRPC
-	}
-
-	privateKeyHex := os.Getenv("OG_CHAIN_PRIVATE_KEY")
-	if privateKeyHex == "" {
+// UpdateAgentIntelligence replaces the encrypted intelligence pointer with a
+// freshly-rotated AES key + new storage root. Same-owner path (no oracle proof
+// needed — the owner already controls the sealed key).
+func UpdateAgentIntelligence(tokenID uint64, newStorageRoot string, newSealedKey []byte) (string, error) {
+	if os.Getenv("OG_CHAIN_PRIVATE_KEY") == "" {
 		return `{"status":"skipped","reason":"OG_CHAIN_PRIVATE_KEY not set — analysis-only mode"}`, nil
 	}
-
-	contractAddr := os.Getenv("MUSASHI_INFT_ADDRESS")
-	if contractAddr == "" {
-		return "", fmt.Errorf("MUSASHI_INFT_ADDRESS not set")
+	if len(newSealedKey) == 0 {
+		return "", fmt.Errorf("newSealedKey required")
 	}
-
-	client, err := ethclient.Dial(rpcURL)
+	root, err := hexToBytes32(newStorageRoot)
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to 0G Chain: %w", err)
+		return "", fmt.Errorf("newStorageRoot: %w", err)
 	}
-	defer client.Close()
 
-	privateKey, err := crypto.HexToECDSA(stripHexPrefix(privateKeyHex))
+	calldata, err := musashiINFT.Pack("updateIntelligence", big.NewInt(int64(tokenID)), root, newSealedKey)
 	if err != nil {
-		return "", fmt.Errorf("invalid private key: %w", err)
+		return "", fmt.Errorf("pack updateIntelligence: %w", err)
 	}
 
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return "", fmt.Errorf("error casting public key")
-	}
-
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	nonce, err := client.PendingNonceAt(ctx, fromAddress)
+	result, err := sendINFTTx(ctx, "update_intelligence", calldata)
 	if err != nil {
-		return "", fmt.Errorf("failed to get nonce: %w", err)
+		return "", err
 	}
+	b, _ := json.MarshalIndent(result, "", "  ")
+	return string(b), nil
+}
 
-	gasPrice, err := client.SuggestGasPrice(ctx)
+// TransferAgent performs an ERC-7857 sealed transfer. The oracle must already
+// have re-encrypted the intelligence blob for `to` and signed the digest.
+func TransferAgent(tokenID uint64, to, newStorageRoot string, newSealedKey, oracleProof []byte) (string, error) {
+	root, err := hexToBytes32(newStorageRoot)
 	if err != nil {
-		return "", fmt.Errorf("failed to get gas price: %w", err)
+		return "", fmt.Errorf("newStorageRoot: %w", err)
 	}
+	toAddr := common.HexToAddress(to)
 
-	ogChainID, err := client.ChainID(ctx)
+	calldata, err := musashiINFT.Pack("transfer", big.NewInt(int64(tokenID)), toAddr, root, newSealedKey, oracleProof)
 	if err != nil {
-		return "", fmt.Errorf("failed to get chain ID: %w", err)
+		return "", fmt.Errorf("pack transfer: %w", err)
 	}
 
-	intHash := common.HexToHash(intelligenceHash)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
 
-	calldata := make([]byte, 0, 4+32*2)
-	calldata = append(calldata, updateIntelligenceSig...)
-	calldata = append(calldata, common.LeftPadBytes(big.NewInt(int64(tokenID)).Bytes(), 32)...)
-	calldata = append(calldata, intHash.Bytes()...)
-
-	contract := common.HexToAddress(contractAddr)
-
-	// Estimate gas with 20% buffer, fallback to 200000
-	gasLimit, err := client.EstimateGas(ctx, ethereum.CallMsg{
-		From: fromAddress,
-		To:   &contract,
-		Data: calldata,
-	})
+	result, err := sendINFTTx(ctx, "sealed_transfer", calldata)
 	if err != nil {
-		gasLimit = 200000
-	} else {
-		gasLimit = gasLimit * 120 / 100
+		return "", err
 	}
+	result.TokenID = tokenID
+	b, _ := json.MarshalIndent(result, "", "  ")
+	return string(b), nil
+}
 
-	tx := types.NewTransaction(nonce, contract, big.NewInt(0), gasLimit, gasPrice, calldata)
-
-	signer := types.NewEIP155Signer(ogChainID)
-	signedTx, err := types.SignTx(tx, signer, privateKey)
+// SetOracleAddress configures the re-encryption oracle on MusashiINFT.
+// For hackathon scope the deployer's own address acts as oracle.
+func SetOracleAddress(oracleAddr string) (string, error) {
+	addr := common.HexToAddress(oracleAddr)
+	calldata, err := musashiINFT.Pack("setOracle", addr)
 	if err != nil {
-		return "", fmt.Errorf("failed to sign transaction: %w", err)
+		return "", fmt.Errorf("pack setOracle: %w", err)
 	}
 
-	err = client.SendTransaction(ctx, signedTx)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	result, err := sendINFTTx(ctx, "set_oracle", calldata)
 	if err != nil {
-		return "", fmt.Errorf("failed to send transaction: %w", err)
+		return "", err
 	}
-
-	receipt, err := bind.WaitMined(ctx, client, signedTx)
-	if err != nil {
-		return "", fmt.Errorf("transaction not mined: %w", err)
-	}
-	if receipt.Status == 0 {
-		return "", fmt.Errorf("transaction reverted (tx: %s) — check contract state and parameters", signedTx.Hash().Hex())
-	}
-
-	result := INFTResult{
-		TxHash:      signedTx.Hash().Hex(),
-		BlockNumber: receipt.BlockNumber.Uint64(),
-		Contract:    contractAddr,
-		ExplorerURL: fmt.Sprintf("%s/tx/%s", OGExplorerBase(), signedTx.Hash().Hex()),
-		Action:      "update_intelligence",
-	}
-
 	b, _ := json.MarshalIndent(result, "", "  ")
 	return string(b), nil
 }
 
 // AgentInfo holds on-chain agent INFT data.
 type AgentInfo struct {
-	TokenID          uint64 `json:"token_id"`
-	Owner            string `json:"owner"`
-	Active           bool   `json:"active"`
-	WinRate          uint16 `json:"win_rate_bps"`
-	ConfigHash       string `json:"config_hash"`
-	IntelligenceHash string `json:"intelligence_hash"`
-	TotalStrikes     uint64 `json:"total_strikes"`
-	Name             string `json:"name"`
-	AgentCount       uint64 `json:"agent_count"`
-	ContractAddr     string `json:"contract_address"`
-	ExplorerURL      string `json:"explorer_url"`
+	TokenID      uint64 `json:"token_id"`
+	Owner        string `json:"owner"`
+	Active       bool   `json:"active"`
+	WinRate      uint16 `json:"win_rate_bps"`
+	Version      uint16 `json:"version"`
+	StorageRoot  string `json:"storage_root"`
+	MetadataHash string `json:"metadata_hash"`
+	TotalStrikes uint64 `json:"total_strikes"`
+	Name         string `json:"name"`
+	AgentCount   uint64 `json:"agent_count"`
+	ContractAddr string `json:"contract_address"`
+	ExplorerURL  string `json:"explorer_url"`
+	StorageScan  string `json:"storage_scan_url,omitempty"`
 }
 
-// QueryAgent reads agent info from MusashiINFT contract.
+// QueryAgent reads agent info from the MusashiINFT contract.
 func QueryAgent(tokenID uint64) (string, error) {
 	rpcURL := os.Getenv("OG_CHAIN_RPC")
 	if rpcURL == "" {
 		rpcURL = DefaultOGChainRPC
 	}
-
 	contractAddr := os.Getenv("MUSASHI_INFT_ADDRESS")
 	if contractAddr == "" {
 		return "", fmt.Errorf("MUSASHI_INFT_ADDRESS not set")
@@ -306,15 +347,20 @@ func QueryAgent(tokenID uint64) (string, error) {
 
 	contract := common.HexToAddress(contractAddr)
 
-	// Call agentCount()
-	acResult, err := client.CallContract(ctx, ethereum.CallMsg{
-		To:   &contract,
-		Data: agentCountSig,
-	}, nil)
+	// agentCount()
+	countData, err := musashiINFT.Pack("agentCount")
+	if err != nil {
+		return "", fmt.Errorf("pack agentCount: %w", err)
+	}
+	countRes, err := client.CallContract(ctx, ethereum.CallMsg{To: &contract, Data: countData}, nil)
 	if err != nil {
 		return "", fmt.Errorf("agentCount() call failed: %w", err)
 	}
-	agentCount := new(big.Int).SetBytes(acResult).Uint64()
+	countUnpacked, err := musashiINFT.Unpack("agentCount", countRes)
+	if err != nil {
+		return "", fmt.Errorf("unpack agentCount: %w", err)
+	}
+	agentCount := countUnpacked[0].(*big.Int).Uint64()
 
 	info := AgentInfo{
 		TokenID:      tokenID,
@@ -323,40 +369,77 @@ func QueryAgent(tokenID uint64) (string, error) {
 		ExplorerURL:  fmt.Sprintf("%s/address/%s", OGExplorerBase(), contractAddr),
 	}
 
-	// If agents exist, query the specific one
-	if agentCount > 0 && tokenID < agentCount {
-		calldata := make([]byte, 0, 4+32)
-		calldata = append(calldata, getAgentSig...)
-		calldata = append(calldata, common.LeftPadBytes(new(big.Int).SetUint64(tokenID).Bytes(), 32)...)
+	if agentCount == 0 || tokenID >= agentCount {
+		b, _ := json.MarshalIndent(info, "", "  ")
+		return string(b), nil
+	}
 
-		agResult, err := client.CallContract(ctx, ethereum.CallMsg{
-			To:   &contract,
-			Data: calldata,
-		}, nil)
-		if err == nil && len(agResult) >= 352 {
-			// getAgent returns a struct with dynamic string, ABI wraps in tuple:
-			// word 0: offset to tuple data (0x20 = 32)
-			// word 1+: struct fields (owner, active, winRate, convergenceAvg, configHash, intelligenceHash, totalStrikes, createdAt, updatedAt, name_offset)
-			base := 32 // skip tuple offset word
-			info.Owner = common.BytesToAddress(agResult[base : base+32]).Hex()
-			info.Active = new(big.Int).SetBytes(agResult[base+32:base+64]).Uint64() != 0
-			info.WinRate = uint16(new(big.Int).SetBytes(agResult[base+64 : base+96]).Uint64())
-			// base+96:base+128 = convergenceAvg (skip)
-			info.ConfigHash = common.BytesToHash(agResult[base+128 : base+160]).Hex()
-			info.IntelligenceHash = common.BytesToHash(agResult[base+160 : base+192]).Hex()
-			info.TotalStrikes = new(big.Int).SetBytes(agResult[base+192 : base+224]).Uint64()
-			// base+224:base+256 = createdAt (skip)
-			// base+256:base+288 = updatedAt (skip)
-			// base+288:base+320 = name offset (relative to tuple start at `base`)
-			nameOffsetRel := new(big.Int).SetBytes(agResult[base+288 : base+320]).Uint64()
-			nameAbs := uint64(base) + nameOffsetRel
-			if nameAbs+32 <= uint64(len(agResult)) {
-				nameLen := new(big.Int).SetBytes(agResult[nameAbs : nameAbs+32]).Uint64()
-				if nameAbs+32+nameLen <= uint64(len(agResult)) {
-					info.Name = string(agResult[nameAbs+32 : nameAbs+32+nameLen])
-				}
-			}
+	// getAgent(tokenId)
+	getData, err := musashiINFT.Pack("getAgent", big.NewInt(int64(tokenID)))
+	if err != nil {
+		return "", fmt.Errorf("pack getAgent: %w", err)
+	}
+	agRes, err := client.CallContract(ctx, ethereum.CallMsg{To: &contract, Data: getData}, nil)
+	if err != nil {
+		return "", fmt.Errorf("getAgent() call failed: %w", err)
+	}
+	// getAgent returns a tuple. The abi package returns it as a Go struct via
+	// `Unpack`, but the auto-generated struct has unstable field names, so we
+	// reach into it via reflection rather than using UnpackIntoInterface (which
+	// panics on our inline struct because uint48 → *big.Int vs struct tag
+	// matching has edge cases).
+	unpacked, err := musashiINFT.Unpack("getAgent", agRes)
+	if err != nil {
+		return "", fmt.Errorf("unpack getAgent: %w", err)
+	}
+	if len(unpacked) == 0 {
+		return "", fmt.Errorf("getAgent returned no data")
+	}
+
+	tv := reflect.ValueOf(unpacked[0])
+	if tv.Kind() != reflect.Struct {
+		return "", fmt.Errorf("getAgent unpacked to %s, expected struct", tv.Kind())
+	}
+
+	readField := func(name string) reflect.Value {
+		// ABI auto-capitalizes: owner → Owner, storageRoot → StorageRoot.
+		capName := strings.ToUpper(name[:1]) + name[1:]
+		return tv.FieldByName(capName)
+	}
+
+	if f := readField("owner"); f.IsValid() {
+		info.Owner = f.Interface().(common.Address).Hex()
+	}
+	if f := readField("active"); f.IsValid() {
+		info.Active = f.Bool()
+	}
+	if f := readField("winRate"); f.IsValid() {
+		info.WinRate = uint16(f.Uint())
+	}
+	if f := readField("version"); f.IsValid() {
+		info.Version = uint16(f.Uint())
+	}
+	if f := readField("storageRoot"); f.IsValid() {
+		arr := f.Interface().([32]byte)
+		info.StorageRoot = common.BytesToHash(arr[:]).Hex()
+	}
+	if f := readField("metadataHash"); f.IsValid() {
+		arr := f.Interface().([32]byte)
+		info.MetadataHash = common.BytesToHash(arr[:]).Hex()
+	}
+	if f := readField("totalStrikes"); f.IsValid() {
+		info.TotalStrikes = f.Uint()
+	}
+	if f := readField("name"); f.IsValid() {
+		info.Name = f.String()
+	}
+
+	if scan := os.Getenv("OG_STORAGE_SCAN_URL"); scan != "" || info.StorageRoot != "" {
+		base := os.Getenv("OG_STORAGE_SCAN_URL")
+		if base == "" {
+			base = "https://storagescan.0g.ai"
 		}
+		info.StorageScan = base + "/tx/" + info.StorageRoot
 	}
 
 	b, _ := json.MarshalIndent(info, "", "  ")
