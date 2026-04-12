@@ -74,11 +74,23 @@ export function AgentChat() {
     addMessage("system", `Switched to ${AGENT_CONFIG[newAgent].name}. New conversation started.`);
   }
 
-  const handleSend = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || processing) return;
+  function handleNewConversation() {
+    if (processing) return;
+    setSessionId(null);
+    setMessages([
+      {
+        id: "welcome",
+        role: "system",
+        content: "New conversation. MUSASHI agent ready — talk naturally.",
+        timestamp: new Date(),
+      },
+    ]);
+  }
 
-    const userText = input.trim();
+  const dispatchMessage = useCallback(async (rawText: string) => {
+    const userText = rawText.trim();
+    if (!userText || processing) return;
+
     addMessage("user", userText);
     setInput("");
     setProcessing(true);
@@ -99,7 +111,10 @@ export function AgentChat() {
         body: JSON.stringify({
           message: userText,
           agent: agent === "claude-code" ? "claude" : "openclaw",
-          sessionId,
+          // Only send sessionId when we actually have one — the server treats
+          // missing/null as "no session", but never send raw null to avoid
+          // confusing strict validators.
+          ...(sessionId ? { sessionId } : {}),
         }),
         signal: controller.signal,
       });
@@ -166,7 +181,24 @@ export function AgentChat() {
       setProcessing(false);
       abortRef.current = null;
     }
-  }, [input, processing, agent, sessionId]);
+  }, [processing, agent, sessionId]);
+
+  const handleSend = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      void dispatchMessage(input);
+    },
+    [dispatchMessage, input],
+  );
+
+  // The conviction judge returns NEED_MORE_DATA with a literal user-facing
+  // question — we render one-click reply chips so the user doesn't have to
+  // type. The trigger phrase is canonical and lives in the system primer.
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const showGapReplyChips =
+    !processing &&
+    !!lastAssistant?.content &&
+    /lanjut investigasi[\s\S]*atau cut/i.test(lastAssistant.content);
 
   function handleCancel() {
     abortRef.current?.abort();
@@ -193,10 +225,19 @@ export function AgentChat() {
         </div>
         <div className="flex-1" />
         {sessionId && (
-          <span className="text-[10px] text-slate-400 font-mono">
+          <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
             session: {sessionId.slice(0, 8)}
           </span>
         )}
+        <button
+          type="button"
+          onClick={handleNewConversation}
+          disabled={processing || (!sessionId && messages.length <= 1)}
+          title="Start a fresh conversation (clears session context)"
+          className="text-[10px] px-2.5 py-1 rounded-full border border-white/10 bg-white/[0.03] text-slate-400 hover:text-white hover:border-white/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+        >
+          + New
+        </button>
       </div>
 
       {/* Messages */}
@@ -248,6 +289,26 @@ export function AgentChat() {
         ))}
         <div ref={bottomRef} />
       </div>
+
+      {/* Quick-reply chips when judge asks NEED_MORE_DATA */}
+      {showGapReplyChips && (
+        <div className="mt-3 flex gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => void dispatchMessage("Lanjut investigasi — tutup gap-nya.")}
+            className="text-xs px-3 py-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition-colors cursor-pointer"
+          >
+            ▶ Lanjut investigasi
+          </button>
+          <button
+            type="button"
+            onClick={() => void dispatchMessage("Cut here. Berikan final summary dengan provisional lean.")}
+            className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] transition-colors cursor-pointer"
+          >
+            ■ Cut here
+          </button>
+        </div>
+      )}
 
       {/* Input */}
       <form onSubmit={handleSend} className="mt-3 flex gap-2">
