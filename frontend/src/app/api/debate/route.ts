@@ -69,6 +69,26 @@ function validateChainId(chainId: number): number {
   return id;
 }
 
+/* ---------- history / reputation runner ---------- */
+
+function runHistory(agentId: number = 0, limit: number = 12): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile(
+      BINARY,
+      ["history", "--agent-id", String(agentId), "--limit", String(limit)],
+      { timeout: 30_000, maxBuffer: 2 * 1024 * 1024, env: childEnv },
+      (err, stdout, stderr) => {
+        if (err) {
+          // Non-fatal: agent can still function without history
+          resolve("{}");
+          return;
+        }
+        resolve(stdout);
+      },
+    );
+  });
+}
+
 /* ---------- gate runner ---------- */
 
 function runGates(token: string, chainId: number): Promise<string> {
@@ -76,7 +96,7 @@ function runGates(token: string, chainId: number): Promise<string> {
     execFile(
       BINARY,
       ["gates", token, "--chain", String(chainId), "--output", "json"],
-      { timeout: 60_000, maxBuffer: 2 * 1024 * 1024, env: childEnv },
+      { timeout: 120_000, maxBuffer: 2 * 1024 * 1024, env: childEnv },
       (err, stdout, stderr) => {
         if (err) {
           reject(new Error(stderr || err.message));
@@ -329,6 +349,62 @@ async function orchestrate(
 
   sseWrite(controller, encoder, { type: "phase", phase: "specialists", status: "done" });
 
+  /* ---- Phase 2.5: Fetch Agent History (parallel with specialist wait) ---- */
+  let historyContext = "";
+  try {
+    const historyRaw = await runHistory(0, 12);
+    const history = JSON.parse(historyRaw);
+    const rep = history.reputation;
+    const strikes = history.strikes as Array<Record<string, unknown>> | undefined;
+
+    if (rep && rep.strikes > 0) {
+      const winRate = rep.total_filled > 0
+        ? ((rep.wins / rep.total_filled) * 100).toFixed(1)
+        : "N/A";
+      const totalReturn = (rep.total_return_bps / 100).toFixed(2);
+
+      let strikeHistory = "";
+      if (Array.isArray(strikes) && strikes.length > 0) {
+        const filled = strikes.filter((s) => s.outcome_filled);
+        const pending = strikes.filter((s) => !s.outcome_filled);
+        const wins = filled.filter((s) => (s.outcome_bps as number) > 0);
+        const losses = filled.filter((s) => (s.outcome_bps as number) < 0);
+
+        strikeHistory = `
+Recent completed strikes:
+${filled.slice(0, 6).map((s) => `  - Strike #${s.id}: token ${(s.token as string).slice(0, 10)}... on chain ${s.chain_id}, convergence ${s.convergence}/4 → ${(s.outcome_bps as number) > 0 ? "WIN" : "LOSS"} (${((s.outcome_bps as number) / 100).toFixed(1)}%)`).join("\n")}
+${pending.length > 0 ? `\n${pending.length} strikes still awaiting outcome.` : ""}
+
+Pattern observations:
+- Wins: ${wins.length} of ${filled.length} completed (${filled.length > 0 ? ((wins.length / filled.length) * 100).toFixed(0) : 0}%)
+- Average win return: ${wins.length > 0 ? ((wins.reduce((sum, s) => sum + (s.outcome_bps as number), 0) / wins.length) / 100).toFixed(1) : "N/A"}%
+- Average loss return: ${losses.length > 0 ? ((losses.reduce((sum, s) => sum + (s.outcome_bps as number), 0) / losses.length) / 100).toFixed(1) : "N/A"}%`;
+      }
+
+      historyContext = `
+== AGENT MEMORY: ON-CHAIN TRACK RECORD ==
+
+This is your verifiable performance history, recorded on 0G Chain (ConvictionLog).
+Use this to calibrate your conviction threshold.
+
+Total strikes published: ${rep.strikes}
+Outcomes recorded: ${rep.total_filled}
+Win rate: ${winRate}%
+Cumulative return: ${totalReturn}%
+${strikeHistory}
+
+Calibration guidance:
+- If your win rate is above 70%, your threshold is well-calibrated. Maintain it.
+- If your win rate is below 50%, you are too permissive. Apply stricter hesitation.
+- If you have many pending outcomes, be cautious — the data is incomplete.
+- Your reputation is permanent and on-chain. Every PASS you issue is recorded forever.
+
+`;
+    }
+  } catch {
+    // Non-fatal: continue without history
+  }
+
   /* ---- Phase 3: Judge ---- */
   sseWrite(controller, encoder, { type: "phase", phase: "judgment", status: "start" });
 
@@ -348,7 +424,7 @@ async function orchestrate(
     .join("\n\n");
 
   const judgePrompt = `You are MUSASHI's Conviction Judge, powered by Opus. You have received reports from 4 independent specialist agents. Your job is to cross-examine their findings, identify contradictions and convergence, and make a final PASS or FAIL judgment.
-
+${historyContext}
 Rules:
 - PASS means high conviction entry signal
 - FAIL means do not enter
