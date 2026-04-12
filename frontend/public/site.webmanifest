@@ -1,6 +1,9 @@
 {
   "name": "MUSASHI — On-Chain Reputation Protocol",
   "short_name": "MUSASHI",
+  "start_url": "/",
+  "scope": "/",
+  "id": "https://musashi-agent.xyz/",
   "icons": [
     { "src": "/musashi-icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/musashi-icon-512.png", "sizes": "512x512", "type": "image/png" }
