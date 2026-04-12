@@ -17,20 +17,15 @@ export function GlassCard({
   strong = false,
   glow = false,
 }: GlassCardProps) {
-  const base = dark
-    ? glow
-      ? "glass-dark-glow"
-      : strong
-        ? "glass-dark-strong"
-        : "glass-dark"
+  // In the new aesthetic, everything is dark glassmorphism
+  const base = glow
+    ? "glass-dark-glow"
     : strong
-      ? "glass-strong shadow-lg shadow-blue-100/50"
+      ? "glass-strong"
       : "glass";
 
   const hoverClass = hover
-    ? dark
-      ? "transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-500/10 card-shine"
-      : "transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-200/60"
+    ? "transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] card-shine cursor-pointer"
     : "";
 
   return (

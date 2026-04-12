@@ -147,7 +147,7 @@ export function ReputationPanel() {
   if (error && !rep) {
     return (
       <GlassCard strong className="p-7">
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-700">{error}</div>
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm text-amber-400">{error}</div>
       </GlassCard>
     );
   }
@@ -166,14 +166,14 @@ export function ReputationPanel() {
       <GlassCard strong className="p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_20px_rgba(139,92,246,0.4)] border border-white/10">
               {agent?.name?.[0] || "M"}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-slate-800">{agent?.name || "MUSASHI"}</span>
+                <span className="font-semibold text-white tracking-wide">{agent?.name || "MUSASHI"}</span>
                 {agent?.active && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">Active</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">Active</span>
                 )}
               </div>
               <div className="text-xs font-mono text-slate-400 mt-0.5">
@@ -192,41 +192,76 @@ export function ReputationPanel() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <GlassCard strong className="p-4">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Strikes</div>
-          <div className="text-2xl font-bold text-slate-800">{rep?.strikeCount ?? 0}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">{rep?.totalFilled ?? 0} outcomes recorded</div>
+        <GlassCard strong className="p-4 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Strikes</div>
+          <div className="flex items-center gap-2">
+            <div className="text-3xl font-bold text-white tracking-tight">{rep?.strikeCount ?? 0}</div>
+            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10 ml-auto">
+              <span className="text-blue-400 font-bold block text-xs">S</span>
+            </div>
+          </div>
+          <div className="text-[10px] text-slate-500 mt-1">{rep?.totalFilled ?? 0} outcomes recorded</div>
         </GlassCard>
 
-        <GlassCard strong className="p-4">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">W / L</div>
-          <div className="text-2xl font-bold">
-            <span className="text-emerald-600">{rep?.wins ?? 0}</span>
-            <span className="text-slate-300 mx-1">/</span>
-            <span className="text-red-500">{rep?.losses ?? 0}</span>
+        <GlassCard strong className="p-4 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">W / L</div>
+          <div className="flex items-center gap-2">
+            <div className="text-3xl font-bold tracking-tight">
+              <span className="text-white">{rep?.wins ?? 0}</span>
+              <span className="text-slate-600 mx-1.5 font-light">/</span>
+              <span className="text-slate-400">{rep?.losses ?? 0}</span>
+            </div>
+            <div className="flex ml-auto gap-0.5 items-end h-4">
+              <div className="w-1.5 h-3 bg-emerald-500/80 rounded-t-sm" />
+              <div className="w-1.5 h-4 bg-purple-500/80 rounded-t-sm" />
+              <div className="w-1.5 h-2 bg-red-500/80 rounded-t-sm" />
+            </div>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">{pendingStrikes.length} pending</div>
+          <div className="text-[10px] text-slate-500 mt-1">
+            <div className="flex overflow-hidden h-1 rounded-full w-full max-w-[120px]">
+               <div className="bg-emerald-500 h-full" style={{width: `${rep ? (rep.wins / rep.totalFilled)*100 : 0}%`}} />
+               <div className="bg-red-500 h-full" style={{width: `${rep ? (rep.losses / rep.totalFilled)*100 : 0}%`}} />
+            </div>
+          </div>
         </GlassCard>
 
-        <GlassCard strong className="p-4">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Win Rate</div>
-          <div className={`text-2xl font-bold ${winRate >= 60 ? "text-emerald-600" : winRate >= 40 ? "text-blue-600" : "text-red-500"}`}>
-            {winRate.toFixed(1)}%
-          </div>
-          <div className="mt-1.5 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ${winRate >= 60 ? "bg-emerald-500" : winRate >= 40 ? "bg-blue-500" : "bg-red-500"}`}
-              style={{ width: `${Math.min(winRate, 100)}%` }}
-            />
+        <GlassCard strong className="p-4 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Win Rate</div>
+          <div className="flex items-center justify-between">
+            <div className="text-3xl font-bold tracking-tight text-white">
+              {winRate.toFixed(1)}%
+            </div>
+            <div className="relative w-8 h-8 rounded-full border-4 border-white/5 flex items-center justify-center">
+              <svg className="absolute inset-0 w-full h-full -rotate-90">
+                <circle cx="16" cy="16" r="14" fill="none" stroke="url(#gradient-winrate)" strokeWidth="4" strokeDasharray={`${(winRate/100) * 88} 88`} className="transition-all duration-1000 ease-out" />
+                <defs>
+                   <linearGradient id="gradient-winrate" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#ec4899" />
+                   </linearGradient>
+                </defs>
+              </svg>
+            </div>
           </div>
         </GlassCard>
 
-        <GlassCard strong className="p-4">
-          <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Total Return</div>
-          <div className={`text-2xl font-bold ${totalReturnPct >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-            {totalReturnPct >= 0 ? "+" : ""}{totalReturnPct.toFixed(1)}%
+        <GlassCard strong className="p-4 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Total Return</div>
+          <div className="flex items-center justify-between">
+            <div className={`text-3xl font-bold tracking-tight ${totalReturnPct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {totalReturnPct >= 0 ? "+" : ""}{totalReturnPct.toFixed(1)}%
+            </div>
+            <svg className={`w-5 h-5 ${totalReturnPct >= 0 ? "text-emerald-400" : "text-red-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              {totalReturnPct >= 0 
+                ? <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                : <path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+              }
+            </svg>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">{rep?.totalReturnBps ?? 0} bps cumulative</div>
         </GlassCard>
       </div>
 
@@ -235,12 +270,15 @@ export function ReputationPanel() {
         <GlassCard strong className="p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-800">Strike Outcome Timeline</h3>
+              <h3 className="text-sm font-semibold text-white tracking-wide">Strike Outcome Timeline</h3>
               <p className="text-[10px] text-slate-400 mt-0.5">
                 Agent learns from each outcome to calibrate future decisions
               </p>
             </div>
-            <button onClick={loadData} className="text-xs px-3 py-1.5 rounded-lg glass text-slate-500 hover:text-slate-700 transition-colors cursor-pointer">
+            <button onClick={loadData} className="text-xs px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               Refresh
             </button>
           </div>
@@ -258,13 +296,13 @@ export function ReputationPanel() {
               return (
                 <div key={s.id} className="flex-1 flex flex-col items-center gap-0.5 group relative">
                   <div
-                    className={`w-full max-w-[24px] rounded-t-sm transition-all duration-300 ${
-                      !isFilled ? "bg-slate-200 animate-pulse" :
-                      isWin ? "bg-emerald-400" :
-                      isLoss ? "bg-red-400" :
-                      "bg-slate-300"
+                    className={`w-full max-w-[24px] rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(0,0,0,0.5)] ${
+                      !isFilled ? "bg-slate-700 animate-pulse border border-slate-600" :
+                      isWin ? "bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]" :
+                      isLoss ? "bg-gradient-to-t from-rose-600 to-rose-400 shadow-[0_0_15px_rgba(225,29,72,0.3)]" :
+                      "bg-slate-600"
                     }`}
-                    style={{ height: `${height}%` }}
+                    style={{ height: `${height}px`, width: '8px' }}
                   />
                   <div className="text-[8px] text-slate-400 font-mono">#{s.id}</div>
 
@@ -308,15 +346,15 @@ export function ReputationPanel() {
 
       {/* Learning Insight */}
       {rep && rep.totalFilled >= 3 && (
-        <GlassCard strong className="p-5 border-l-2 border-l-blue-500">
+        <GlassCard strong className="p-5 border-l-2 border-l-purple-500/50">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+              <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
               </svg>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-slate-800 mb-1">Agent Memory Active</h4>
+              <h4 className="text-sm font-semibold text-white mb-1 tracking-wide">Agent Memory Active</h4>
               <p className="text-xs text-slate-500 leading-relaxed">
                 {winRate >= 70
                   ? `With a ${winRate.toFixed(0)}% win rate across ${rep.totalFilled} outcomes, the judge maintains its current conviction threshold. Strong calibration.`
