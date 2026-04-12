@@ -221,20 +221,31 @@ Store evidence to 0G Storage (write evidence to a temp file first to avoid CLI a
 exec {baseDir}/scripts/musashi-core/musashi-core store '<evidence_json_or_file_path>'
 ```
 
-If 0G Storage upload fails (network issues, insufficient gas), still publish the STRIKE with a local SHA-256 hash as evidence. Report the storage failure to the user.
+If 0G Storage upload fails (network, wallet, or indexer issues), **STOP and report the failure**. Never publish a STRIKE without a real 0G Storage merkle root — the on-chain evidenceHash must always resolve to retrievable, merkle-verifiable content. Never substitute a local hash.
 
 Publish conviction on 0G Chain:
 ```
 exec {baseDir}/scripts/musashi-core/musashi-core strike <token_address> --token-chain <chain_id> --convergence <score> --evidence <root_hash>
 ```
 
-### Step 8: Update Agent Intelligence (INFT)
+### Step 8: Update Agent Intelligence (ERC-7857 INFT)
 
+The MUSASHI agent is an ERC-7857 INFT whose intelligence (prompts + config) lives as an **encrypted** bundle on 0G Storage, referenced by a merkle root and protected by an ECIES-sealed AES key. To rotate the intelligence (e.g. after learning from new strike outcomes):
+
+1. Re-package + re-encrypt the new intelligence bundle and upload the ciphertext:
 ```
-exec {baseDir}/scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <new_hash>
+exec {baseDir}/scripts/musashi-core/musashi-core seal-intelligence --input /path/to/new-bundle.tar.gz
+```
+Capture `storage_root` and `sealed_key_path` from the JSON output.
+
+2. Update the INFT on-chain (same owner path — no oracle proof required):
+```
+exec {baseDir}/scripts/musashi-core/musashi-core update-agent --token-id 0 --storage-root <root> --sealed-key-file <sealed_key_path>
 ```
 
-Syncs reputation from ConvictionLog into the INFT on-chain.
+This replaces the stored merkle root, rotates the sealed key, bumps `version`, and syncs `totalStrikes`/`winRate` from ConvictionLog into the INFT. Any watcher of the `IntelligenceUpdated` event will see the new state.
+
+For a **transfer** or **clone** to a different owner, use `transfer-agent` instead — the Go binary will sign the oracle proof automatically using OG_CHAIN_PRIVATE_KEY (which is configured as the oracle during hackathon setup).
 
 Report STRIKE to user with:
 - On-chain tx hash + explorer link

@@ -22,8 +22,8 @@ MUSASHI builds the missing **reputation layer** for 0G's agent ecosystem.
 
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| ConvictionLog | `0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed` | [View](https://chainscan.0g.ai/address/0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed) |
-| MusashiINFT | `0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32` | [View](https://chainscan.0g.ai/address/0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32) |
+| ConvictionLog | `0x2B84aC25498FF0157fAB04fEa9e3544A14882A15` | [View](https://chainscan.0g.ai/address/0x2B84aC25498FF0157fAB04fEa9e3544A14882A15) |
+| MusashiINFT | `0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c` | [View](https://chainscan.0g.ai/address/0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c) |
 
 Network: 0G-Mainnet, Chain ID: 16661
 
@@ -255,13 +255,20 @@ This creates a complete audit trail: **agent identity (INFT) → conviction sign
 ### How the Three Components Connect
 
 ```
-1. Agent mints INFT        → MusashiINFT.mint("AGENT-NAME", configHash, intelHash)
-2. Agent analyzes token     → pipeline runs (gates, specialists, debate)
-3. Evidence uploaded        → 0G Storage → returns merkle root hash
-4. STRIKE published         → ConvictionLog.logStrike(agentId, token, chain, convergence, evidenceHash)
-5. Outcome recorded later   → ConvictionLog.recordOutcome(strikeId, returnBps)
-6. Reputation synced        → MusashiINFT.updateIntelligence(tokenId, newHash) → reads per-agent reputation
-7. Anyone verifies          → read ConvictionLog → check INFT → download evidence → verify merkle proof
+1. Encrypt intelligence bundle → AES-256-CTR ciphertext uploaded to 0G Storage → merkle root
+   AES key ECIES-sealed to owner pubkey → stored in MusashiINFT.sealedKey[tokenId]
+2. Agent mints INFT            → MusashiINFT.mint(name, storageRoot, metadataHash, sealedKey)
+3. Agent analyzes token        → pipeline runs (gates → specialists → debate → judge)
+4. Judge verdict = PASS ONLY   → evidence JSON uploaded to 0G Storage → returns merkle root
+5. STRIKE published            → ConvictionLog.logStrike(agentId, token, chain, convergence, <merkle root>)
+   (evidenceHash on-chain = real 0G Storage pointer, tamper-evident retrievable)
+6. Outcome recorded later      → ConvictionLog.recordOutcome(strikeId, returnBps)
+7. Intelligence rotated        → MusashiINFT.updateIntelligence(tokenId, newRoot, newSealedKey)
+   — bumps version, syncs totalStrikes/winRate from ConvictionLog
+8. Ownership transfer          → MusashiINFT.transfer(tokenId, to, newRoot, newSealedKey, oracleProof)
+   — oracle re-encrypts the bundle for the new owner, signs attestation, contract verifies ECDSA
+9. Anyone verifies             → read ConvictionLog → read MusashiINFT → download evidence with
+   `0g-storage-client download --root <hash> --proof` → cryptographically confirms integrity
 ```
 
 ---
@@ -334,8 +341,8 @@ Edit `.env`:
 
 ```
 OG_CHAIN_RPC=https://evmrpc.0g.ai
-CONVICTION_LOG_ADDRESS=0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed
-MUSASHI_INFT_ADDRESS=0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32
+CONVICTION_LOG_ADDRESS=0x2B84aC25498FF0157fAB04fEa9e3544A14882A15
+MUSASHI_INFT_ADDRESS=0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c
 
 # Optional: only needed for on-chain publishing (strike, store, mint, update)
 # Use a dedicated wallet with minimal funds — never your main wallet
@@ -379,8 +386,13 @@ set -a && source .env && set +a
 | `status` | Query global or per-agent reputation | `./scripts/musashi-core/musashi-core status` or `... status --per-agent --agent-id 0` |
 | `record-outcome` | Record STRIKE outcome | `./scripts/musashi-core/musashi-core record-outcome --strike-id 0 --return-bps 500` |
 | `set-inft` | Link MusashiINFT to ConvictionLog (one-time) | `./scripts/musashi-core/musashi-core set-inft 0xFB1C...488` |
-| `mint-agent` | Mint agent INFT | `./scripts/musashi-core/musashi-core mint-agent --name MUSASHI --config-hash <hash> --intelligence-hash <hash>` |
-| `update-agent` | Update agent intelligence + sync reputation | `./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <hash>` |
+| `seal-intelligence` | Encrypt + upload intelligence bundle to 0G Storage, emit sealed key | `./scripts/musashi-core/musashi-core seal-intelligence --input /path/to/bundle.tar.gz` |
+| `mint-agent` | Mint agent INFT (ERC-7857) | `./scripts/musashi-core/musashi-core mint-agent --name MUSASHI --storage-root <root> --sealed-key-file <path>` |
+| `update-agent` | Rotate agent intelligence + sync reputation | `./scripts/musashi-core/musashi-core update-agent --token-id 0 --storage-root <root> --sealed-key-file <path>` |
+| `transfer-agent` | Sealed ERC-7857 transfer (re-seals for receiver, auto-signs oracle proof) | `./scripts/musashi-core/musashi-core transfer-agent --token-id 0 --to 0x… --storage-root <root> --sealed-key-file <path>` |
+| `set-oracle` | Set the re-encryption oracle on MusashiINFT (one-time) | `./scripts/musashi-core/musashi-core set-oracle 0x…` |
+| `verify` | Download evidence from 0G Storage with merkle proof verification | `./scripts/musashi-core/musashi-core verify --strike-id 0` |
+| `orchestrate` | Gates → 0G Storage → STRIKE in one command, gated on judge verdict | `./scripts/musashi-core/musashi-core orchestrate 0x… --chain 1 --convergence 4 --judge-verdict PASS --judge-reason "..."` |
 | `history` | Query strike history + reputation (agent memory) | `./scripts/musashi-core/musashi-core history --agent-id 0 --limit 12` |
 | `agent-info` | Query INFT agent state | `./scripts/musashi-core/musashi-core agent-info --token-id 0` |
 
@@ -423,14 +435,45 @@ musashi-core record-outcome
   --strike-id uint64   Strike ID to record outcome for (default 0)
   --return-bps int64   Return in basis points, positive=win, negative=loss (default 0)
 
+musashi-core seal-intelligence
+  --input string             Plaintext intelligence bundle (tarball of prompts/ + SKILL.md, etc.)
+  --sealed-key-out string    Where to write the ECIES-sealed AES key (default: <input>.sealed.hex)
+  --ciphertext-out string    Where to write AES-256-CTR ciphertext before upload (default: temp file)
+
 musashi-core mint-agent
   --name string              Agent name (default "MUSASHI")
-  --config-hash string       Config hash from 0G Storage
-  --intelligence-hash string Intelligence/prompts hash from 0G Storage
+  --storage-root string      0G Storage merkle root of the encrypted intelligence bundle
+  --metadata-hash string     bytes32 public descriptor commitment (optional, defaults to zero)
+  --sealed-key-file string   Path to the hex-encoded ECIES-sealed AES key
 
 musashi-core update-agent
   --token-id uint64          INFT token ID (default 0)
-  --intelligence-hash string New intelligence hash
+  --storage-root string      New 0G Storage merkle root (from seal-intelligence)
+  --sealed-key-file string   Path to the freshly rotated sealed AES key
+
+musashi-core transfer-agent
+  --token-id uint64          INFT token ID to transfer
+  --to string                New owner address
+  --storage-root string      New 0G Storage root (re-encrypted for the receiver)
+  --sealed-key-file string   Sealed AES key for the receiver
+  --current-version uint     Override current on-chain version (0 = auto-fetch)
+
+musashi-core set-oracle <oracle_address>
+  (one-time setup; signs re-seal attestations for transfer/clone)
+
+musashi-core verify
+  --strike-id uint64         Strike ID to verify (reads evidenceHash from ConvictionLog)
+  --root string              0G Storage merkle root to verify directly (alternative to --strike-id)
+  --out string               Where to write the downloaded file (default: temp file)
+
+musashi-core orchestrate <token_address>
+  --chain int64              Chain ID (default 1)
+  --agent-id uint64          INFT agent token ID (default 0)
+  --convergence uint8        Convergence score (3 or 4) — REQUIRED when publishing a STRIKE
+  --skip-ai                  Skip AI-powered gates 4-5 (default true)
+  --store-evidence           Upload gate result to 0G Storage without publishing a STRIKE
+  --judge-verdict string     Set to "PASS" to actually publish a STRIKE (default: analyze-only)
+  --judge-reason string      One-line rationale from the judge agent
 
 musashi-core history
   --agent-id uint64    INFT agent token ID (default 0)
@@ -500,8 +543,10 @@ set -a && source .env && set +a
 ./scripts/musashi-core/musashi-core history --agent-id 0 --limit 12
 # Returns: strikes with outcomes + reputation stats — fed into judge for self-calibration
 
-# 8. Sync reputation to INFT
-./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <new_hash>
+# 8. Rotate intelligence + sync reputation to INFT
+./scripts/musashi-core/musashi-core seal-intelligence --input /path/to/new-bundle.tar.gz
+./scripts/musashi-core/musashi-core update-agent --token-id 0 \
+  --storage-root <new_storage_root> --sealed-key-file <new_sealed_key_path>
 ```
 
 ### OpenClaw Skill Usage
@@ -527,8 +572,8 @@ MUSASHI has two modes. **Analysis mode works without any private key.**
       "musashi": {
         "env": {
           "OG_CHAIN_RPC": "https://evmrpc.0g.ai",
-          "CONVICTION_LOG_ADDRESS": "0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed",
-          "MUSASHI_INFT_ADDRESS": "0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32"
+          "CONVICTION_LOG_ADDRESS": "0x2B84aC25498FF0157fAB04fEa9e3544A14882A15",
+          "MUSASHI_INFT_ADDRESS": "0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c"
         }
       }
     }
@@ -547,8 +592,8 @@ This gives you the full pipeline: 7 gates, 4 specialists, pattern detection, adv
       "musashi": {
         "env": {
           "OG_CHAIN_RPC": "https://evmrpc.0g.ai",
-          "CONVICTION_LOG_ADDRESS": "0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed",
-          "MUSASHI_INFT_ADDRESS": "0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32",
+          "CONVICTION_LOG_ADDRESS": "0x2B84aC25498FF0157fAB04fEa9e3544A14882A15",
+          "MUSASHI_INFT_ADDRESS": "0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c",
           "OG_CHAIN_PRIVATE_KEY": "your-dedicated-wallet-key",
           "OG_STORAGE_RPC": "https://evmrpc.0g.ai",
           "OG_STORAGE_INDEXER": "https://indexer-storage-turbo.0g.ai"
@@ -655,8 +700,8 @@ pnpm dev
 ```
 
 The dashboard reads from the same mainnet contracts:
-- ConvictionLog: `0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed`
-- MusashiINFT: `0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32`
+- ConvictionLog: `0x2B84aC25498FF0157fAB04fEa9e3544A14882A15`
+- MusashiINFT: `0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c`
 
 ---
 

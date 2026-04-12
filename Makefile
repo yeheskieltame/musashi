@@ -77,11 +77,35 @@ scan:
 discover:
 	scripts/musashi-core/musashi-core discover --chain "$(or $(CHAIN),1)" --limit "$(or $(LIMIT),20)"
 
+seal-intelligence:
+	@test -n "$(INPUT)" || (echo "Usage: make seal-intelligence INPUT=/path/to/intelligence.tar.gz" && exit 1)
+	scripts/musashi-core/musashi-core seal-intelligence --input "$(INPUT)"
+
+# Mint a MUSASHI agent as an ERC-7857 INFT. Run `make seal-intelligence` first
+# to produce STORAGE_ROOT (0G Storage merkle root) and SEALED_KEY_FILE (ECIES
+# wrapped AES key), then:
+#   make mint-agent STORAGE_ROOT=0x… SEALED_KEY_FILE=/tmp/foo.sealed.hex
 mint-agent:
+	@test -n "$(STORAGE_ROOT)" || (echo "Usage: make mint-agent STORAGE_ROOT=0x… SEALED_KEY_FILE=path [METADATA_HASH=0x…]" && exit 1)
+	@test -n "$(SEALED_KEY_FILE)" || (echo "Usage: make mint-agent STORAGE_ROOT=0x… SEALED_KEY_FILE=path [METADATA_HASH=0x…]" && exit 1)
 	scripts/musashi-core/musashi-core mint-agent \
-		--name "MUSASHI" \
-		--config-hash "$(CONFIG_HASH)" \
-		--intelligence-hash "$(INTEL_HASH)"
+		--name "$(or $(NAME),MUSASHI)" \
+		--storage-root "$(STORAGE_ROOT)" \
+		--metadata-hash "$(or $(METADATA_HASH),0x0000000000000000000000000000000000000000000000000000000000000000)" \
+		--sealed-key-file "$(SEALED_KEY_FILE)"
+
+update-agent:
+	@test -n "$(TOKEN_ID)" || (echo "Usage: make update-agent TOKEN_ID=0 STORAGE_ROOT=0x… SEALED_KEY_FILE=path" && exit 1)
+	@test -n "$(STORAGE_ROOT)" || (echo "Usage: make update-agent TOKEN_ID=0 STORAGE_ROOT=0x… SEALED_KEY_FILE=path" && exit 1)
+	@test -n "$(SEALED_KEY_FILE)" || (echo "Usage: make update-agent TOKEN_ID=0 STORAGE_ROOT=0x… SEALED_KEY_FILE=path" && exit 1)
+	scripts/musashi-core/musashi-core update-agent \
+		--token-id "$(TOKEN_ID)" \
+		--storage-root "$(STORAGE_ROOT)" \
+		--sealed-key-file "$(SEALED_KEY_FILE)"
+
+verify-strike:
+	@test -n "$(STRIKE_ID)" || (echo "Usage: make verify-strike STRIKE_ID=0" && exit 1)
+	scripts/musashi-core/musashi-core verify --strike-id "$(STRIKE_ID)"
 
 store-evidence:
 	@test -n "$(EVIDENCE)" || (echo "Usage: make store-evidence EVIDENCE='{...}'" && exit 1)

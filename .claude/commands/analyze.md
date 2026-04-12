@@ -98,19 +98,43 @@ If `OG_CHAIN_PRIVATE_KEY` is not set, report the PASS verdict and inform: "On-ch
 
 If confirmed and key is set:
 
-```bash
-# Store evidence
-./scripts/musashi-core/musashi-core store '<evidence_json>'
-
-# Publish STRIKE
-./scripts/musashi-core/musashi-core strike <token_address> --token-chain <chain_id> --convergence <score> --evidence <root_hash>
-```
-
-### Step 8: Update Agent Intelligence (INFT)
+Only publish a STRIKE if the judge verdict was PASS with high conviction (3-4 convergence). Gate pass alone is NOT a STRIKE — the judge must explicitly say PASS after reading the full debate transcript.
 
 ```bash
-./scripts/musashi-core/musashi-core update-agent --token-id 0 --intelligence-hash <new_hash>
+# Single-command path (recommended): gates → 0G Storage → STRIKE, gated on judge verdict
+./scripts/musashi-core/musashi-core orchestrate <token_address> \
+  --chain <chain_id> \
+  --agent-id 0 \
+  --convergence <3|4> \
+  --judge-verdict PASS \
+  --judge-reason "<one-line rationale from the judge>"
+
+# Or manual two-step (debugging):
+./scripts/musashi-core/musashi-core store '<evidence_json>'      # → prints storage_root
+./scripts/musashi-core/musashi-core strike <token_address> \
+  --token-chain <chain_id> --convergence <score> \
+  --evidence <storage_root>                                      # evidenceHash MUST be the 0G Storage merkle root
 ```
+
+If judge = FAIL or hesitant, stop. Do not upload to 0G Storage, do not publish a STRIKE. Keeping the on-chain conviction history clean is more important than demonstrating activity.
+
+### Step 8: Update Agent Intelligence (ERC-7857 INFT)
+
+The MUSASHI INFT stores its intelligence as an encrypted bundle on 0G Storage. To rotate:
+
+```bash
+# 1. Re-seal the new intelligence bundle (prompts + config)
+./scripts/musashi-core/musashi-core seal-intelligence --input /path/to/new-bundle.tar.gz
+# Capture `storage_root` and `sealed_key_path` from the JSON output.
+
+# 2. Update the INFT with the new root + freshly sealed key
+./scripts/musashi-core/musashi-core update-agent \
+  --token-id 0 \
+  --storage-root <root> \
+  --sealed-key-file <sealed_key_path>
+```
+
+This rotates the encrypted blob on 0G Storage, bumps the INFT's `version`, and syncs the latest `totalStrikes`/`winRate` from ConvictionLog.
 
 ## Output Format
 

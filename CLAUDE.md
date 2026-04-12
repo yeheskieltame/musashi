@@ -565,8 +565,8 @@ Both contracts deployed on 0G Mainnet (Chain ID: 16661):
 
 | Contract | Address |
 |----------|---------|
-| ConvictionLog | `0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed` |
-| MusashiINFT | `0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32` |
+| ConvictionLog | `0x2B84aC25498FF0157fAB04fEa9e3544A14882A15` |
+| MusashiINFT | `0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c` |
 
 ### ConvictionLog.sol (deployed version)
 
@@ -610,33 +610,49 @@ function reputation() → (uint256 total, uint256 w, uint256 l, int256 totalRetu
 function agentReputation(uint256 _agentId) → (uint256 strikes, uint256 filled, uint256 w, uint256 l, int256 totalReturn)
 ```
 
-### MusashiINFT.sol (deployed version)
+### MusashiINFT.sol (ERC-7857 compliant — current version)
 
-ERC-7857 inspired. Packed storage (4 slots + dynamic string). Linked to ConvictionLog (immutable). Ownable2Step + Pausable + ReentrancyGuard.
+Real ERC-7857 semantics: encrypted intelligence bundle on 0G Storage, per-owner ECIES-sealed symmetric key, oracle-verified transfers/clones. Linked to ConvictionLog (immutable). Ownable2Step + Pausable + ReentrancyGuard.
 
 ```solidity
 struct AgentToken {
-    address owner;             // slot 0: owner(20) + active(1) + winRate(2) + convergenceAvg(1)
+    address owner;             // slot 0: owner(20) + active(1) + winRate(2) + convergenceAvg(1) + version(2)
     bool    active;
     uint16  winRate;
     uint8   convergenceAvg;
-    bytes32 configHash;        // slot 1
-    bytes32 intelligenceHash;  // slot 2
+    uint16  version;           // bumped on every re-seal (transfer/clone/update) — replay protection
+    bytes32 storageRoot;       // slot 1: 0G Storage merkle root of the AES-256-CTR encrypted bundle
+    bytes32 metadataHash;      // slot 2: commitment to the public descriptor JSON
     uint64  totalStrikes;      // slot 3: totalStrikes(8) + createdAt(6) + updatedAt(6)
     uint48  createdAt;
     uint48  updatedAt;
     string  name;
 }
 
-function mint(string calldata _name, bytes32 _configHash, bytes32 _intelligenceHash)
-function updateIntelligence(uint256 tokenId, bytes32 _intelligenceHash)  // syncs reputation from ConvictionLog
+// per-token ECIES-wrapped AES key, rotated on every re-seal
+mapping(uint256 => bytes) public sealedKey;
+
+// trusted ECDSA re-encryption oracle (TEE/ZKP in production, deployer key for hackathon)
+address public oracle;
+
+function mint(string calldata _name, bytes32 _storageRoot, bytes32 _metadataHash, bytes calldata _sealedKey)
+function updateIntelligence(uint256 tokenId, bytes32 newStorageRoot, bytes calldata newSealedKey)
+function transfer(uint256 tokenId, address to, bytes32 newStorageRoot, bytes calldata newSealedKey, bytes calldata oracleProof)
+function clone(uint256 tokenId, address newOwner, bytes32 newStorageRoot, bytes calldata newSealedKey, bytes calldata oracleProof)
 function authorizeUsage(uint256 tokenId, address executor, uint48 duration, bytes32 permissionsHash)
 function revokeUsage(uint256 tokenId, address executor)
-function clone(uint256 tokenId, address newOwner)
-function transfer(uint256 tokenId, address to)
+function setOracle(address _oracle) external onlyOwner
+function transferDigest(uint256 tokenId, uint16 version, bytes32 oldRoot, bytes32 newRoot, address to) → bytes32
 function getAgent(uint256 tokenId) → AgentToken memory
+function getSealedKey(uint256 tokenId) → bytes memory
 function agentCount() → uint256
+
+event SealedTransfer(uint256 indexed id, address indexed from, address indexed to, bytes32 oldRoot, bytes32 newRoot, uint16 newVersion);
+event IntelligenceUpdated(uint256 indexed id, bytes32 newStorageRoot, uint64 totalStrikes, uint16 winRate);
+event AgentCloned(uint256 indexed originalId, uint256 indexed newId, address indexed newOwner, bytes32 newRoot);
 ```
+
+The oracle proof is an ECDSA signature over `keccak256(abi.encode(chainid, address(this), tokenId, version, oldRoot, newRoot, to))` wrapped with the EIP-191 `"\x19Ethereum Signed Message:\n32"` prefix. Any transfer / clone with a newRoot equal to oldRoot reverts (`StaleRoot`), and any signature produced for a stale `(version, oldRoot)` pair is rejected after `version` bumps.
 
 **IMPORTANT for Go binary ABI encoding:** `logStrike` uses `uint256` for agentId and `uint64` for chainId. The function selector is `keccak256("logStrike(uint256,address,uint64,uint8,bytes32)")`. Using the wrong types in the selector will cause a revert.
 
@@ -671,8 +687,8 @@ OG_CHAIN_RPC=https://evmrpc.0g.ai
 OG_CHAIN_PRIVATE_KEY=         # Deployer wallet (hex, 0x prefix accepted)
 
 # Deployed contracts
-CONVICTION_LOG_ADDRESS=0xdB5EB0d68e73902eC630256902825a72E4B4d1Ed
-MUSASHI_INFT_ADDRESS=0xfFE8dAa358cFb3EF8A2e20B0C6fBBF181942dc32
+CONVICTION_LOG_ADDRESS=0x2B84aC25498FF0157fAB04fEa9e3544A14882A15
+MUSASHI_INFT_ADDRESS=0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c
 
 # 0G Storage — uses official 0g-storage-client CLI (file upload)
 OG_STORAGE_RPC=https://evmrpc.0g.ai
