@@ -18,7 +18,7 @@ export interface PipelineResult {
   timestamp: string;
   status: "PASS" | "FAIL" | "WARN" | "SKIP";
   failed_at: number;
-  token_age: "fresh" | "early" | "established";
+  token_age: "fresh" | "early" | "discovery" | "maturation" | "established";
   age_hours: number;
   gates: GateResult[];
 }
