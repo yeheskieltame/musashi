@@ -142,62 +142,116 @@ func (g *SocialGate) scoreReddit(result *Result, searchTerm, tokenName string) f
 		return 1
 	}
 
-	// Count relevant posts (title or body mentions token)
+	// Bucket posts by age and compute mention velocity
 	now := time.Now().Unix()
 	relevant := 0
 	totalScore := 0
 	totalComments := 0
-	recentCount := 0 // posts from last 48h
+	bucket1h := 0
+	bucket6h := 0
+	bucket24h := 0
+	bucket48h := 0
+	bucketWeek := 0
 
 	for _, p := range posts {
 		titleLower := strings.ToLower(p.Title)
 		textLower := strings.ToLower(p.Selftext)
 		termLower := strings.ToLower(searchTerm)
 
-		if strings.Contains(titleLower, termLower) || strings.Contains(textLower, termLower) {
-			relevant++
-			totalScore += p.Score
-			totalComments += p.NumComments
+		if !strings.Contains(titleLower, termLower) && !strings.Contains(textLower, termLower) {
+			continue
+		}
+		relevant++
+		totalScore += p.Score
+		totalComments += p.NumComments
 
-			age := now - int64(p.CreatedUTC)
-			if age < 48*3600 {
-				recentCount++
-			}
+		age := now - int64(p.CreatedUTC)
+		switch {
+		case age < 3600:
+			bucket1h++
+			bucket6h++
+			bucket24h++
+			bucket48h++
+			bucketWeek++
+		case age < 6*3600:
+			bucket6h++
+			bucket24h++
+			bucket48h++
+			bucketWeek++
+		case age < 24*3600:
+			bucket24h++
+			bucket48h++
+			bucketWeek++
+		case age < 48*3600:
+			bucket48h++
+			bucketWeek++
+		case age < 7*24*3600:
+			bucketWeek++
 		}
 	}
 
 	result.AddEvidence("reddit", "relevant_posts", fmt.Sprintf("%d", relevant))
 	result.AddEvidence("reddit", "total_upvotes", fmt.Sprintf("%d", totalScore))
 	result.AddEvidence("reddit", "total_comments", fmt.Sprintf("%d", totalComments))
-	result.AddEvidence("reddit", "recent_48h", fmt.Sprintf("%d", recentCount))
+	result.AddEvidence("reddit", "mentions_1h", fmt.Sprintf("%d", bucket1h))
+	result.AddEvidence("reddit", "mentions_6h", fmt.Sprintf("%d", bucket6h))
+	result.AddEvidence("reddit", "mentions_24h", fmt.Sprintf("%d", bucket24h))
+	result.AddEvidence("reddit", "mentions_week", fmt.Sprintf("%d", bucketWeek))
 
 	if relevant == 0 {
 		return 2
 	}
 
-	score := 3.0 // base: found mentions
+	score := 2.5 // base: at least one mention found
+
+	// Volume tiers
 	if relevant >= 3 {
-		score += 1
+		score += 0.5
 	}
 	if relevant >= 8 {
-		score += 1
+		score += 0.5
 	}
+
+	// Engagement tiers
 	if totalScore > 50 {
-		score += 1
+		score += 0.5
 	}
 	if totalScore > 200 {
-		score += 1
+		score += 0.5
+	}
+	if totalScore > 1000 {
+		score += 0.5
 	}
 	if totalComments > 20 {
-		score += 1
+		score += 0.5
 	}
-	if recentCount >= 2 {
-		score += 1
+	if totalComments > 100 {
+		score += 0.5
 	}
-	if recentCount >= 5 {
+
+	// Velocity / acceleration scoring — fresh mentions matter more than stale.
+	// Compare 24h share vs week baseline. Acceleration > flat history.
+	if bucketWeek > 0 {
+		share24h := float64(bucket24h) / float64(bucketWeek)
+		result.AddEvidence("reddit", "share_24h_of_week", fmt.Sprintf("%.2f", share24h))
+		switch {
+		case share24h > 0.60:
+			score += 2 // mentions concentrated in last day = breakout
+		case share24h > 0.35:
+			score += 1.5
+		case share24h > 0.20:
+			score += 0.5
+		}
+	}
+	if bucket1h >= 2 {
+		score += 1.5 // active right now
+	} else if bucket6h >= 3 {
 		score += 1
 	}
 
+	if score < 1 {
+		score = 1
+	}
 	if score > 10 {
 		score = 10
 	}
@@ -372,43 +426,133 @@ func (g *SocialGate) scoreFarcaster(result *Result, searchTerm string) float64 {
 	return score
 }
 
-// scoreDexActivity uses DexScreener trading data as a proxy for social interest.
+// scoreDexActivity uses real DexScreener pair data — txn velocity, buy/sell
+// pressure, volume acceleration — as a deterministic social/demand proxy.
+// Also computes boost-to-organic ratio: high boost without organic engagement
+// is a manufactured-hype trap and gets penalized.
 func (g *SocialGate) scoreDexActivity(result *Result, ctx TokenContext) float64 {
-	// We don't re-fetch — use data already available from gate context
-	// DexScreener data from Gate 2 already shows volume + txn counts.
-	// Here we score the velocity of activity as social proxy.
-	if ctx.GoPlusData == nil {
+	if !ctx.DexPairsFetched || len(ctx.DexPairs) == 0 {
 		return 3
 	}
 
-	// This data comes indirectly — just check holder count as proxy.
-	// High holder count = high social spread.
-	holders := 0
-	fmt.Sscanf(ctx.GoPlusData.HolderCount, "%d", &holders)
+	// Pick the deepest-liquidity pair as the primary signal
+	var primary *data.DexPair
+	bestLiq := 0.0
+	for i := range ctx.DexPairs {
+		if ctx.DexPairs[i].Liquidity.Usd > bestLiq {
+			bestLiq = ctx.DexPairs[i].Liquidity.Usd
+			primary = &ctx.DexPairs[i]
+		}
+	}
+	if primary == nil {
+		return 3
+	}
 
-	result.AddEvidence("dex_proxy", "holder_count", fmt.Sprintf("%d", holders))
+	// Aggregate txn counts across windows
+	buys24 := primary.Txns.H24.Buys
+	sells24 := primary.Txns.H24.Sells
+	total24 := buys24 + sells24
+	buys6 := primary.Txns.H6.Buys + primary.Txns.H6.Sells
+	buys1 := primary.Txns.H1.Buys + primary.Txns.H1.Sells
 
-	score := 3.0
-	if holders > 100 {
-		score += 1
-	}
-	if holders > 1000 {
-		score += 1
-	}
-	if holders > 10000 {
-		score += 1
-	}
-	if holders > 100000 {
+	result.AddEvidence("dex_activity", "txns_24h", fmt.Sprintf("%d", total24))
+	result.AddEvidence("dex_activity", "buys_24h", fmt.Sprintf("%d", buys24))
+	result.AddEvidence("dex_activity", "sells_24h", fmt.Sprintf("%d", sells24))
+	result.AddEvidence("dex_activity", "txns_6h", fmt.Sprintf("%d", buys6))
+	result.AddEvidence("dex_activity", "txns_1h", fmt.Sprintf("%d", buys1))
+	result.AddEvidence("dex_activity", "volume_24h_usd", fmt.Sprintf("%.0f", primary.Volume.H24))
+
+	score := 2.0
+
+	// Volume tiers
+	switch {
+	case primary.Volume.H24 > 5_000_000:
+		score += 3
+	case primary.Volume.H24 > 1_000_000:
+		score += 2.5
+	case primary.Volume.H24 > 250_000:
 		score += 2
-	}
-	if holders > 1000000 {
+	case primary.Volume.H24 > 50_000:
 		score += 1
+	case primary.Volume.H24 > 10_000:
+		score += 0.5
 	}
 
+	// Txn count tiers (organic interest breadth)
+	switch {
+	case total24 > 5000:
+		score += 2
+	case total24 > 1000:
+		score += 1.5
+	case total24 > 200:
+		score += 1
+	case total24 > 50:
+		score += 0.5
+	}
+
+	// Buy pressure: more buys than sells = demand wave
+	if total24 > 50 {
+		buyRatio := float64(buys24) / float64(total24)
+		result.AddEvidence("dex_activity", "buy_ratio", fmt.Sprintf("%.2f", buyRatio))
+		if buyRatio > 0.60 {
+			score += 1.5
+		} else if buyRatio > 0.52 {
+			score += 0.5
+		} else if buyRatio < 0.40 {
+			score -= 1.5 // dump in progress
+		}
+	}
+
+	// Velocity: 1h share of 24h activity. Healthy momentum > 1/24, hot > 1/12.
+	if total24 > 100 && buys1 > 0 {
+		share1h := float64(buys1) / float64(total24)
+		result.AddEvidence("dex_activity", "txn_1h_share", fmt.Sprintf("%.3f", share1h))
+		switch {
+		case share1h > 0.15:
+			score += 1.5 // accelerating hard
+		case share1h > 0.08:
+			score += 1
+		case share1h > 0.04:
+			score += 0.5
+		}
+	}
+
+	// Boost-to-organic check: paid promotion with no organic backing = trap.
+	if ctx.BoostedTokensFetched {
+		boosted := false
+		boostAmount := 0.0
+		addrLower := strings.ToLower(getPrimaryTokenAddress(primary))
+		for _, b := range ctx.BoostedTokens {
+			if strings.ToLower(b.TokenAddress) == addrLower {
+				boosted = true
+				boostAmount = b.TotalAmount
+				break
+			}
+		}
+		result.AddEvidence("dex_activity", "is_boosted", fmt.Sprintf("%v", boosted))
+		if boosted {
+			result.AddEvidence("dex_activity", "boost_amount", fmt.Sprintf("%.0f", boostAmount))
+			// Boosted but volume is anemic = manufactured trap
+			if primary.Volume.H24 < 25_000 || total24 < 100 {
+				result.AddEvidence("dex_activity", "verdict", "manufactured_hype")
+				score -= 2
+			}
+		}
+	}
+
+	if score < 1 {
+		score = 1
+	}
 	if score > 10 {
 		score = 10
 	}
 	return score
+}
+
+// getPrimaryTokenAddress returns the base token address from a pair (the
+// token being analyzed, not the quote currency).
+func getPrimaryTokenAddress(p *data.DexPair) string {
+	return p.BaseToken.Address
 }
 
 func max(a, b int) int {

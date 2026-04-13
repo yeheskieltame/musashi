@@ -51,6 +51,24 @@ type TokenContext struct {
 	CoinGeckoDetail  *data.CoinDetail // Cached coin detail (nil if not fetched)
 	CoinGeckoID      string           // Resolved CoinGecko coin ID
 	CoinGeckoFetched bool             // Whether CoinGecko was already fetched
+
+	// Cached DexScreener pairs: fetched once for age detection, reused by
+	// liquidity/social/narrative gates so we don't burn rate limit hitting
+	// the same /tokens/{address} endpoint repeatedly.
+	DexPairs        []data.DexPair
+	DexPairsFetched bool
+
+	// Pre-fetched typed boost list (small payload, single call) so social and
+	// narrative gates can compute boost-to-organic ratios without each gate
+	// calling /token-boosts/latest/v1 individually.
+	BoostedTokens        []data.BoostedToken
+	BoostedTokensFetched bool
+
+	// Narrative landscape: top CoinGecko categories ranked by 24h market cap
+	// gain. Lets the narrative gate score "is this token in a rising sector"
+	// instead of relying solely on a static keyword list.
+	NarrativeLandscape        []data.CoinCategory
+	NarrativeLandscapeFetched bool
 }
 
 // ClassifyAge determines the token's age tier from pairCreatedAt timestamp (milliseconds).

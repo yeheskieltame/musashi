@@ -17,10 +17,10 @@ type RedditClient struct {
 
 func NewRedditClient() *RedditClient {
 	return &RedditClient{
-		client: NewResilientClient(30*time.Second, RetryConfig{
-			MaxRetries:     2,
-			InitialBackoff: 2 * time.Second,
-			MaxBackoff:     5 * time.Second,
+		client: NewResilientClient(45*time.Second, RetryConfig{
+			MaxRetries:     1,
+			InitialBackoff: 1 * time.Second,
+			MaxBackoff:     2 * time.Second,
 		}),
 	}
 }

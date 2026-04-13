@@ -94,11 +94,12 @@ func (p *PipelineResult) Pretty() string {
 	return sb.String()
 }
 
-// fetchTokenAge gets the earliest pairCreatedAt from DexScreener data.
-func fetchTokenAge(token string) gates.TokenContext {
+// fetchTokenAgeAndPairs fetches DexScreener pairs once and derives age + caches
+// the full pair list so downstream gates don't have to refetch.
+func fetchTokenAgeAndPairs(token string) gates.TokenContext {
 	dex := data.NewDexScreenerClient()
 	dexData, err := dex.GetTokenPairs(token)
-	if err != nil || len(dexData.Pairs) == 0 {
+	if err != nil || dexData == nil || len(dexData.Pairs) == 0 {
 		return gates.TokenContext{Age: gates.AgeEstablished, HasAgeData: false}
 	}
 
@@ -110,7 +111,10 @@ func fetchTokenAge(token string) gates.TokenContext {
 		}
 	}
 
-	return gates.ClassifyAge(earliestMs)
+	ctx := gates.ClassifyAge(earliestMs)
+	ctx.DexPairs = dexData.Pairs
+	ctx.DexPairsFetched = true
+	return ctx
 }
 
 // RunGates executes the gate pipeline sequentially with fail-fast behavior.
@@ -120,8 +124,8 @@ func fetchTokenAge(token string) gates.TokenContext {
 // GoPlus data is fetched ONCE and shared across all gates to avoid rate limits.
 func RunGates(token string, chainID int64, skipAI ...bool) (*PipelineResult, error) {
 	shouldSkipAI := len(skipAI) > 0 && skipAI[0]
-	// Fetch token age context first
-	tokenCtx := fetchTokenAge(token)
+	// Fetch token age + dexscreener pair list once for the whole pipeline
+	tokenCtx := fetchTokenAgeAndPairs(token)
 
 	// Fetch GoPlus data once and cache in context — Gates 1, 2, 3 all need it.
 	// This prevents 3x redundant API calls which trigger 429 rate limits.
@@ -161,6 +165,23 @@ func RunGates(token string, chainID int64, skipAI ...bool) (*PipelineResult, err
 				}
 			}
 			tokenCtx.CoinGeckoFetched = true
+		}
+
+		// Pre-fetch narrative landscape: top categories ranked by 24h gain.
+		// Single CoinGecko call shared between social and narrative gates.
+		cgCat := data.NewCoinGeckoClient()
+		if cats, catErr := cgCat.GetCategories(); catErr == nil {
+			tokenCtx.NarrativeLandscape = cats
+			tokenCtx.NarrativeLandscapeFetched = true
+		}
+
+		// Pre-fetch boost list — small payload, single call. Reused by
+		// social (boost-to-organic ratio) and narrative (manufactured hype
+		// detection) gates.
+		dexBoost := data.NewDexScreenerClient()
+		if boosts, boostErr := dexBoost.GetBoostedTokens(); boostErr == nil {
+			tokenCtx.BoostedTokens = boosts
+			tokenCtx.BoostedTokensFetched = true
 		}
 	}
 

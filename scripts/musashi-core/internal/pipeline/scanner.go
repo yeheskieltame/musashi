@@ -54,29 +54,26 @@ func ScanTokens(chainID int64, limit int, runGates bool) (string, error) {
 	// === Source 1: DexScreener boosted tokens (have direct token addresses) ===
 	boosted, err := dex.GetBoostedTokens()
 	if err == nil {
-		for _, raw := range boosted {
-			var bt struct {
-				TokenAddress string `json:"tokenAddress"`
-				ChainID      string `json:"chainId"`
-				Description  string `json:"description"`
+		for _, bt := range boosted {
+			if bt.TokenAddress == "" {
+				continue
 			}
-			if json.Unmarshal(raw, &bt) == nil && bt.TokenAddress != "" {
-				key := strings.ToLower(bt.TokenAddress + "_" + bt.ChainID)
-				if !seen[key] {
-					seen[key] = true
-					cid := nameToChainID(bt.ChainID)
-					if chainID > 0 && cid != chainID {
-						continue
-					}
-					rawCandidates = append(rawCandidates, ScanCandidate{
-						Address: bt.TokenAddress,
-						Name:    bt.Description,
-						Chain:   bt.ChainID,
-						ChainID: cid,
-						Source:  "boosted",
-					})
-				}
+			key := strings.ToLower(bt.TokenAddress + "_" + bt.ChainID)
+			if seen[key] {
+				continue
 			}
+			seen[key] = true
+			cid := nameToChainID(bt.ChainID)
+			if chainID > 0 && cid != chainID {
+				continue
+			}
+			rawCandidates = append(rawCandidates, ScanCandidate{
+				Address: bt.TokenAddress,
+				Name:    bt.Description,
+				Chain:   bt.ChainID,
+				ChainID: cid,
+				Source:  "boosted",
+			})
 		}
 	}
 

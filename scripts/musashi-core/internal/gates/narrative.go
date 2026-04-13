@@ -36,18 +36,35 @@ func (g *NarrativeGate) Evaluate(token string, chainID int64) (*Result, error) {
 }
 
 // Hot narrative keywords — tokens matching these get a narrative bonus.
-// Updated periodically to reflect current market meta.
+// Refreshed for 2026 market meta. Order matters: more specific narratives
+// (AI Agents, Bitcoin L2) checked before broader ones (AI, L2).
 var hotNarratives = map[string][]string{
-	"AI":       {"ai", "artificial intelligence", "machine learning", "llm", "neural", "gpt", "agent"},
-	"RWA":      {"rwa", "real world asset", "tokenized", "treasury"},
-	"DePIN":    {"depin", "physical infrastructure", "iot", "sensor", "wireless"},
-	"Meme":     {"meme", "doge", "pepe", "shib", "inu", "cat", "frog", "bonk"},
-	"L2":       {"layer 2", "l2", "rollup", "zk", "optimistic"},
-	"DeFi":     {"defi", "dex", "lending", "yield", "amm", "swap", "liquidity"},
-	"Gaming":   {"gaming", "game", "metaverse", "play", "nft"},
-	"Privacy":  {"privacy", "zero knowledge", "zk", "mixer"},
-	"Staking":  {"staking", "restaking", "liquid staking", "lst", "lrt"},
-	"SocialFi": {"socialfi", "social", "creator", "fan token"},
+	"AI Agents":       {"ai agent", "autonomous agent", "agent framework", "swarm"},
+	"AI":              {"artificial intelligence", "machine learning", "llm", "neural", "gpt", "ai "},
+	"DeSci":           {"desci", "decentralized science", "longevity", "biotech"},
+	"RWA":             {"rwa", "real world asset", "tokenized", "treasury bill", "t-bill"},
+	"DePIN":           {"depin", "physical infrastructure", "iot", "sensor", "wireless network"},
+	"Bitcoin L2":      {"bitcoin l2", "btc l2", "babylon", "stacks", "rune"},
+	"Solana Memecoin": {"pump.fun", "pumpfun", "bonk", "wif", "popcat", "mew"},
+	"TON Ecosystem":   {"telegram", "ton ", "notcoin", "hamster", "dogs"},
+	"Hyperliquid":     {"hyperliquid", "hyperliquid ecosystem"},
+	"Meme":            {"meme", "doge", "pepe", "shib", "inu", "cat", "frog"},
+	"L2":              {"layer 2", "l2", "rollup", "zk rollup", "optimistic"},
+	"Restaking":       {"restaking", "eigenlayer", "lrt", "liquid restaking"},
+	"Staking":         {"staking", "liquid staking", "lst"},
+	"DeFi":            {"defi", "dex", "lending", "yield", "amm", "swap", "liquidity"},
+	"Gaming":          {"gaming", "game", "metaverse", "play to earn", "p2e"},
+	"Privacy":         {"privacy", "zero knowledge", "zk", "mixer"},
+	"SocialFi":        {"socialfi", "social", "creator", "fan token"},
+}
+
+// narrativeOrder is the priority order for category->narrative matching.
+// More specific narratives must come first.
+var narrativeOrder = []string{
+	"AI Agents", "Solana Memecoin", "TON Ecosystem", "Hyperliquid",
+	"Bitcoin L2", "DeSci", "Restaking",
+	"AI", "RWA", "DePIN", "Meme", "Gaming", "L2",
+	"Staking", "DeFi", "SocialFi", "Privacy",
 }
 
 func (g *NarrativeGate) EvaluateWithContext(token string, chainID int64, ctx TokenContext) (*Result, error) {
@@ -84,14 +101,19 @@ func (g *NarrativeGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 	scores = append(scores, trendScore)
 	weights = append(weights, 3.0)
 
-	// --- 3. DexScreener boosted ---
-	boostScore := g.scoreBoosted(result, token)
+	// --- 3. DexScreener boost vs organic check ---
+	boostScore := g.scoreBoosted(result, token, ctx)
 	scores = append(scores, boostScore)
-	weights = append(weights, 2.0)
+	weights = append(weights, 2.5)
 
 	// --- 4. Name/symbol narrative keyword match ---
 	kwScore := g.scoreKeywordMatch(result, tokenName, tokenSymbol, narrative)
 	scores = append(scores, kwScore)
+	weights = append(weights, 1.5)
+
+	// --- 5. Narrative landscape: is this token's category currently rising? ---
+	landscapeScore := g.scoreLandscape(result, ctx, narrative)
+	scores = append(scores, landscapeScore)
 	weights = append(weights, 2.0)
 
 	// Weighted average
@@ -192,7 +214,6 @@ func (g *NarrativeGate) scoreCoinGeckoDetail(result *Result, detail *data.CoinDe
 	}
 
 	// Ordered narrative check — more specific narratives first
-	narrativeOrder := []string{"Meme", "AI", "RWA", "DePIN", "Gaming", "L2", "DeFi", "Staking", "SocialFi", "Privacy"}
 	for _, narr := range narrativeOrder {
 		keywords := hotNarratives[narr]
 		for _, catLower := range categoriesLower {
@@ -266,33 +287,207 @@ func (g *NarrativeGate) scoreTrending(result *Result, searchTerm, symbol string)
 	return 4 // neutral — most tokens aren't trending
 }
 
-// scoreBoosted checks if token is being promoted on DexScreener.
-func (g *NarrativeGate) scoreBoosted(result *Result, tokenAddress string) float64 {
-	boosted, err := g.dex.GetBoostedTokens()
-	if err != nil {
-		result.AddEvidence("dexscreener", "boost_error", err.Error())
-		return 3
+// scoreBoosted checks if a token is being promoted on DexScreener and
+// cross-references organic signals to detect manufactured hype traps.
+//
+// Logic:
+//   - boost present + organic strong  → mild positive (legit marketing)
+//   - boost present + organic absent  → strong negative (manufactured trap)
+//   - no boost + organic strong       → strong positive (sleeper)
+//   - no boost + organic absent       → neutral
+func (g *NarrativeGate) scoreBoosted(result *Result, tokenAddress string, ctx TokenContext) float64 {
+	var boosted []data.BoostedToken
+	if ctx.BoostedTokensFetched {
+		boosted = ctx.BoostedTokens
+	} else {
+		fetched, err := g.dex.GetBoostedTokens()
+		if err != nil {
+			result.AddEvidence("dexscreener", "boost_error", err.Error())
+			return 3
+		}
+		boosted = fetched
 	}
 
 	addressLower := strings.ToLower(tokenAddress)
 	isBoosted := false
-
-	for _, raw := range boosted {
-		rawStr := string(raw)
-		if strings.Contains(strings.ToLower(rawStr), addressLower) {
+	boostAmount := 0.0
+	for _, b := range boosted {
+		if strings.ToLower(b.TokenAddress) == addressLower {
 			isBoosted = true
+			boostAmount = b.TotalAmount
 			break
 		}
 	}
 
 	result.AddEvidence("dexscreener", "is_boosted", fmt.Sprintf("%v", isBoosted))
-
 	if isBoosted {
-		// Boosted is a mixed signal — someone is paying to promote.
-		// Could be legit marketing or could be a rug trying to attract buyers.
-		return 6 // slightly positive but cautious
+		result.AddEvidence("dexscreener", "boost_amount", fmt.Sprintf("%.0f", boostAmount))
 	}
-	return 4 // neutral
+
+	// Determine organic strength from cached signals
+	organic := organicStrength(ctx)
+	result.AddEvidence("dexscreener", "organic_strength", organic)
+
+	switch {
+	case isBoosted && organic == "strong":
+		return 7 // legit marketing on top of real demand
+	case isBoosted && organic == "moderate":
+		return 5
+	case isBoosted && organic == "weak":
+		result.AddEvidence("dexscreener", "verdict", "manufactured_hype")
+		return 1 // paid promo with no organic = trap
+	case !isBoosted && organic == "strong":
+		return 8 // quiet sleeper with real interest
+	case !isBoosted && organic == "moderate":
+		return 5
+	default:
+		return 3
+	}
+}
+
+// organicStrength derives a coarse organic-engagement label from cached signals.
+// Uses CoinGecko community + DexScreener volume + holder count.
+func organicStrength(ctx TokenContext) string {
+	score := 0
+
+	if ctx.CoinGeckoFetched && ctx.CoinGeckoDetail != nil {
+		cd := ctx.CoinGeckoDetail.CommunityData
+		if cd.TwitterFollowers > 5000 {
+			score += 2
+		} else if cd.TwitterFollowers > 500 {
+			score += 1
+		}
+		if cd.TelegramMembers > 2000 {
+			score += 1
+		}
+		if cd.RedditActive48h > 50 {
+			score += 1
+		}
+		if ctx.CoinGeckoDetail.WatchlistUsers > 1000 {
+			score += 1
+		}
+	}
+
+	if ctx.DexPairsFetched && len(ctx.DexPairs) > 0 {
+		var bestVol float64
+		var bestTxns int
+		for _, p := range ctx.DexPairs {
+			if p.Volume.H24 > bestVol {
+				bestVol = p.Volume.H24
+			}
+			if t := p.Txns.H24.Buys + p.Txns.H24.Sells; t > bestTxns {
+				bestTxns = t
+			}
+		}
+		if bestVol > 500_000 {
+			score += 2
+		} else if bestVol > 100_000 {
+			score += 1
+		}
+		if bestTxns > 1000 {
+			score += 2
+		} else if bestTxns > 200 {
+			score += 1
+		}
+	}
+
+	switch {
+	case score >= 5:
+		return "strong"
+	case score >= 2:
+		return "moderate"
+	default:
+		return "weak"
+	}
+}
+
+// scoreLandscape checks whether the token's category sits inside the current
+// top-rising CoinGecko categories (24h market cap gain). Catches narrative
+// rotations even if the token doesn't match a hardcoded keyword.
+func (g *NarrativeGate) scoreLandscape(result *Result, ctx TokenContext, narrative string) float64 {
+	if !ctx.NarrativeLandscapeFetched || len(ctx.NarrativeLandscape) == 0 {
+		return 4
+	}
+	if !ctx.CoinGeckoFetched || ctx.CoinGeckoDetail == nil || len(ctx.CoinGeckoDetail.Categories) == 0 {
+		// Can't tell which category the token is in
+		// Still surface top-rising categories as evidence for the agent
+		topRising := topRisingCategories(ctx.NarrativeLandscape, 5)
+		result.AddEvidence("landscape", "top_rising", strings.Join(topRising, ", "))
+		return 4
+	}
+
+	// Build a set of category names rising > 0% in last 24h, and their gain
+	gainByCat := map[string]float64{}
+	for _, c := range ctx.NarrativeLandscape {
+		gainByCat[strings.ToLower(c.Name)] = c.MarketCapChange24h
+	}
+
+	// Find the best 24h gain among the token's categories
+	bestGain := -100.0
+	matchedCat := ""
+	for _, cat := range ctx.CoinGeckoDetail.Categories {
+		if g, ok := gainByCat[strings.ToLower(cat)]; ok {
+			if g > bestGain {
+				bestGain = g
+				matchedCat = cat
+			}
+		}
+	}
+
+	topRising := topRisingCategories(ctx.NarrativeLandscape, 5)
+	result.AddEvidence("landscape", "top_rising_categories", strings.Join(topRising, ", "))
+
+	if matchedCat == "" {
+		return 4
+	}
+	result.AddEvidence("landscape", "token_category", matchedCat)
+	result.AddEvidence("landscape", "category_24h_change", fmt.Sprintf("%.2f%%", bestGain))
+
+	score := 4.0
+	switch {
+	case bestGain > 15:
+		score = 9 // narrative is exploding
+	case bestGain > 7:
+		score = 8
+	case bestGain > 3:
+		score = 7
+	case bestGain > 0:
+		score = 6
+	case bestGain > -3:
+		score = 4
+	case bestGain > -7:
+		score = 3
+	default:
+		score = 2 // narrative bleeding out
+	}
+	return score
+}
+
+// topRisingCategories returns the top-N CoinGecko categories ranked by 24h gain.
+func topRisingCategories(cats []data.CoinCategory, n int) []string {
+	type rank struct {
+		name string
+		gain float64
+	}
+	ranks := make([]rank, 0, len(cats))
+	for _, c := range cats {
+		ranks = append(ranks, rank{c.Name, c.MarketCapChange24h})
+	}
+	// simple selection top-n
+	for i := 0; i < n && i < len(ranks); i++ {
+		maxIdx := i
+		for j := i + 1; j < len(ranks); j++ {
+			if ranks[j].gain > ranks[maxIdx].gain {
+				maxIdx = j
+			}
+		}
+		ranks[i], ranks[maxIdx] = ranks[maxIdx], ranks[i]
+	}
+	out := make([]string, 0, n)
+	for i := 0; i < n && i < len(ranks); i++ {
+		out = append(out, fmt.Sprintf("%s(%+.1f%%)", ranks[i].name, ranks[i].gain))
+	}
+	return out
 }
 
 // scoreKeywordMatch checks if token name/symbol directly matches hot narrative keywords.

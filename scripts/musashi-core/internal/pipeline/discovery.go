@@ -84,23 +84,18 @@ func DiscoverTokens(chainID int64, limit int) (string, error) {
 	// Source 3: DexScreener boosted tokens (paid promotion = awareness signal)
 	boosted, err := dex.GetBoostedTokens()
 	if err == nil && len(result.Tokens) < limit*2 {
-		for _, raw := range boosted {
+		for _, bt := range boosted {
 			if len(result.Tokens) >= limit*2 {
 				break
 			}
-			var bt struct {
-				TokenAddress string `json:"tokenAddress"`
-				ChainID      string `json:"chainId"`
-				Description  string `json:"description"`
-				URL          string `json:"url"`
+			if bt.TokenAddress == "" {
+				continue
 			}
-			if json.Unmarshal(raw, &bt) == nil && bt.TokenAddress != "" {
-				result.Tokens = append(result.Tokens, DiscoveredToken{
-					Address: bt.TokenAddress,
-					Name:    bt.Description,
-					Source:  "dexscreener_boosted",
-				})
-			}
+			result.Tokens = append(result.Tokens, DiscoveredToken{
+				Address: bt.TokenAddress,
+				Name:    bt.Description,
+				Source:  "dexscreener_boosted",
+			})
 		}
 	}
 
