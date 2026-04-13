@@ -205,9 +205,8 @@ Without a private key, publishing commands return `analysis_only` / `skipped` in
 
 **0G APAC Hackathon 2026** — Track 1: Agentic Infrastructure & OpenClaw Lab
 Builder: Yeheskiel Yunus Tame ([@YeheskielTame](https://x.com/YeheskielTame)) · Universitas Kristen Duta Wacana
-Prior work: [Tessera](https://github.com/yeheskieltame/Tessera) — Juara 1, Synthesis Hackathon (March 2026)
 
-Inspiration: [Tessera](https://github.com/yeheskieltame/Tessera) (gate elimination + evidence pipeline), [TradingAgents](https://github.com/TauricResearch/TradingAgents) (specialist roles + adversarial debate), [OpenClaw](https://github.com/openclaw/openclaw) (skill system + distribution).
+Inspiration: [TradingAgents](https://github.com/TauricResearch/TradingAgents) (specialist roles + adversarial debate), [OpenClaw](https://github.com/openclaw/openclaw) (skill system + distribution).
 
 ---
 
