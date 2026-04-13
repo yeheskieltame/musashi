@@ -11,7 +11,6 @@ import { AgentIntelligencePanel } from "@/components/AgentIntelligencePanel";
 import { StrikePublisher } from "@/components/StrikePublisher";
 import { StrikeLedger } from "@/components/StrikeLedger";
 import { DebateTerminal } from "@/components/DebateTerminal";
-import { GlassCard } from "@/components/GlassCard";
 import type { PipelineResult, SearchResult, DebateVerdict } from "@/types";
 
 type Tab = "scanner" | "gates" | "debate" | "ledger" | "strike";
@@ -125,22 +124,21 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="dashboard-bg min-h-screen grid-bg-dark glow-top glow-bottom relative overflow-hidden">
+    <div className="landing-bg min-h-screen relative overflow-hidden">
       {/* Background layers */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <img src="/hero-bg.png" alt="" className="w-full h-full object-cover opacity-20 mix-blend-screen" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#030303]/70 via-[#030303]/80 to-[#030303]" />
-      </div>
+      <div className="absolute inset-0 bg-[#0a0e1a]/80" />
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
-        <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-[#0a0e1a]/95 backdrop-blur-md border-b border-white/10 shadow-lg shadow-zinc-900/40 animate-fade-in [animation-duration:500ms]">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img src="/musashi-logo.png" alt="MUSASHI" className="w-5 h-5" />
+              <img src="/musashi-logo.png" alt="MUSASHI" className="w-6 h-6" />
               <span className="text-white font-bold text-lg tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
             </Link>
             <div className="w-px h-5 bg-white/20 hidden sm:block" />
-            <span className="text-sm font-medium text-slate-400 hidden sm:block">Dashboard</span>
+            <span className="text-sm font-semibold text-white/80 hidden sm:block uppercase tracking-wider">Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
             <WalletConnect />
@@ -149,65 +147,65 @@ export default function DashboardPage() {
       </header>
 
       {/* Main content */}
-      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
-        <main className="space-y-6">
-          {/* ERC-7857 Intelligence state (encrypted storage + sealed key + oracle) */}
-          <section>
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
+        <main className="space-y-8">
+          {/* ERC-7857 Intelligence state */}
+          <section className="animate-slide-up [animation-duration:600ms] [animation-fill-mode:backwards]">
             <AgentIntelligencePanel tokenId={0} />
           </section>
 
           {/* Reputation */}
-          <section>
+          <section className="animate-slide-up [animation-duration:600ms] [animation-delay:150ms] [animation-fill-mode:backwards]">
             <ReputationPanel />
           </section>
 
           {/* Command Bar */}
-          <section>
+          <section className="animate-slide-up [animation-duration:600ms] [animation-delay:300ms] [animation-fill-mode:backwards]">
             <CommandBar onSearch={handleSearch} onGates={handleGates} loading={loading} />
           </section>
 
           {/* Search Results Dropdown */}
           {showSearch && searchResults.length > 0 && (
-            <GlassCard strong className="p-5 -mt-2">
-              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Search Results</h4>
-              <div className="space-y-1">
+            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-5 -mt-4 shadow-xl backdrop-blur-md animate-fade-in">
+              <h4 className="text-xs font-bold text-white/70 uppercase tracking-wider mb-3">Search Results</h4>
+              <div className="space-y-2">
                 {searchResults.map((r) => (
                   <button
                     key={`${r.address}-${r.chain}`}
                     onClick={() => handleSelectFromSearch(r)}
-                    className="w-full text-left flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-all cursor-pointer group"
+                    className="w-full text-left flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-all cursor-pointer group"
                   >
                     <div>
-                      <span className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{r.name}</span>
-                      <span className="text-sm text-slate-400 ml-2">${r.symbol}</span>
-                      <span className="text-[10px] ml-2 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{r.chain}</span>
-                      <div className="text-xs font-mono text-slate-400 mt-0.5">
+                      <span className="font-bold text-white group-hover:text-blue-400 transition-colors">{r.name}</span>
+                      <span className="text-sm text-white/50 ml-2 font-mono">${r.symbol}</span>
+                      <span className="text-[10px] ml-2 px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/5">{r.chain}</span>
+                      <div className="text-xs font-mono text-white/40 mt-1">
                         {r.address.slice(0, 10)}...{r.address.slice(-6)}
                       </div>
                     </div>
-                    <div className="text-right text-xs text-slate-500 font-mono">
-                      <div>${r.price_usd}</div>
-                      <div className="text-slate-400">Liq: ${(r.liquidity_usd || 0).toLocaleString()}</div>
+                    <div className="text-right text-xs text-white/60 font-mono">
+                      <div className="text-white font-bold">${r.price_usd}</div>
+                      <div className="text-white/40 mt-0.5">Liq: ${(r.liquidity_usd || 0).toLocaleString()}</div>
                     </div>
                   </button>
                 ))}
               </div>
-            </GlassCard>
+            </div>
           )}
 
           {/* Tabs */}
-          <div className="flex overflow-x-auto sm:overflow-visible gap-1 glass-strong rounded-full p-1.5 w-fit max-w-[95vw] sm:max-w-full mx-auto border border-white/10 shadow-[0_0_30px_rgba(139,92,246,0.1)] relative z-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex overflow-x-auto sm:overflow-visible gap-2 bg-white/[0.02] border border-white/5 shadow-lg rounded-full p-1.5 w-fit max-w-[95vw] sm:max-w-full mx-auto backdrop-blur-md relative z-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-slide-up [animation-duration:600ms] [animation-delay:450ms] [animation-fill-mode:backwards]">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold transition-all cursor-pointer ${
                   activeTab === t.id
-                    ? "bg-white/10 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] border border-white/10"
-                    : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    ? "bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-white/10"
+                    : "text-white/50 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={t.icon} />
                 </svg>
                 {t.label}
@@ -215,79 +213,77 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Tab Content — all tabs stay mounted, hidden via CSS to preserve state */}
-          <section>
-            <div className={activeTab === "scanner" ? "" : "hidden"}>
-              <GlassCard strong className="p-7">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-500/20 flex items-center justify-center border border-zinc-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                    <svg className="w-4 h-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          {/* Tab Content */}
+          <section className="animate-slide-up [animation-duration:600ms] [animation-delay:600ms] [animation-fill-mode:backwards]">
+            <div className={activeTab === "scanner" ? "animate-fade-in" : "hidden"}>
+              <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-white tracking-wide">Token Scanner</h2>
-                    <p className="text-sm text-slate-400">
+                    <h2 className="text-xl font-bold text-white tracking-wide">Token Scanner</h2>
+                    <p className="text-sm text-white/50">
                       Fetch, score, and rank token opportunities automatically.
                     </p>
                   </div>
                 </div>
-                <div className="mt-5">
+                <div className="mt-6">
                   <TokenScanner onSelectToken={handleSelectFromScanner} />
                 </div>
-              </GlassCard>
+              </div>
             </div>
 
             {activeTab === "gates" && (
-              <GlassCard strong className="p-7">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-500/20 flex items-center justify-center border border-zinc-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                    <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md animate-fade-in">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
-                  <h2 className="text-lg font-semibold text-white tracking-wide">Gate Analysis</h2>
+                  <h2 className="text-xl font-bold text-white tracking-wide">Gate Analysis</h2>
                 </div>
 
                 {loading && (
-                  <div className="flex items-center gap-3 text-slate-400 py-12 justify-center">
-                    <div className="w-5 h-5 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
-                    <span className="text-sm">Running elimination gates...</span>
+                  <div className="flex items-center gap-3 text-white/60 py-12 justify-center">
+                    <div className="w-6 h-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <span className="text-sm font-semibold">Running elimination gates...</span>
                   </div>
                 )}
 
                 {gateError && !loading && (
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-                    <p className="text-sm text-amber-400">{gateError}</p>
+                  <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-5 shadow-inner">
+                    <p className="text-sm font-bold text-rose-400">{gateError}</p>
                   </div>
                 )}
 
                 {gateResult && !loading && (
                   <>
-                    <div className="mb-5 p-4 glass rounded-xl">
-                      <div className="flex items-center justify-between">
-                        <div className="font-mono text-sm text-slate-600 truncate">
-                          {gateResult.token}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/10">
-                            Chain: {gateResult.chain_id}
-                          </span>
+                    <div className="mb-6 p-5 bg-white/[0.03] border border-white/5 rounded-2xl flex items-center justify-between">
+                      <div className="font-mono text-sm text-white/70 font-semibold truncate">
+                        {gateResult.token}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs px-3 py-1 bg-white/10 text-white font-semibold rounded-full border border-white/10">
+                          Chain: {gateResult.chain_id}
+                        </span>
+                        <button
+                          onClick={() => handleStartDebate(gateResult.token, gateResult.chain_id)}
+                          className="text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-xl px-4 py-2 hover:bg-amber-500/30 hover:shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all cursor-pointer"
+                        >
+                          Run Debate
+                        </button>
+                        {gateResult.status === "PASS" && (
                           <button
-                            onClick={() => handleStartDebate(gateResult.token, gateResult.chain_id)}
-                            className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg px-3 py-1.5 hover:bg-amber-500/20 hover:shadow-[0_0_15px_rgba(217,119,6,0.3)] transition-all cursor-pointer font-medium"
+                            onClick={() => setActiveTab("strike")}
+                            className="text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-xl px-4 py-2 hover:bg-emerald-500/30 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
                           >
-                            Run Debate
+                             Publish STRIKE
                           </button>
-                          {gateResult.status === "PASS" && (
-                            <button
-                              onClick={() => setActiveTab("strike")}
-                              className="text-xs bg-zinc-500/10 text-zinc-400 border border-zinc-500/30 rounded-lg px-3 py-1.5 hover:bg-zinc-500/20 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer font-medium"
-                            >
-                              Publish STRIKE
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
 
@@ -300,21 +296,21 @@ export default function DashboardPage() {
                 )}
 
                 {!gateResult && !loading && !gateError && (
-                  <div className="text-center py-12">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
-                      <svg className="w-6 h-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="text-center py-16 bg-white/[0.01] rounded-2xl border border-white/5">
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+                      <svg className="w-7 h-7 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
                     </div>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm font-semibold text-white/60">
                       Enter a token address above or select from the Scanner to run gate analysis.
                     </p>
                   </div>
                 )}
-              </GlassCard>
+              </div>
             )}
 
-            <div className={activeTab === "debate" ? "" : "hidden"}>
+            <div className={activeTab === "debate" ? "animate-fade-in" : "hidden"}>
               {debateToken ? (
                 <DebateTerminal
                   token={debateToken}
@@ -322,40 +318,40 @@ export default function DashboardPage() {
                   onComplete={handleDebateComplete}
                 />
               ) : (
-                <GlassCard strong className="p-7">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                      <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.15)]">
+                      <svg className="w-5 h-5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                     </div>
-                    <h2 className="text-lg font-semibold text-white tracking-wide">Multi-Agent Debate</h2>
+                    <h2 className="text-xl font-bold text-white tracking-wide">Multi-Agent Debate</h2>
                   </div>
-                  <div className="text-center py-12">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                      <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="text-center py-16 bg-white/[0.01] rounded-2xl border border-white/5">
+                    <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(139,92,246,0.1)]">
+                      <svg className="w-7 h-7 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                     </div>
-                    <p className="text-sm text-slate-400 max-w-md mx-auto">
+                    <p className="text-sm font-semibold text-white/60 max-w-lg mx-auto leading-relaxed">
                       Run gate analysis on a token first, then click "Run Debate" to launch
                       4 specialist AI agents (Sonnet) + 1 Opus Judge for full conviction analysis.
                     </p>
                   </div>
-                </GlassCard>
+                </div>
               )}
             </div>
 
             {activeTab === "ledger" && (
-              <StrikeLedger />
+              <div className="animate-fade-in"><StrikeLedger /></div>
             )}
 
             {activeTab === "strike" && (
-              <StrikePublisher
+              <div className="animate-fade-in"><StrikePublisher
                 token={selectedToken ?? undefined}
                 chainId={selectedChain}
                 convergence={gateResult?.status === "PASS" ? 3 : undefined}
-              />
+              /></div>
             )}
           </section>
         </main>

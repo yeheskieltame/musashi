@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createPublicClient, http } from "viem";
-import { GlassCard } from "./GlassCard";
 import {
   CONVICTION_LOG_ADDRESS,
   CONVICTION_LOG_ABI,
@@ -43,10 +42,10 @@ interface RepData {
 }
 
 function calibrationStatus(winRate: number, totalFilled: number): { label: string; color: string; desc: string } {
-  if (totalFilled < 3) return { label: "Calibrating", color: "text-amber-500", desc: "Building track record..." };
-  if (winRate >= 70) return { label: "Well-Tuned", color: "text-zinc-500", desc: "Conviction threshold calibrated" };
-  if (winRate >= 50) return { label: "Adjusting", color: "text-zinc-400", desc: "Tightening conviction threshold" };
-  return { label: "Recalibrating", color: "text-amber-500", desc: "Applying maximum hesitation" };
+  if (totalFilled < 3) return { label: "Calibrating", color: "text-blue-400", desc: "Building track record..." };
+  if (winRate >= 70) return { label: "Well-Tuned", color: "text-emerald-400", desc: "Conviction threshold calibrated" };
+  if (winRate >= 50) return { label: "Adjusting", color: "text-amber-400", desc: "Tightening conviction threshold" };
+  return { label: "Recalibrating", color: "text-rose-400", desc: "Applying maximum hesitation" };
 }
 
 export function ReputationPanel() {
@@ -135,20 +134,20 @@ export function ReputationPanel() {
 
   if (loading) {
     return (
-      <GlassCard strong className="p-7">
-        <div className="flex items-center justify-center py-12 gap-3 text-slate-400">
-          <div className="w-5 h-5 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
-          <span className="text-sm">Loading agent memory from 0G Chain...</span>
+      <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md">
+        <div className="flex items-center justify-center py-12 gap-3 text-white/50">
+          <div className="w-6 h-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+          <span className="text-sm font-semibold">Loading agent memory from 0G Chain...</span>
         </div>
-      </GlassCard>
+      </div>
     );
   }
 
   if (error && !rep) {
     return (
-      <GlassCard strong className="p-7">
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm text-amber-400">{error}</div>
-      </GlassCard>
+      <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md">
+        <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-5 text-sm font-bold text-rose-400">{error}</div>
+      </div>
     );
   }
 
@@ -163,128 +162,124 @@ export function ReputationPanel() {
   return (
     <div className="space-y-4">
       {/* Agent Identity + Calibration Status */}
-      <GlassCard strong className="p-5">
+      <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-5 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-transparent flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(217,119,6,0.2)] border border-amber-500/30 font-mono">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-300 font-bold text-xl shadow-[0_0_15px_rgba(59,130,246,0.2)] border border-blue-500/30 font-mono">
               {agent?.name?.[0] || "M"}
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-white tracking-wide">{agent?.name || "MUSASHI"}</span>
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-lg text-white tracking-wide">{agent?.name || "MUSASHI"}</span>
                 {agent?.active && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">Active</span>
+                  <span className="text-[10px] uppercase font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]">Active</span>
                 )}
               </div>
-              <div className="text-xs font-mono text-slate-400 mt-0.5">
+              <div className="text-xs font-mono font-semibold text-white/40 mt-1">
                 INFT #0 on 0G Chain
               </div>
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-sm font-semibold ${calibration.color}`}>
+            <div className={`text-sm font-black uppercase tracking-wider ${calibration.color}`}>
               {calibration.label}
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{calibration.desc}</div>
+            <div className="text-xs font-semibold text-white/40 mt-1">{calibration.desc}</div>
           </div>
         </div>
-      </GlassCard>
+      </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-zinc-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Strikes</div>
-          <div className="flex items-center gap-2">
-            <div className="text-3xl font-bold text-white tracking-tight">{rep?.strikeCount ?? 0}</div>
-            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10 ml-auto">
-              <span className="text-zinc-300 font-bold block text-xs">S</span>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-5 relative overflow-hidden group hover:bg-white/[0.04] transition-all backdrop-blur-md">
+          <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-2 font-mono">Strikes</div>
+          <div className="flex items-center gap-3">
+            <div className="text-4xl font-black text-white tracking-tight">{rep?.strikeCount ?? 0}</div>
+            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 ml-auto shadow-inner">
+              <span className="text-white/60 font-black block text-sm">S</span>
             </div>
           </div>
-          <div className="text-[10px] text-slate-500 mt-1">{rep?.totalFilled ?? 0} outcomes recorded</div>
-        </GlassCard>
+          <div className="text-xs font-semibold text-white/40 mt-2">{rep?.totalFilled ?? 0} outcomes recorded</div>
+        </div>
 
-        <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-zinc-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">W / L</div>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-5 relative overflow-hidden group hover:bg-white/[0.04] transition-all backdrop-blur-md">
+          <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-2 font-mono">W / L</div>
           <div className="flex items-center gap-2">
-            <div className="text-3xl font-bold tracking-tight">
+            <div className="text-4xl font-black tracking-tight flex items-baseline">
               <span className="text-white">{rep?.wins ?? 0}</span>
-              <span className="text-slate-600 mx-1.5 font-light">/</span>
-              <span className="text-slate-400">{rep?.losses ?? 0}</span>
+              <span className="text-white/20 mx-2 font-light text-2xl">/</span>
+              <span className="text-white/50">{rep?.losses ?? 0}</span>
             </div>
-            <div className="flex ml-auto gap-0.5 items-end h-4">
-              <div className="w-1.5 h-3 bg-zinc-500/80 rounded-t-sm" />
-              <div className="w-1.5 h-4 bg-amber-500/80 rounded-t-sm" />
-              <div className="w-1.5 h-2 bg-amber-500/80 rounded-t-sm" />
-            </div>
-          </div>
-          <div className="text-[10px] text-slate-500 mt-1">
-            <div className="flex overflow-hidden h-1 rounded-full w-full max-w-[120px]">
-               <div className="bg-zinc-500 h-full" style={{width: `${rep ? (rep.wins / rep.totalFilled)*100 : 0}%`}} />
-               <div className="bg-amber-500 h-full" style={{width: `${rep ? (rep.losses / rep.totalFilled)*100 : 0}%`}} />
+            <div className="flex ml-auto gap-1 items-end h-6">
+              <div className="w-2 h-4 bg-emerald-500/80 rounded-t-sm" />
+              <div className="w-2 h-6 bg-emerald-500/80 rounded-t-sm" />
+              <div className="w-2 h-3 bg-rose-500/80 rounded-t-sm" />
             </div>
           </div>
-        </GlassCard>
+          <div className="text-xs text-white/40 mt-2">
+            <div className="flex overflow-hidden h-1.5 rounded-full w-full max-w-[120px] bg-white/5">
+               <div className="bg-emerald-500 h-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{width: `${rep && rep.totalFilled ? (rep.wins / rep.totalFilled)*100 : 0}%`}} />
+               <div className="bg-rose-500 h-full shadow-[0_0_10px_rgba(244,63,94,0.5)]" style={{width: `${rep && rep.totalFilled ? (rep.losses / rep.totalFilled)*100 : 0}%`}} />
+            </div>
+          </div>
+        </div>
 
-        <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Win Rate</div>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-5 relative overflow-hidden group hover:bg-white/[0.04] transition-all backdrop-blur-md">
+          <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-2 font-mono">Win Rate</div>
           <div className="flex items-center justify-between">
-            <div className="text-3xl font-bold tracking-tight text-white">
+            <div className="text-4xl font-black tracking-tight text-white">
               {winRate.toFixed(1)}%
             </div>
-            <div className="relative w-8 h-8 rounded-full border-4 border-white/5 flex items-center justify-center">
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle cx="16" cy="16" r="14" fill="none" stroke="url(#gradient-winrate)" strokeWidth="4" strokeDasharray={`${(winRate/100) * 88} 88`} className="transition-all duration-1000 ease-out" />
+            <div className="relative w-10 h-10 rounded-full border-[5px] border-white/5 flex items-center justify-center">
+              <svg className="absolute inset-0 w-full h-full -rotate-90 scale-[1.15]">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="url(#gradient-winrate)" strokeWidth="4" strokeDasharray={`${(winRate/100) * 100} 100`} className="transition-all duration-1000 ease-out drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
                 <defs>
                    <linearGradient id="gradient-winrate" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#a855f7" />
-                      <stop offset="100%" stopColor="#ec4899" />
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#10b981" />
                    </linearGradient>
                 </defs>
               </svg>
             </div>
           </div>
-        </GlassCard>
+        </div>
 
-        <GlassCard strong className="p-4 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-zinc-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 font-medium">Total Return</div>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-5 relative overflow-hidden group hover:bg-white/[0.04] transition-all backdrop-blur-md">
+          <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-2 font-mono">Total Return</div>
           <div className="flex items-center justify-between">
-            <div className={`text-3xl font-bold tracking-tight ${totalReturnPct >= 0 ? "text-zinc-400" : "text-amber-400"}`}>
+            <div className={`text-4xl font-black tracking-tight ${totalReturnPct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
               {totalReturnPct >= 0 ? "+" : ""}{totalReturnPct.toFixed(1)}%
             </div>
-            <svg className={`w-5 h-5 ${totalReturnPct >= 0 ? "text-zinc-400" : "text-amber-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className={`w-6 h-6 ${totalReturnPct >= 0 ? "text-emerald-400" : "text-rose-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               {totalReturnPct >= 0 
                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 : <path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
               }
             </svg>
           </div>
-        </GlassCard>
+        </div>
       </div>
 
       {/* Strike Outcome Timeline */}
       {recentStrikes.length > 0 && (
-        <GlassCard strong className="p-5">
-          <div className="flex items-center justify-between mb-4">
+        <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-sm font-semibold text-white tracking-wide">Strike Outcome Timeline</h3>
-              <p className="text-[10px] text-slate-400 mt-0.5">
+              <h3 className="text-lg font-bold text-white tracking-wide">Strike Outcome Timeline</h3>
+              <p className="text-xs font-semibold text-white/40 mt-1">
                 Agent learns from each outcome to calibrate future decisions
               </p>
             </div>
-            <button onClick={loadData} className="text-xs px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <button onClick={loadData} className="text-xs font-bold px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer flex items-center gap-2 shadow-inner">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Refresh
+              REFRESH
             </button>
           </div>
 
           {/* Visual timeline */}
-          <div className="flex items-end gap-1 h-24 mb-3">
+          <div className="flex items-end gap-1.5 h-32 mb-4 bg-white/[0.01] p-4 rounded-xl border border-white/5">
             {recentStrikes.slice().reverse().map((s) => {
               const isFilled = s.outcomeFilled;
               const isWin = s.outcomeBps > 0;
@@ -294,28 +289,28 @@ export function ReputationPanel() {
                 : 30;
 
               return (
-                <div key={s.id} className="flex-1 flex flex-col items-center gap-0.5 group relative">
+                <div key={s.id} className="flex-1 flex flex-col items-center gap-1 group relative">
                   <div
-                    className={`w-full max-w-[24px] rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(0,0,0,0.5)] ${
-                      !isFilled ? "bg-slate-700 animate-pulse border border-slate-600" :
-                      isWin ? "bg-zinc-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" :
-                      isLoss ? "bg-rose-500 shadow-[0_0_15px_rgba(225,29,72,0.3)]" :
-                      "bg-slate-600"
+                    className={`w-full max-w-[24px] rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)] ${
+                      !isFilled ? "bg-white/10 animate-pulse border border-white/20" :
+                      isWin ? "bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]" :
+                      isLoss ? "bg-rose-500 shadow-[0_0_20px_rgba(225,29,72,0.4)]" :
+                      "bg-white/30"
                     }`}
-                    style={{ height: `${height}px`, width: '8px' }}
+                    style={{ height: `${height}%`, minHeight: '8px', width: '10px' }}
                   />
-                  <div className="text-[8px] text-slate-400 font-mono">#{s.id}</div>
+                  <div className="text-[9px] text-white/30 font-bold font-mono mt-1">#{s.id}</div>
 
                   {/* Tooltip */}
-                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-10">
-                    <div className="bg-slate-800 text-white text-[10px] rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-                      <div className="font-semibold">Strike #{s.id}</div>
-                      <div className="text-white/70 mt-0.5">
+                  <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 hidden group-hover:block z-10">
+                    <div className="bg-[#0a0e1a] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 whitespace-nowrap shadow-2xl backdrop-blur-md">
+                      <div className="text-white/50 mb-1">Strike #{s.id}</div>
+                      <div className="text-white text-sm">
                         {isFilled
-                          ? `${isWin ? "+" : ""}${(s.outcomeBps / 100).toFixed(1)}% ${isWin ? "WIN" : isLoss ? "LOSS" : "NEUTRAL"}`
+                          ? <span className={isWin ? "text-emerald-400" : isLoss ? "text-rose-400" : "text-white"}>{`${isWin ? "+" : ""}${(s.outcomeBps / 100).toFixed(1)}% ${isWin ? "WIN" : isLoss ? "LOSS" : "NEUTRAL"}`}</span>
                           : "Awaiting outcome"}
                       </div>
-                      <div className="text-white/50">Convergence: {s.convergence}/4</div>
+                      <div className="text-white/40 text-[10px] uppercase tracking-wider mt-1.5 font-mono">Convergence: {s.convergence}/4</div>
                     </div>
                   </div>
                 </div>
@@ -324,52 +319,53 @@ export function ReputationPanel() {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-4 text-[10px] text-slate-400">
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-zinc-400" />
+          <div className="flex items-center gap-5 text-xs font-bold text-white/50 uppercase tracking-wider bg-white/[0.02] px-5 py-2.5 rounded-xl border border-white/5">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
               <span>Win</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
               <span>Loss</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-slate-200" />
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-white/20" />
               <span>Pending</span>
             </div>
             <div className="ml-auto">
-              <span className="text-slate-500">Learning from {filledStrikes.length} outcomes</span>
+              <span className="text-white/70">Learning from <span className="text-white mx-1">{filledStrikes.length}</span> outcomes</span>
             </div>
           </div>
-        </GlassCard>
+        </div>
       )}
 
       {/* Learning Insight */}
       {rep && rep.totalFilled >= 3 && (
-        <GlassCard strong className="p-5 border-l-2 border-l-amber-500/50">
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_15px_rgba(217,119,6,0.2)]">
-              <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="rounded-2xl bg-white/[0.02] border border-l-4 border-white/5 border-l-blue-500 p-6 backdrop-blur-md shadow-lg">
+          <div className="flex gap-5">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+              <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
               </svg>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-white mb-1 tracking-wide">Agent Memory Active</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <h4 className="text-lg font-bold text-white mb-2 tracking-wide">Agent Memory Active</h4>
+              <p className="text-sm font-semibold text-white/50 leading-relaxed">
                 {winRate >= 70
                   ? `With a ${winRate.toFixed(0)}% win rate across ${rep.totalFilled} outcomes, the judge maintains its current conviction threshold. Strong calibration.`
                   : winRate >= 50
                   ? `Win rate at ${winRate.toFixed(0)}% across ${rep.totalFilled} outcomes. The judge is tightening its conviction threshold — requiring stronger convergence for PASS decisions.`
                   : `Win rate at ${winRate.toFixed(0)}% across ${rep.totalFilled} outcomes. The judge has entered maximum hesitation mode — only 4/4 convergence with pristine fundamentals will PASS.`
                 }
-                {" "}All data is on-chain and verifiable on{" "}
-                <a href={`${OG_EXPLORER}/address/${CONVICTION_LOG_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:underline">
+                <br /><br />
+                <span className="text-white/40">All data is on-chain and verifiable on</span>{" "}
+                <a href={`${OG_EXPLORER}/address/${CONVICTION_LOG_ADDRESS}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
                   0G Explorer
                 </a>.
               </p>
             </div>
           </div>
-        </GlassCard>
+        </div>
       )}
     </div>
   );

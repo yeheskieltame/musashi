@@ -12,7 +12,6 @@ import {
   OG_EXPLORER,
   OG_CHAIN_ID,
 } from "@/lib/contracts";
-import { GlassCard } from "./GlassCard";
 import { CHAIN_NAMES } from "@/types";
 
 const ogChain = {
@@ -133,78 +132,85 @@ export function StrikePublisher({
 
   if (!isConnected) {
     return (
-      <GlassCard strong className="p-7 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
-          <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md text-center">
+        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(255,255,255,0.02)]">
+          <svg className="w-6 h-6 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <p className="text-sm text-white font-medium mb-1 tracking-wide">Connect your wallet to publish STRIKEs on-chain</p>
-        <p className="text-xs text-slate-400">Requires 0G Mainnet (Chain ID: 16661) and a minted Agent INFT</p>
-      </GlassCard>
+        <p className="text-sm text-white font-bold mb-1 tracking-wide">Connect your wallet to publish STRIKEs on-chain</p>
+        <p className="text-xs text-white/40 font-medium">Requires 0G Mainnet (Chain ID: 16661) and a minted Agent INFT</p>
+      </div>
     );
   }
 
   return (
-    <GlassCard strong className="p-7 relative overflow-hidden group">
-      <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-      <div className="flex items-center gap-3 mb-5 relative z-10">
-        <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-          <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md relative overflow-hidden group shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(59,130,246,0.05),transparent_70%)] pointer-events-none" />
+      <div className="flex items-center gap-4 mb-6 relative z-10">
+        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+          <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-white tracking-wide">Publish STRIKE</h2>
-          <p className="text-xs text-slate-400">Sign and publish conviction signal to 0G Chain</p>
+          <h2 className="text-lg font-black text-white tracking-wide">Publish STRIKE</h2>
+          <p className="text-xs font-semibold text-white/40 mt-1">Sign and publish conviction signal to 0G Chain</p>
         </div>
       </div>
 
       {/* Agent INFT Selection */}
-      <div className="mb-5 relative z-10">
-        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Select Agent INFT</label>
+      <div className="mb-6 relative z-10">
+        <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-3 block">Select Agent INFT</label>
         {loadingAgents ? (
-          <div className="flex items-center gap-2 text-slate-400 py-3">
-            <div className="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-            <span className="text-xs">Loading your INFTs...</span>
+          <div className="flex items-center gap-3 text-white/50 py-4 bg-[#0a0e1a]/40 rounded-xl px-4 border border-white/5">
+            <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+            <span className="text-xs font-semibold">Loading your INFTs...</span>
           </div>
         ) : agents.length === 0 ? (
-          <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
-            <p className="text-sm text-amber-400 font-medium mb-1 tracking-wide">No Agent INFT found</p>
-            <p className="text-xs text-amber-500/70">
+          <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+            <p className="text-sm text-amber-400 font-bold mb-2 tracking-wide flex items-center gap-2">
+               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+               </svg>
+               No Agent INFT found
+            </p>
+            <p className="text-xs font-medium text-amber-300/80 leading-relaxed">
               You need to mint an Agent INFT before publishing strikes.
-              Use the Agent Chat to run: <code className="bg-amber-500/20 px-1.5 py-0.5 rounded text-[11px] text-amber-300 border border-amber-500/30">mint-agent --name YourAgentName</code>
+              Use the Agent Chat to run: <code className="bg-amber-500/20 px-2 py-1 rounded-md text-[11px] text-amber-300 font-mono font-bold border border-amber-500/30 ml-1">mint-agent --name YourAgentName</code>
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {agents.map((a) => (
               <button
                 key={a.tokenId}
                 onClick={() => setSelectedAgent(a.tokenId)}
-                className={`w-full text-left flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                className={`w-full text-left flex items-center justify-between p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
                   selectedAgent === a.tokenId
-                    ? "border-amber-500/50 bg-white/10 shadow-[0_0_15px_rgba(217,119,6,0.2)]"
-                    : "border-white/10 hover:border-white/20 hover:bg-white/5"
+                    ? "border-blue-500/50 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.2)]"
+                    : "border-white/10 hover:border-white/20 hover:bg-white/[0.05]"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full bg-amber-600/80 border border-amber-500/50 flex items-center justify-center text-white text-xs font-bold shadow-[0_0_10px_rgba(217,119,6,0.4)]`}>
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-black shadow-inner border ${selectedAgent === a.tokenId ? "bg-blue-600 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.6)]" : "bg-white/10 border-white/20 text-white/60"}`}>
                     #{a.tokenId}
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-white tracking-wide">{a.name}</span>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                      <span>Token #{a.tokenId}</span>
-                      <span>{a.strikes} strikes</span>
-                      {a.active && <span className="text-zinc-400">Active</span>}
+                    <span className="text-sm font-bold text-white tracking-wide">{a.name}</span>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[10px] font-mono font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded border border-white/10">Token #{a.tokenId}</span>
+                      <span className="text-[10px] font-bold text-blue-400">{a.strikes} strikes</span>
+                      {a.active && <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Active</span>}
                     </div>
                   </div>
                 </div>
                 {selectedAgent === a.tokenId && (
-                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                 )}
               </button>
             ))}
@@ -213,24 +219,24 @@ export function StrikePublisher({
       </div>
 
       {/* Strike Details */}
-      <div className="grid grid-cols-2 gap-3 text-sm mb-5 relative z-10">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
-          <label className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Token</label>
-          <div className="font-mono text-white truncate text-sm mt-0.5 font-semibold">
+      <div className="grid grid-cols-2 gap-4 text-sm mb-6 relative z-10">
+        <div className="bg-[#0a0e1a]/40 border border-white/5 rounded-xl p-4 shadow-inner">
+          <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1">Token</label>
+          <div className="font-mono text-white truncate text-[13px] font-bold">
             {token || "—"}
           </div>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
-          <label className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Chain</label>
-          <div className="text-white text-sm mt-0.5 font-semibold">{CHAIN_NAMES[chainId] || `Chain ${chainId}`}</div>
+        <div className="bg-[#0a0e1a]/40 border border-white/5 rounded-xl p-4 shadow-inner">
+          <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1">Chain</label>
+          <div className="text-white text-[13px] font-bold">{CHAIN_NAMES[chainId] || `Chain ${chainId}`}</div>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
-          <label className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Convergence</label>
-          <div className={`text-sm font-bold mt-0.5 ${convergence >= 4 ? "text-zinc-400" : "text-amber-400"}`}>{convergence}/4</div>
+        <div className="bg-[#0a0e1a]/40 border border-white/5 rounded-xl p-4 shadow-inner">
+          <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1">Convergence</label>
+          <div className={`text-[13px] font-black tracking-wider ${convergence >= 4 ? "text-emerald-400" : "text-blue-400"}`}>{convergence}/4</div>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
-          <label className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Evidence Hash</label>
-          <div className="font-mono text-white truncate text-[11px] mt-0.5 font-semibold">
+        <div className="bg-[#0a0e1a]/40 border border-white/5 rounded-xl p-4 shadow-inner">
+          <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1">Evidence Hash</label>
+          <div className="font-mono text-blue-300/80 truncate text-[11px] font-semibold">
             {evidenceHash || "—"}
           </div>
         </div>
@@ -238,14 +244,19 @@ export function StrikePublisher({
 
       {/* Wrong chain warning */}
       {isWrongChain && (
-        <div className="mb-4 rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 flex items-center justify-between relative z-10">
+        <div className="mb-6 rounded-xl bg-amber-500/10 border border-amber-500/30 p-5 flex items-center justify-between relative z-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
           <div>
-            <p className="text-sm text-white font-medium tracking-wide">Wrong network</p>
-            <p className="text-xs text-amber-400/80">Switch to 0G Mainnet (Chain ID: {OG_CHAIN_ID}) to publish strikes.</p>
+            <p className="text-sm text-white font-bold tracking-wide flex items-center gap-2">
+               <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+               </svg>
+               Wrong network
+            </p>
+            <p className="text-xs font-medium text-amber-400/80 mt-1">Switch to 0G Mainnet (Chain ID: {OG_CHAIN_ID}) to publish strikes.</p>
           </div>
           <button
             onClick={() => switchChain({ chainId: OG_CHAIN_ID })}
-            className="text-xs px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors cursor-pointer font-medium whitespace-nowrap border border-amber-500/30"
+            className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors cursor-pointer whitespace-nowrap border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
             aria-label="Switch to 0G Mainnet"
           >
             Switch Network
@@ -257,37 +268,53 @@ export function StrikePublisher({
       <button
         onClick={handleStrike}
         disabled={!token || !evidenceHash || agents.length === 0 || isPending || isConfirming || isWrongChain}
-        className="relative w-full bg-amber-600/80 border border-amber-500/50 shadow-[0_0_20px_rgba(217,119,6,0.3)] hover:shadow-[0_0_30px_rgba(217,119,6,0.5)] text-white rounded-xl px-5 py-3.5 text-sm font-semibold hover:bg-amber-500/80 transition-all disabled:opacity-50 cursor-pointer overflow-hidden z-10 backdrop-blur"
+        className="relative w-full bg-blue-600 border border-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] text-white rounded-xl px-6 py-4 text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all duration-300 disabled:opacity-50 disabled:shadow-none cursor-pointer overflow-hidden z-10"
       >
-        <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
-        <span className="relative">
+        <span className="relative z-10 flex items-center justify-center gap-2">
         {isPending
-          ? "Signing..."
+          ? (
+            <>
+               <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+               Signing...
+            </>
+          )
           : isConfirming
-            ? "Confirming on 0G Chain..."
+            ? (
+               <>
+                  <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Confirming on 0G Chain...
+               </>
+            )
             : `Sign & Publish as ${agents.find((a) => a.tokenId === selectedAgent)?.name || "Agent"}`}
         </span>
       </button>
 
       {error && (
-        <div className="mt-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 relative z-10">
-          <p className="text-xs text-amber-400">{error.message.slice(0, 150)}</p>
+        <div className="mt-4 bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 relative z-10 text-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+          <p className="text-xs font-bold text-rose-400">{error.message.slice(0, 150)}</p>
         </div>
       )}
 
       {isSuccess && hash && (
-        <div className="mt-3 bg-zinc-500/10 border border-zinc-500/30 rounded-xl p-4 relative z-10">
-          <p className="text-sm text-zinc-400 font-semibold mb-1 tracking-wide">STRIKE published on 0G Chain!</p>
-          <a
-            href={`${OG_EXPLORER}/tx/${hash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-white/70 hover:text-white hover:underline font-mono break-all transition-colors"
-          >
-            {hash}
-          </a>
+        <div className="mt-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5 relative z-10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+          <p className="text-[13px] text-emerald-400 font-black mb-2 tracking-wide flex items-center gap-2">
+             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+             </svg>
+             STRIKE published on 0G Chain!
+          </p>
+          <div className="bg-black/30 rounded-lg p-3 border border-emerald-500/20">
+             <a
+               href={`${OG_EXPLORER}/tx/${hash}`}
+               target="_blank"
+               rel="noopener noreferrer"
+               className="text-xs font-bold font-mono text-emerald-300/80 hover:text-emerald-300 break-all transition-colors inline-block"
+             >
+               Tx: {hash} ↗
+             </a>
+          </div>
         </div>
       )}
-    </GlassCard>
+    </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPublicClient, http, type Hex } from "viem";
-import { GlassCard } from "./GlassCard";
 import {
   MUSASHI_INFT_ADDRESS,
   MUSASHI_INFT_ABI,
@@ -14,23 +13,6 @@ import {
   storageScanUrl,
   chainScanAddress,
 } from "@/lib/contracts";
-
-// AgentIntelligencePanel — visualizes the ERC-7857 state of a MUSASHI agent.
-//
-// Judges watching the demo see, without having to trust our word:
-//   - Where the encrypted intelligence bundle lives on 0G Storage (merkle root
-//     + one-click link to 0G StorageScan).
-//   - That the agent holds a real sealed symmetric key (byte length shown,
-//     contents never exposed — only the owner can decrypt client-side).
-//   - Which address is authorized to perform oracle-verified re-seals on
-//     transfer / clone (`oracle()`), proving the ERC-7857 oracle slot is
-//     wired to a real signer, not left empty.
-//   - The agent's re-seal version counter (bumps on every transfer/clone/
-//     update), demonstrating the replay-protection story.
-//
-// All reads are direct on-chain calls (no backend hop) so the panel works
-// even if the Go binary is offline — it is the clearest possible proof that
-// the contracts on 0G Mainnet really implement the claimed behavior.
 
 const ogChain = {
   id: OG_CHAIN_ID,
@@ -173,52 +155,52 @@ export function AgentIntelligencePanel({ tokenId = 0 }: { tokenId?: number }) {
 
   if (loading) {
     return (
-      <GlassCard strong className="p-7">
-        <div className="flex items-center gap-3 text-slate-400">
-          <div className="w-5 h-5 rounded-full border-2 border-amber-500/60 border-t-transparent animate-spin" />
-          <span className="text-sm">Loading ERC-7857 intelligence state from 0G Chain…</span>
+      <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md">
+        <div className="flex items-center gap-3 text-white/50">
+          <div className="w-6 h-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+          <span className="text-sm font-semibold">Loading ERC-7857 intelligence state from 0G Chain…</span>
         </div>
-      </GlassCard>
+      </div>
     );
   }
 
   if (error || !intel) {
     return (
-      <GlassCard strong className="p-7">
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-sm text-amber-400">
+      <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md">
+        <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-5 text-sm font-bold text-rose-400">
           {error ?? "No agent intelligence found."}
         </div>
-      </GlassCard>
+      </div>
     );
   }
 
   const oracleSet = intel.oracle !== "0x0000000000000000000000000000000000000000";
 
   return (
-    <GlassCard strong className="p-7 space-y-6">
+    <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-7 backdrop-blur-md space-y-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.18em] text-amber-500/80">ERC-7857 Intelligence</span>
-            <span className="px-2 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/5 text-[10px] text-amber-300 font-mono">
+            <span className="text-[10px] uppercase font-bold tracking-[0.18em] text-blue-400">ERC-7857 Intelligence</span>
+            <span className="px-2 py-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-[10px] font-bold text-blue-300 font-mono">
               v{intel.version}
             </span>
           </div>
-          <h3 className="text-xl font-semibold text-white mt-1">{intel.name} <span className="text-white/30 font-light">#{intel.tokenId}</span></h3>
-          <p className="text-xs text-white/40 mt-1">
+          <h3 className="text-2xl font-black text-white mt-1.5 tracking-tight">{intel.name} <span className="text-white/30 font-light">#{intel.tokenId}</span></h3>
+          <p className="text-xs font-semibold text-white/40 mt-1">
             Encrypted bundle on 0G Storage · AES key sealed to owner pubkey · oracle-verified re-seal on transfer
           </p>
         </div>
         <button
           onClick={() => void load()}
-          className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-[11px] text-white/60 hover:text-white hover:border-white/20 transition-colors"
+          className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.05] text-[11px] font-bold text-white hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-inner"
         >
-          refresh
+          REFRESH
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Storage root — the ONE thing that proves 0G Storage is doing real work */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Storage root */}
         <Field
           label="0G Storage root"
           subtitle="Merkle root of the AES-256-CTR encrypted intelligence bundle"
@@ -231,7 +213,7 @@ export function AgentIntelligencePanel({ tokenId = 0 }: { tokenId?: number }) {
           accent="amber"
         />
 
-        {/* Sealed key — length only, never bytes. Decryption happens client-side off-dashboard. */}
+        {/* Sealed key */}
         <Field
           label="Sealed symmetric key"
           subtitle="ECIES-wrapped AES-256 key · decryptable only by current owner"
@@ -239,13 +221,13 @@ export function AgentIntelligencePanel({ tokenId = 0 }: { tokenId?: number }) {
           raw={`${intel.sealedKeyLength} bytes (hidden)`}
           accent="cyan"
           inline={
-            <span className={`px-2 py-0.5 rounded-full border text-[10px] font-mono ${intel.sealedKeyLength > 0 ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-300" : "border-red-500/30 bg-red-500/5 text-red-300"}`}>
-              {intel.sealedKeyLength > 0 ? "sealed" : "missing"}
+            <span className={`px-2.5 py-1 rounded-full border text-[10px] font-bold font-mono ${intel.sealedKeyLength > 0 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-rose-500/30 bg-rose-500/10 text-rose-400"}`}>
+              {intel.sealedKeyLength > 0 ? "SEALED" : "MISSING"}
             </span>
           }
         />
 
-        {/* Oracle — proves the re-encryption oracle slot is wired */}
+        {/* Oracle */}
         <Field
           label="Re-encryption oracle"
           subtitle="ECDSA signer attesting that transfers re-seal to the receiver"
@@ -272,33 +254,33 @@ export function AgentIntelligencePanel({ tokenId = 0 }: { tokenId?: number }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-white/5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-white/10">
         <Stat label="Re-seal version" value={`v${intel.version}`} hint="bumps every transfer / clone / update" />
         <Stat label="Total strikes" value={intel.totalStrikes.toString()} hint="from ConvictionLog" />
         <Stat label="Win rate" value={intel.totalStrikes > 0 ? `${(intel.winRate / 100).toFixed(1)}%` : "—"} hint="bps / 100" />
         <Stat label="Status" value={intel.active ? "active" : "paused"} hint={intel.active ? "accepting strikes" : "disabled"} tone={intel.active ? "ok" : "warn"} />
       </div>
 
-      <div className="pt-3 border-t border-white/5 text-[11px] text-white/30 leading-relaxed">
+      <div className="pt-4 border-t border-white/10 text-[11px] font-semibold text-white/40 leading-relaxed">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>Linked ConvictionLog:</span>
           <a
             href={chainScanAddress(intel.convictionLog)}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-white/50 hover:text-amber-300 transition-colors"
+            className="font-mono font-bold text-white/70 hover:text-blue-400 transition-colors"
           >
             {fmtAddr(intel.convictionLog)}
           </a>
-          <span className={intel.convictionLog.toLowerCase() === CONVICTION_LOG_ADDRESS.toLowerCase() ? "text-emerald-400" : "text-red-400"}>
-            {intel.convictionLog.toLowerCase() === CONVICTION_LOG_ADDRESS.toLowerCase() ? "✓ matches dashboard config" : "✗ MISMATCH"}
+          <span className={intel.convictionLog.toLowerCase() === CONVICTION_LOG_ADDRESS.toLowerCase() ? "text-emerald-400" : "text-rose-400"}>
+            {intel.convictionLog.toLowerCase() === CONVICTION_LOG_ADDRESS.toLowerCase() ? "✓ MATCHES DASHBOARD CONFIG" : "✗ MISMATCH"}
           </span>
         </div>
-        <div className="mt-1">
+        <div className="mt-1.5 text-white/30">
           Minted {fmtTs(intel.createdAt)} · last update {fmtTs(intel.updatedAt)} · {OG_EXPLORER.replace("https://", "")} · storage: {OG_STORAGE_SCAN.replace("https://", "")}
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }
 
@@ -326,32 +308,32 @@ function Field({
   inline?: React.ReactNode;
 }) {
   const accentMap: Record<string, string> = {
-    amber: "border-amber-500/30 bg-amber-500/[0.03]",
-    violet: "border-violet-500/30 bg-violet-500/[0.03]",
-    cyan: "border-cyan-500/30 bg-cyan-500/[0.03]",
-    slate: "border-white/10 bg-white/[0.02]",
-    red: "border-red-500/30 bg-red-500/[0.03]",
+    amber: "border-amber-500/20 bg-amber-500/[0.05]",
+    violet: "border-violet-500/20 bg-violet-500/[0.05]",
+    cyan: "border-blue-500/20 bg-blue-500/[0.05]",
+    slate: "border-white/10 bg-white/[0.03]",
+    red: "border-rose-500/20 bg-rose-500/[0.05]",
   };
   return (
-    <div className={`rounded-xl border ${accentMap[accent]} p-4`}>
+    <div className={`rounded-xl border ${accentMap[accent]} p-5 transition-colors hover:bg-white/[0.06]`}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-white/40">{label}</span>
+        <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">{label}</span>
         {inline}
       </div>
-      <p className="text-[10px] text-white/30 mt-1 leading-snug">{subtitle}</p>
-      <div className="mt-2 flex items-center gap-2">
-        <code className="font-mono text-sm text-white/90 break-all" title={raw}>{value}</code>
+      <p className="text-[11px] font-medium text-white/40 mt-1.5 leading-snug">{subtitle}</p>
+      <div className="mt-3 flex items-center gap-3">
+        <code className="font-mono text-sm font-bold text-white break-all" title={raw}>{value}</code>
         {onCopy && (
           <button
             onClick={onCopy}
-            className="text-[10px] px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-white/50 hover:text-white hover:border-white/30"
+            className="text-[10px] font-bold uppercase px-2 py-1 rounded-md border border-white/20 bg-white/10 text-white hover:bg-white/20 hover:border-white/30 transition-colors"
           >
-            {copied ? "copied" : "copy"}
+            {copied ? "COPIED" : "COPY"}
           </button>
         )}
       </div>
       {linkHref && (
-        <a href={linkHref} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-[11px] text-amber-400 hover:text-amber-300">
+        <a href={linkHref} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block font-bold text-[11px] text-blue-400 hover:text-blue-300 transition-colors">
           {linkLabel}
         </a>
       )}
@@ -362,10 +344,10 @@ function Field({
 function Stat({ label, value, hint, tone }: { label: string; value: string; hint: string; tone?: "ok" | "warn" }) {
   const toneClass = tone === "warn" ? "text-amber-400" : tone === "ok" ? "text-emerald-400" : "text-white";
   return (
-    <div>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-white/30">{label}</div>
-      <div className={`text-lg font-semibold ${toneClass}`}>{value}</div>
-      <div className="text-[10px] text-white/25">{hint}</div>
+    <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+      <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">{label}</div>
+      <div className={`text-xl font-black mt-1 ${toneClass}`}>{value}</div>
+      <div className="text-[10px] font-semibold text-white/30 mt-1">{hint}</div>
     </div>
   );
 }

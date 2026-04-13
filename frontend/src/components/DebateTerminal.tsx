@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { GlassCard } from "./GlassCard";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -59,12 +58,12 @@ type AgentStatus = "waiting" | "running" | "done" | "error";
 const AGENTS = ["safety", "technical", "narrative", "market"] as const;
 
 const AGENT_COLORS: Record<string, string> = {
-  safety: "text-orange-400",
-  technical: "text-zinc-300",
-  narrative: "text-amber-400",
-  market: "text-zinc-400",
-  judge: "text-amber-300",
-  system: "text-slate-400",
+  safety: "text-blue-400",
+  technical: "text-emerald-400",
+  narrative: "text-violet-400",
+  market: "text-cyan-400",
+  judge: "text-white",
+  system: "text-white/50",
 };
 
 const AGENT_LABELS: Record<string, string> = {
@@ -77,17 +76,17 @@ const AGENT_LABELS: Record<string, string> = {
 };
 
 const BADGE_STYLES: Record<AgentStatus, string> = {
-  waiting: "bg-slate-100 text-slate-400 border-slate-200",
-  running: "bg-blue-50 text-blue-600 border-blue-200 animate-pulse",
-  done: "bg-emerald-50 text-emerald-600 border-emerald-200",
-  error: "bg-amber-50 text-amber-600 border-amber-200",
+  waiting: "bg-white/5 text-white/40 border-white/10",
+  running: "bg-blue-500/10 text-blue-400 border-blue-500/30 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.2)]",
+  done: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+  error: "bg-rose-500/10 text-rose-400 border-rose-500/30",
 };
 
 const JUDGE_BADGE_STYLES: Record<AgentStatus, string> = {
-  waiting: "bg-amber-50/50 text-amber-300 border-amber-200",
-  running: "bg-amber-50 text-amber-600 border-amber-300 animate-pulse",
-  done: "bg-amber-50 text-amber-700 border-amber-400",
-  error: "bg-amber-50 text-amber-600 border-amber-200",
+  waiting: "bg-white/5 text-white/40 border-white/10",
+  running: "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse shadow-[0_0_15px_rgba(217,119,6,0.3)]",
+  done: "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_10px_rgba(217,119,6,0.2)]",
+  error: "bg-rose-500/10 text-rose-400 border-rose-500/30",
 };
 
 /* ------------------------------------------------------------------ */
@@ -442,41 +441,41 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
         : "Ready";
 
   const statusColor = running
-    ? "text-zinc-400"
+    ? "text-blue-400"
     : verdict
       ? verdict.pass
-        ? "text-emerald-600"
-        : "text-amber-600"
+        ? "text-emerald-400"
+        : "text-rose-400"
       : events.some((e) => e.type === "error")
-        ? "text-amber-500"
-        : "text-slate-400";
+        ? "text-amber-400"
+        : "text-white/40";
 
   const statusDot = running
-    ? "bg-zinc-500 animate-pulse"
+    ? "bg-blue-500 animate-pulse"
     : verdict
       ? verdict.pass
-        ? "bg-zinc-500"
-        : "bg-amber-500"
+        ? "bg-emerald-500"
+        : "bg-rose-500"
       : events.some((e) => e.type === "error")
         ? "bg-amber-500"
-        : "bg-slate-300";
+        : "bg-white/30";
 
   /* ---------------------------------------------------------------- */
   /*  Render                                                           */
   /* ---------------------------------------------------------------- */
 
   return (
-    <GlassCard strong className="overflow-hidden">
+    <div className="rounded-2xl bg-white/[0.02] border border-white/5 backdrop-blur-md overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/60">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/[0.01]">
+        <div className="flex items-center gap-4">
           {/* Terminal icon */}
-          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-800 text-white">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="w-4 h-4"
+              className="w-5 h-5"
             >
               <path
                 fillRule="evenodd"
@@ -487,16 +486,16 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">
+            <h3 className="text-base font-bold text-white tracking-wide">
               Multi-Agent Debate
             </h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className={`flex items-center gap-1.5 text-xs ${statusColor}`}>
-                <span className={`inline-block w-1.5 h-1.5 rounded-full ${statusDot}`} />
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase ${statusColor}`}>
+                <span className={`inline-block w-1.5 h-1.5 rounded-full shadow-lg ${statusDot}`} />
                 {statusLabel}
               </span>
               {running && startTime && (
-                <span className="text-xs text-slate-400">
+                <span className="text-xs font-mono font-bold text-white/30">
                   {formatElapsed(elapsed)}
                 </span>
               )}
@@ -504,11 +503,11 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Token + chain badge */}
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-mono text-slate-600">
+          <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-mono font-bold text-white/70">
             {truncateAddress(token)}
-            <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-semibold">
+            <span className="px-2 py-0.5 rounded-md bg-white/10 text-white border border-white/20 text-[10px] tracking-widest">
               {chain}
             </span>
           </span>
@@ -517,7 +516,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
           {!running && (
             <button
               onClick={startDebate}
-              className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-blue-600 border border-blue-500 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_20px_rgba(37,99,235,0.6)] transition-all disabled:opacity-50 disabled:shadow-none cursor-pointer"
               disabled={!token}
             >
               {events.length > 0 ? "Re-run" : "Start Debate"}
@@ -527,14 +526,14 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
           {/* Collapse toggle */}
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all cursor-pointer"
             aria-label={collapsed ? "Expand terminal" : "Collapse terminal"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              className={`w-4 h-4 transition-transform ${collapsed ? "rotate-180" : ""}`}
+              className={`w-5 h-5 transition-transform ${collapsed ? "rotate-180" : ""}`}
             >
               <path
                 fillRule="evenodd"
@@ -548,22 +547,22 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
 
       {/* Collapsible body */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          collapsed ? "max-h-0 overflow-hidden opacity-0" : "max-h-[600px] opacity-100"
+        className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          collapsed ? "max-h-0 overflow-hidden opacity-0" : "max-h-[800px] opacity-100"
         }`}
       >
         {/* Agent status bar */}
-        <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-slate-200/40 bg-slate-50/50">
+        <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b border-white/5 bg-[#0a0e1a]/50">
           {AGENTS.map((agent) => (
             <span
               key={agent}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium capitalize transition-all duration-300 ${BADGE_STYLES[agentStatuses[agent]]}`}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${BADGE_STYLES[agentStatuses[agent]]}`}
             >
               {agentStatuses[agent] === "running" && (
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-zinc-500 animate-pulse" />
+                <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
               )}
               {agentStatuses[agent] === "done" && (
-                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                   <path
                     fillRule="evenodd"
                     d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
@@ -572,7 +571,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
                 </svg>
               )}
               {agentStatuses[agent] === "error" && (
-                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
                 </svg>
               )}
@@ -581,17 +580,17 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
           ))}
 
           {/* Separator */}
-          <span className="w-px h-4 bg-slate-200" />
+          <span className="w-px h-5 bg-white/10 mx-1" />
 
           {/* Judge badge */}
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold transition-all duration-300 ${JUDGE_BADGE_STYLES[agentStatuses.judge]}`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${JUDGE_BADGE_STYLES[agentStatuses.judge]}`}
           >
             {agentStatuses.judge === "running" && (
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
             )}
             {agentStatuses.judge === "done" && (
-              <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
@@ -606,22 +605,24 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
         {/* Terminal body */}
         <div
           ref={terminalRef}
-          className="bg-slate-900 rounded-b-none overflow-y-auto font-mono text-[11px] leading-relaxed px-4 py-3 scroll-smooth"
-          style={{ maxHeight: "400px", minHeight: events.length > 0 ? "200px" : "80px" }}
+          className="bg-[#050810] relative overflow-y-auto font-mono text-[11px] leading-relaxed px-5 py-4 scroll-smooth shadow-inner"
+          style={{ maxHeight: "400px", minHeight: events.length > 0 ? "200px" : "120px" }}
         >
+           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.03)_0%,transparent_100%)] pointer-events-none" />
+           <div className="relative z-10 space-y-1">
           {events.length === 0 && !running && (
-            <div className="flex items-center justify-center py-8 text-slate-500">
-              <span>Press "Start Debate" to begin multi-agent analysis</span>
+            <div className="flex items-center justify-center py-10 text-white/30 font-semibold tracking-wide">
+              <span>Press "Start Debate" to begin multi-agent analysis on 0G</span>
             </div>
           )}
 
           {events.map((line) => {
-            const color = line.agent ? AGENT_COLORS[line.agent] : "text-slate-400";
+            const color = line.agent ? AGENT_COLORS[line.agent] : "text-white/40";
             const label = line.agent ? AGENT_LABELS[line.agent] : null;
 
             if (line.type === "phase") {
               return (
-                <div key={line.id} className="text-cyan-400 py-1.5 select-none">
+                <div key={line.id} className="text-blue-400 font-bold py-2 select-none uppercase tracking-widest border-b border-blue-500/20 mb-2 mt-1">
                   {line.content}
                 </div>
               );
@@ -629,9 +630,9 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
 
             if (line.type === "error") {
               return (
-                <div key={line.id} className="text-amber-400 py-0.5">
+                <div key={line.id} className="text-rose-400 py-1 bg-rose-500/10 border-l-2 border-rose-500 pl-3 my-1">
                   {label && (
-                    <span className="font-semibold">[{label}] </span>
+                    <span className="font-bold opacity-80 decoration-rose-500/40">[{label}] </span>
                   )}
                   {line.content}
                 </div>
@@ -642,9 +643,9 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
               return (
                 <div
                   key={line.id}
-                  className="text-amber-300 font-bold py-1 text-xs"
+                  className="text-amber-300 font-bold py-2 text-xs bg-amber-500/10 border border-amber-500/20 px-4 rounded-lg mt-3"
                 >
-                  [{label}] {line.content}
+                  <span className="text-amber-400/80 mr-2">[{label}]</span><span className="leading-relaxed">{line.content}</span>
                 </div>
               );
             }
@@ -654,10 +655,10 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
             return (
               <div
                 key={line.id}
-                className={`${color} py-0.5 ${isJudge ? "font-semibold text-xs" : ""}`}
+                className={`${color} py-0.5 ${isJudge ? "font-bold text-xs mt-2" : "font-medium"} transition-all`}
               >
                 {label && label !== "SYSTEM" && (
-                  <span className="font-semibold">[{label}] </span>
+                  <span className="font-bold opacity-60 mr-1.5">[{label}]</span>
                 )}
                 {line.content}
               </div>
@@ -665,30 +666,31 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
           })}
 
           {running && (
-            <span className="inline-block w-1.5 h-3.5 bg-slate-400 animate-pulse ml-1 align-middle" />
+            <span className="inline-block w-2.5 h-4 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)] animate-pulse ml-2 align-middle" />
           )}
+          </div>
         </div>
 
         {/* Verdict panel */}
         {verdict && (
           <div
-            className={`px-4 py-3 border-t ${
+            className={`px-5 py-4 border-t ${
               verdict.pass
-                ? "border-emerald-200 bg-emerald-50/80"
-                : "border-amber-200 bg-amber-50/80"
+                ? "border-emerald-500/30 bg-emerald-500/10"
+                : "border-rose-500/30 bg-rose-500/10"
             }`}
           >
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap">
               {/* PASS / FAIL badge */}
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-sm ${
+                className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-xl font-bold text-sm shadow-[0_0_20px_rgba(0,0,0,0.2)] ${
                   verdict.pass
-                    ? "bg-emerald-600 text-white"
-                    : "bg-amber-600 text-white"
+                    ? "bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                    : "bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.4)]"
                 }`}
               >
                 {verdict.pass ? (
-                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                     <path
                       fillRule="evenodd"
                       d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
@@ -696,7 +698,7 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
                     />
                   </svg>
                 ) : (
-                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
                   </svg>
                 )}
@@ -704,18 +706,18 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
               </span>
 
               {/* Convergence */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-slate-500">Convergence</span>
-                <span className="font-semibold text-sm text-slate-800">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Convergence</span>
+                <span className="font-black text-sm text-white">
                   {verdict.convergence}/4
                 </span>
               </div>
 
               {/* Divider */}
-              <span className="hidden sm:block w-px h-5 bg-slate-200" />
+              <span className="hidden sm:block w-px h-6 bg-white/10" />
 
               {/* Reasoning - extract FINAL REASONING or DECISIVE FACTOR if present */}
-              <p className="text-xs text-slate-600 flex-1 min-w-0">
+              <p className="text-xs font-medium text-white/70 flex-1 min-w-0 leading-relaxed">
                 {(() => {
                   const r = verdict.reasoning;
                   const finalMatch = /FINAL REASONING:\s*([^\n]+(?:\n[^\n]+)*)/i.exec(r);
@@ -729,6 +731,6 @@ export function DebateTerminal({ token, chain, onComplete }: DebateTerminalProps
           </div>
         )}
       </div>
-    </GlassCard>
+    </div>
   );
 }
