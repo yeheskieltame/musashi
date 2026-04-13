@@ -88,9 +88,23 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 	}
 
 	// Check 1: Minimum holders (tiered by age)
+	// Design rule: a low holder count on a young token is NOT disqualifying on
+	// its own — being early is the whole premise of a multibagger strike. If
+	// fundamentals (funding, innovation, team) are strong, being holder #8 is
+	// the signal, not the fail. So:
+	//   - Fresh / Early tokens: downgrade to WARN, let the narrative specialist
+	//     decide whether fundamentals compensate.
+	//   - Established tokens: keep strict FAIL — 30+ days with <50 holders is
+	//     a dead token, not an early opportunity.
 	holderCount, _ := strconv.Atoi(sec.HolderCount)
-	if holderCount < minHolders {
-		return result.Fail(fmt.Sprintf("Too few holders: %d (min %d for %s token)", holderCount, minHolders, ctx.Age)), nil
+	lowHolders := holderCount < minHolders
+	if lowHolders {
+		switch ctx.Age {
+		case AgeFresh, AgeEarly:
+			result.AddEvidence("analysis", "holder_context", fmt.Sprintf("Only %d holders (below %d floor for %s) — EARLY ADOPTER zone; narrative specialist must verify funding/innovation/team to promote this to a strike", holderCount, minHolders, ctx.Age))
+		default:
+			return result.Fail(fmt.Sprintf("Too few holders: %d (min %d for %s token)", holderCount, minHolders, ctx.Age)), nil
+		}
 	}
 
 	// DexScreener transaction data for buy/sell analysis
@@ -137,12 +151,19 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 	}
 
 	// Check 3: Transaction count sanity (tiered)
+	lowActivity := false
 	if totalTxns24 < minTxns {
-		// For fresh tokens, check if there's recent activity even if 24h total is low
+		// For fresh/early tokens, check if there's recent activity even if 24h total is low.
+		// Same early-adopter logic as holders — low txn count on a young token
+		// might just mean nobody has found it yet, not that it's dead.
 		totalTxns1h := totalBuys1h + totalSells1h
-		if ctx.Age == AgeFresh && totalTxns1h >= 3 {
+		switch {
+		case ctx.Age == AgeFresh && totalTxns1h >= 3:
 			result.AddEvidence("analysis", "activity_context", fmt.Sprintf("24h txns %d is low but 1h has %d txns — token is actively trading", totalTxns24, totalTxns1h))
-		} else {
+		case (ctx.Age == AgeFresh || ctx.Age == AgeEarly) && totalTxns24 >= 1:
+			lowActivity = true
+			result.AddEvidence("analysis", "activity_context", fmt.Sprintf("Only %d txns in 24h (below %d floor for %s) — EARLY ADOPTER zone; specialist must verify fundamentals before this becomes a strike", totalTxns24, minTxns, ctx.Age))
+		default:
 			return result.Fail(fmt.Sprintf("Very low activity: only %d transactions in 24h (min %d for %s token)", totalTxns24, minTxns, ctx.Age)), nil
 		}
 	}
@@ -200,5 +221,12 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 		}
 	}
 
+	// Final verdict: if the token passed the hard checks but landed in the
+	// early-adopter zone (low holders or low activity on a young token), emit
+	// WARN so the pipeline keeps going and the narrative specialist owns the
+	// call. Hard PASS only when the snapshot is already healthy.
+	if lowHolders || lowActivity {
+		return result.Warn(fmt.Sprintf("Early-adopter zone (tier: %s, holders: %d, sell_ratio: %.0f%%) — specialist must verify fundamentals", ctx.Age, holderCount, sellRatio24*100)), nil
+	}
 	return result.Pass(fmt.Sprintf("Wallet behavior is healthy (tier: %s, holders: %d, sell_ratio: %.0f%%)", ctx.Age, holderCount, sellRatio24*100)), nil
 }
