@@ -169,11 +169,23 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 		result.AddEvidence("goplus", "lp_locked_count", fmt.Sprintf("%d", totalLPLocked))
 
 		if totalLPLocked == 0 && len(sec.LPHolders) > 0 {
-			// For fresh tokens, LP not locked yet is a WARNING, not instant fail
-			// Many legit tokens lock LP within first few hours
-			if ctx.Age == AgeFresh {
+			// Tiered interpretation of "no LP locked":
+			//   - Fresh (<24h): WARN only — many legit tokens lock within hours
+			//   - Early (1-7d): FAIL — this is when most rugs happen
+			//   - Established (>7d) with substantial TVL (>$500k) AND many holders
+			//     (>1000): WARN — at scale, burned LP or CEX-migrated LP is normal
+			//   - Established + small: FAIL — small-cap old token with unlocked LP
+			//     is still rug-prone
+			holders := 0
+			fmt.Sscanf(sec.HolderCount, "%d", &holders)
+
+			switch {
+			case ctx.Age == AgeFresh:
 				result.AddEvidence("analysis", "lp_lock_context", "LP not locked — acceptable for <24h token but flag for monitoring")
-			} else {
+			case ctx.Age == AgeEstablished && totalLiquidity >= 500_000 && holders >= 1000:
+				result.AddEvidence("analysis", "lp_lock_context", fmt.Sprintf("LP not locked, but established token with $%.1fM TVL and %d holders — likely burned or CEX-migrated LP, not a fresh rug setup", totalLiquidity/1_000_000, holders))
+				// Fall through to pass — this isn't a rug indicator at scale
+			default:
 				return result.Fail("No LP is locked — rug pull risk"), nil
 			}
 		}

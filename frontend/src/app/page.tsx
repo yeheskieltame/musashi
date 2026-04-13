@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
+import { RecentFindings } from "@/components/RecentFindings";
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -219,6 +220,7 @@ export default function LandingPage() {
           </a>
           
           <div className="hidden sm:flex items-center gap-1">
+            <a href="#findings" className="px-3 py-1.5 rounded-full text-sm font-medium text-amber-300/80 hover:text-amber-200 hover:bg-amber-500/5 transition-all">Findings</a>
             <a href="#problem" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Problem</a>
             <a href="#pipeline" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Pipeline</a>
             <a href="#protocol" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">0G Protocol</a>
@@ -249,6 +251,7 @@ export default function LandingPage() {
         {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
           <div className="sm:hidden mt-2 p-4 bg-[#050505]/95 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+            <a href="#findings" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-amber-300 hover:bg-amber-500/5">Findings</a>
             <a href="#problem" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">Problem</a>
             <a href="#pipeline" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">Pipeline</a>
             <a href="#protocol" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/5">0G Protocol</a>
@@ -384,6 +387,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Live findings — three real analyses run against top-trending tokens */}
+      <RecentFindings />
 
       {/* Problem Statement */}
       <section id="problem" className="relative py-28 px-6 overflow-hidden">
