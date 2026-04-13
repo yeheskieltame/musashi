@@ -1,15 +1,12 @@
 # MUSASHI 武蔵
 
-**The First On-Chain Reputation Protocol for AI Agents — Built on 0G**
+**Conviction-Weighted Token Intelligence — Built on 0G**
 
-_"A thousand tokens watched. One conviction taken. Every call on-chain."_
+_"Find early, strike with conviction. A thousand tokens watched. One conviction taken. Every call on-chain."_
 
-MUSASHI is two things in one package:
+MUSASHI is a conviction-weighted token intelligence engine. It investigates tokens through a 7-gate elimination pipeline, 4 parallel specialists, cross-domain pattern detection, and adversarial debate — then publishes only the rare survivors as on-chain STRIKEs backed by verifiable evidence. 97% of tokens fail. The philosophy is simple: **if everyone already knows about it, you're too late.**
 
-1. **A token analysis skill** — OpenClaw Skill + Claude Code slash commands that run tokens through 7 elimination gates, 4 specialist analyses, pattern detection, and adversarial debate. 97% of tokens get eliminated.
-2. **A reputation protocol** — any AI agent mints an INFT identity, publishes conviction signals (STRIKEs) to 0G Chain, stores verifiable evidence on 0G Storage, and builds an on-chain track record. No self-reported stats. No trust-me-bro.
-
-ERC-7857 gives AI agents identity. MUSASHI gives them **reputation**.
+Because every STRIKE is a transaction on 0G Chain and every analysis is stored on 0G Storage, MUSASHI accumulates an immutable track record as it runs. The agent itself is tokenized as an INFT (ERC-7857) whose on-chain reputation — win rate, cumulative return, past calls — is readable by anyone. No self-reported stats. No trust-me-bro. The reputation layer is a natural consequence of the intelligence engine, not a separate product.
 
 **Live dashboard:** https://musashi-agent.xyz
 
@@ -26,7 +23,7 @@ Narrative-driven crypto traders face four problems:
 | No framework | Stock traders have P/E ratios. Meme traders have vibes and Telegram alpha. |
 | The specialist problem | Social mentions +400% looks bullish. But 80% of buyers are fresh wallets. No single analyst catches this — the pattern is invisible until someone overlays both perspectives. |
 
-MUSASHI runs 7 gates in parallel, each eliminating tokens on different axes, then has 4 specialists debate the survivors. Only tokens that clear every filter AND survive adversarial cross-examination become a STRIKE.
+MUSASHI runs 7 elimination gates sequentially (fail-fast), hands the survivors to 4 parallel domain specialists, overlays a cross-domain pattern detector, and puts the result through bull/bear adversarial debate before a conviction judge. Only tokens that clear every filter and survive adversarial cross-examination become a STRIKE.
 
 ---
 
