@@ -44,6 +44,8 @@ If the binary errors or times out, report the error and ask if user wants to ret
 - FAIL if >60% bot-like activity or pure shill
 - Low social on fresh token is NOT a failure — silence + strong on-chain = early signal
 
+For macro/category/trending cross-checks, invoke the **`coingecko`** companion skill (see SKILL.md → Companion skills) instead of hand-rolling WebFetch — it knows the right CoinGecko + GeckoTerminal endpoints.
+
 **Gate 5: Narrative Alignment** — Use WebSearch to identify:
 - Current narrative meta (AI, RWA, DePIN, etc.)
 - Token's narrative lifecycle stage (Forming → Growing → Peak → Declining)

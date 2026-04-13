@@ -320,7 +320,11 @@ The `history` command returns structured JSON with all strikes + outcomes + repu
 
 ## Companion skills
 
-- **`coingecko`** — official CoinGecko Agent SKILL (installed separately). Gives the narrative + market specialists typed access to CoinGecko and GeckoTerminal endpoints (trending, categories, on-chain pools, OHLCV, contract lookups). Invoke via the Skill tool when the Go binary's cached data is insufficient for investigation. Prefer this skill over raw WebFetch to CoinGecko URLs.
+- **`coingecko`** — official CoinGecko Agent SKILL (bundled in `skills/coingecko/`). Gives the narrative + market specialists typed access to CoinGecko and GeckoTerminal endpoints (trending, categories, on-chain pools, OHLCV, contract lookups). Invoke via the Skill tool when the Go binary's cached data is insufficient for investigation. Prefer this skill over raw WebFetch to CoinGecko URLs.
+
+  **Install (Claude Code):** `cp -r skills/coingecko ~/.claude/skills/` (or symlink). The skill is auto-detected on next session start.
+
+  **Install (OpenClaw):** `openclaw skills install ./skills/coingecko` — OpenClaw loads the same SKILL.md format. Agents in both runtimes invoke it identically.
 
 ## Output Format
 
