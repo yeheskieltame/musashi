@@ -17,3 +17,6 @@ contracts/out/
 contracts/cache/
 contracts/broadcast/
 .vercel
+
+# Local development context (never push)
+CLAUDE.md
