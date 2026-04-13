@@ -164,7 +164,7 @@ func DiscoverTokens(chainID int64, limit int) (string, error) {
 				}
 			}
 			if earliestMs > 0 {
-				ctx := gates.ClassifyAge(earliestMs)
+				ctx := gates.ClassifyAgeForChain(earliestMs, chainID)
 				token.TokenAge = string(ctx.Age)
 				token.AgeHours = ctx.AgeHours
 			}

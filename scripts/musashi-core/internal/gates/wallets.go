@@ -24,14 +24,20 @@ func (g *WalletsGate) Name() string { return "Wallet Behavior" }
 func (g *WalletsGate) Number() int  { return 3 }
 
 // walletThresholds returns tiered thresholds based on token age.
+// Data-backed from ChainPlay pump.fun lifecycle study: mortality is 15% by 24h,
+// 31% by day 7, survival curve flattens hard around day 30, 98% dead by day 90.
 func walletThresholds(age TokenAge) (minHolders int, minTxns int, maxSellRatio float64) {
 	switch age {
-	case AgeFresh: // < 24h — early tokens naturally have fewer holders
+	case AgeFresh: // < 24h
 		return 15, 5, 0.80
-	case AgeEarly: // 1-7 days
+	case AgeEarly: // 1-7d
 		return 30, 10, 0.75
-	default: // > 7 days — established
-		return 50, 20, 0.70
+	case AgeDiscovery: // 7-30d — still discovering, moderate floors
+		return 75, 30, 0.72
+	case AgeMaturation: // 30-90d — should have traction by now
+		return 200, 60, 0.70
+	default: // > 90d — established, strict
+		return 500, 100, 0.70
 	}
 }
 
@@ -101,9 +107,19 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 	if lowHolders {
 		switch ctx.Age {
 		case AgeFresh, AgeEarly:
+			// Early-adopter zone: holder count on a young token is not a death
+			// signal on its own — specialist must verify funding/innovation.
 			result.AddEvidence("analysis", "holder_context", fmt.Sprintf("Only %d holders (below %d floor for %s) — EARLY ADOPTER zone; narrative specialist must verify funding/innovation/team to promote this to a strike", holderCount, minHolders, ctx.Age))
+		case AgeDiscovery, AgeMaturation:
+			// Deferred to trend veto below: if activity is accelerating, we
+			// treat this as late-discovery accumulation (WARN). If flat or
+			// declining, it's a dead/dying token (FAIL). The actual decision
+			// is made after we compute activityTrend below.
+			result.AddEvidence("analysis", "holder_context", fmt.Sprintf("Only %d holders at %s tier (below %d floor) — verdict deferred to activity trend veto", holderCount, ctx.Age, minHolders))
 		default:
-			return result.Fail(fmt.Sprintf("Too few holders: %d (min %d for %s token)", holderCount, minHolders, ctx.Age)), nil
+			// Established (>90d): 98% of memecoins are dead by this point per
+			// ChainPlay data. Strict fail on low holders is reliable.
+			return result.Fail(fmt.Sprintf("Too few holders: %d (min %d for %s token, >90d old)", holderCount, minHolders, ctx.Age)), nil
 		}
 	}
 
@@ -193,15 +209,29 @@ func (g *WalletsGate) EvaluateWithContext(token string, chainID int64, ctx Token
 
 	// Volume momentum: is activity growing or dying?
 	// Compare 1h activity (annualized) vs 24h activity
+	activityTrend := 0.0
 	if totalTxns24 > 10 {
 		recentActivity := float64(totalTxns1h) * 24
-		activityTrend := recentActivity / float64(totalTxns24)
+		activityTrend = recentActivity / float64(totalTxns24)
 		result.AddEvidence("analysis", "activity_trend", fmt.Sprintf("%.2f", activityTrend))
 
 		if activityTrend > 1.5 {
 			result.AddEvidence("analysis", "activity_signal", "ACCELERATING — recent activity significantly above average")
 		} else if activityTrend < 0.3 && ctx.Age != AgeFresh {
 			result.AddEvidence("analysis", "activity_signal", "DECELERATING — recent activity significantly below average")
+		}
+	}
+
+	// Trend veto for Discovery/Maturation tiers: the deferred "low holders"
+	// verdict gets decided here. Accelerating activity (>1.2x baseline) means
+	// the token is entering late accumulation — WARN and let specialist judge.
+	// Flat or declining activity with low holders = dead, FAIL.
+	if lowHolders && (ctx.Age == AgeDiscovery || ctx.Age == AgeMaturation) {
+		if activityTrend > 1.2 {
+			result.AddEvidence("analysis", "trend_veto", fmt.Sprintf("activity_trend=%.2fx — accelerating despite low holders, late-discovery accumulation possible", activityTrend))
+			// lowHolders stays true → final verdict becomes WARN
+		} else {
+			return result.Fail(fmt.Sprintf("Low holders (%d < %d) at %s tier with no accelerating activity (trend=%.2fx) — dead token", holderCount, minHolders, ctx.Age, activityTrend)), nil
 		}
 	}
 

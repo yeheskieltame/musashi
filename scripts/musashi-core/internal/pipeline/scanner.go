@@ -195,7 +195,7 @@ func ScanTokens(chainID int64, limit int, runGates bool) (string, error) {
 				c.Volume24h = bestPair.Volume.H24
 
 				if bestPair.PairCreatedAt > 0 {
-					ctx := gates.ClassifyAge(bestPair.PairCreatedAt)
+					ctx := gates.ClassifyAgeForChain(bestPair.PairCreatedAt, chainID)
 					c.TokenAge = string(ctx.Age)
 					c.AgeHours = ctx.AgeHours
 				}
@@ -209,7 +209,7 @@ func ScanTokens(chainID int64, limit int, runGates bool) (string, error) {
 			if dexData != nil && len(dexData.Pairs) > 0 {
 				for _, p := range dexData.Pairs {
 					if p.PairCreatedAt > 0 {
-						ctx := gates.ClassifyAge(p.PairCreatedAt)
+						ctx := gates.ClassifyAgeForChain(p.PairCreatedAt, chainID)
 						c.TokenAge = string(ctx.Age)
 						c.AgeHours = ctx.AgeHours
 						break
@@ -355,8 +355,12 @@ func scoreCandidate(c *ScanCandidate) (float64, string) {
 		ageScore = 15 // highest priority: fresh opportunities
 	case gates.AgeEarly:
 		ageScore = 12 // still early
+	case gates.AgeDiscovery:
+		ageScore = 9 // 7-30d: organic discovery still possible
+	case gates.AgeMaturation:
+		ageScore = 6 // 30-90d: survived the cliff but upside narrowing
 	case gates.AgeEstablished:
-		ageScore = 5 // established, less upside
+		ageScore = 5 // >90d: established, less upside
 	}
 	score += ageScore
 	parts = append(parts, fmt.Sprintf("age=%.0f", ageScore))

@@ -28,12 +28,27 @@ func IsEmpty(s string) bool {
 }
 
 // TokenAge represents the maturity stage of a token.
+//
+// Tier model is data-backed (ChainPlay pump.fun survival study, Gate Research
+// memecoin lifecycle, Onchain.org launch data):
+//   - Fresh <24h: 15% die in first 24h; survivors exponential
+//   - Early 1-7d: 31% mortality by day 7; discovery dominant
+//   - Discovery 7-30d: inflection point — tokens can still enter accumulation
+//   - Maturation 30-90d: survival curve flattens; flat holders = reliable dead signal
+//   - Established >90d: 98% of memecoins dead by 90d; strict filtering
+//
+// Chain-specific multipliers are applied in ClassifyAgeForChain:
+//   - Solana/pump.fun launches: ×0.7 (compressed timeline — 7/21/60d effective)
+//   - ETH/L2 fair launches: ×1.0 (default 7/30/90)
+//   - BSC: ×0.85 (between the two — 7/25/75 effective)
 type TokenAge string
 
 const (
 	AgeFresh       TokenAge = "fresh"       // < 24 hours
 	AgeEarly       TokenAge = "early"       // 1-7 days
-	AgeEstablished TokenAge = "established" // > 7 days
+	AgeDiscovery   TokenAge = "discovery"   // 7-30 days
+	AgeMaturation  TokenAge = "maturation"  // 30-90 days
+	AgeEstablished TokenAge = "established" // > 90 days
 )
 
 // TokenContext carries metadata about the token that gates can use for tiered evaluation.
@@ -71,8 +86,30 @@ type TokenContext struct {
 	NarrativeLandscapeFetched bool
 }
 
-// ClassifyAge determines the token's age tier from pairCreatedAt timestamp (milliseconds).
+// chainAgeMultiplier returns a speed factor for the age-tier classifier based
+// on launchpad dynamics. Solana (pump.fun) compresses the timeline ~3x;
+// BSC sits between; ETH/L2 is the 1.0 baseline the research was calibrated on.
+func chainAgeMultiplier(chainID int64) float64 {
+	switch chainID {
+	case 101, 900, 8453 * 1000: // Solana sentinel IDs used in some registries
+		return 0.7
+	case 56: // BSC
+		return 0.85
+	default: // Ethereum (1), Arbitrum (42161), Base (8453), Polygon (137), 0G (16661), etc.
+		return 1.0
+	}
+}
+
+// ClassifyAge determines the token's age tier from pairCreatedAt timestamp
+// (milliseconds). Uses default ETH/L2 multipliers. For chain-aware classification
+// use ClassifyAgeForChain.
 func ClassifyAge(pairCreatedAtMs int64) TokenContext {
+	return ClassifyAgeForChain(pairCreatedAtMs, 1)
+}
+
+// ClassifyAgeForChain applies chain-specific multipliers to the age tier cutoffs.
+// Reference cutoffs (ETH/L2 baseline): 24h / 7d / 30d / 90d.
+func ClassifyAgeForChain(pairCreatedAtMs int64, chainID int64) TokenContext {
 	if pairCreatedAtMs == 0 {
 		return TokenContext{Age: AgeEstablished, HasAgeData: false}
 	}
@@ -86,11 +123,21 @@ func ClassifyAge(pairCreatedAtMs int64) TokenContext {
 		HasAgeData:    true,
 	}
 
+	mult := chainAgeMultiplier(chainID)
+	freshCutoff := 24.0 * mult
+	earlyCutoff := 24.0 * 7 * mult
+	discoveryCutoff := 24.0 * 30 * mult
+	maturationCutoff := 24.0 * 90 * mult
+
 	switch {
-	case hours < 24:
+	case hours < freshCutoff:
 		ctx.Age = AgeFresh
-	case hours < 24*7:
+	case hours < earlyCutoff:
 		ctx.Age = AgeEarly
+	case hours < discoveryCutoff:
+		ctx.Age = AgeDiscovery
+	case hours < maturationCutoff:
+		ctx.Age = AgeMaturation
 	default:
 		ctx.Age = AgeEstablished
 	}

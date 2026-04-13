@@ -30,10 +30,14 @@ func liqThresholds(age TokenAge) (minLiquidity, minVolume float64, minLPRatio fl
 	switch age {
 	case AgeFresh: // < 24h — allow lower liquidity, focus on contract safety
 		return 5000, 500, 0.03
-	case AgeEarly: // 1-7 days — moderate thresholds
+	case AgeEarly: // 1-7d — moderate thresholds
 		return 8000, 800, 0.04
-	default: // > 7 days — established thresholds
-		return 10000, 1000, 0.05
+	case AgeDiscovery: // 7-30d — discovery phase, light ramp
+		return 10000, 1000, 0.04
+	case AgeMaturation: // 30-90d — should have real depth by now
+		return 20000, 2000, 0.05
+	default: // > 90d — established thresholds
+		return 25000, 3000, 0.05
 	}
 }
 
@@ -179,12 +183,13 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 			holders := 0
 			fmt.Sscanf(sec.HolderCount, "%d", &holders)
 
+			scaleMature := (ctx.Age == AgeMaturation || ctx.Age == AgeEstablished) && totalLiquidity >= 500_000 && holders >= 1000
 			switch {
 			case ctx.Age == AgeFresh:
 				result.AddEvidence("analysis", "lp_lock_context", "LP not locked — acceptable for <24h token but flag for monitoring")
-			case ctx.Age == AgeEstablished && totalLiquidity >= 500_000 && holders >= 1000:
-				result.AddEvidence("analysis", "lp_lock_context", fmt.Sprintf("LP not locked, but established token with $%.1fM TVL and %d holders — likely burned or CEX-migrated LP, not a fresh rug setup", totalLiquidity/1_000_000, holders))
-				// Fall through to pass — this isn't a rug indicator at scale
+			case scaleMature:
+				result.AddEvidence("analysis", "lp_lock_context", fmt.Sprintf("LP not locked, but %s token with $%.1fM TVL and %d holders — likely burned or CEX-migrated LP, not a fresh rug setup", ctx.Age, totalLiquidity/1_000_000, holders))
+				// Fall through to pass — not a rug indicator at scale
 			default:
 				return result.Fail("No LP is locked — rug pull risk"), nil
 			}

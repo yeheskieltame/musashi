@@ -96,7 +96,7 @@ func (p *PipelineResult) Pretty() string {
 
 // fetchTokenAgeAndPairs fetches DexScreener pairs once and derives age + caches
 // the full pair list so downstream gates don't have to refetch.
-func fetchTokenAgeAndPairs(token string) gates.TokenContext {
+func fetchTokenAgeAndPairs(token string, chainID int64) gates.TokenContext {
 	dex := data.NewDexScreenerClient()
 	dexData, err := dex.GetTokenPairs(token)
 	if err != nil || dexData == nil || len(dexData.Pairs) == 0 {
@@ -111,7 +111,7 @@ func fetchTokenAgeAndPairs(token string) gates.TokenContext {
 		}
 	}
 
-	ctx := gates.ClassifyAge(earliestMs)
+	ctx := gates.ClassifyAgeForChain(earliestMs, chainID)
 	ctx.DexPairs = dexData.Pairs
 	ctx.DexPairsFetched = true
 	return ctx
@@ -125,7 +125,7 @@ func fetchTokenAgeAndPairs(token string) gates.TokenContext {
 func RunGates(token string, chainID int64, skipAI ...bool) (*PipelineResult, error) {
 	shouldSkipAI := len(skipAI) > 0 && skipAI[0]
 	// Fetch token age + dexscreener pair list once for the whole pipeline
-	tokenCtx := fetchTokenAgeAndPairs(token)
+	tokenCtx := fetchTokenAgeAndPairs(token, chainID)
 
 	// Fetch GoPlus data once and cache in context — Gates 1, 2, 3 all need it.
 	// This prevents 3x redundant API calls which trigger 429 rate limits.
