@@ -215,20 +215,20 @@ export default function LandingPage() {
       <nav className="fixed top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50">
         <div className="glass-dark rounded-full px-2 py-2 flex items-center justify-between sm:justify-center gap-1 shadow-lg shadow-zinc-900/40">
           <a href="/" className="flex items-center gap-2 px-3 py-1.5 focus:outline-none">
-            <img src="/musashi-logo.png" alt="" className="w-5 h-5" />
-            <span className="text-white font-bold text-sm tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
+            <img src="/musashi-logo.png" alt="" className="w-5 h-5 shrink-0" />
+            <span className="text-white font-bold text-sm tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] whitespace-nowrap">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
           </a>
           
           <div className="hidden sm:flex items-center gap-1">
-            <a href="#findings" className="px-3 py-1.5 rounded-full text-sm font-medium text-amber-300/80 hover:text-amber-200 hover:bg-amber-500/5 transition-all">Findings</a>
-            <a href="#problem" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Problem</a>
-            <a href="#pipeline" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Pipeline</a>
-            <a href="#protocol" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">0G Protocol</a>
-            <a href="#deploy-agent" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Deploy</a>
-            <a href="#setup" className="px-3 py-1.5 rounded-full text-sm font-medium text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Setup</a>
+            <a href="#findings" className="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap text-amber-300/80 hover:text-amber-200 hover:bg-amber-500/5 transition-all">Findings</a>
+            <a href="#problem" className="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Problem</a>
+            <a href="#pipeline" className="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Pipeline</a>
+            <a href="#protocol" className="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">0G Protocol</a>
+            <a href="#deploy-agent" className="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Deploy</a>
+            <a href="#setup" className="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap text-white/40 hover:text-white/80 hover:bg-white/5 transition-all">Setup</a>
             <Link
               href="/dashboard"
-              className="bg-amber-600/80 border border-amber-500/50 text-white rounded-full px-5 py-1.5 text-sm font-medium hover:shadow-[0_0_15px_rgba(217,119,6,0.4)] hover:bg-amber-500/80 transition-all ml-1 backdrop-blur"
+              className="bg-amber-600/80 border border-amber-500/50 text-white rounded-full px-5 py-1.5 text-sm font-medium whitespace-nowrap hover:shadow-[0_0_15px_rgba(217,119,6,0.4)] hover:bg-amber-500/80 transition-all ml-1 backdrop-blur"
             >
               Dashboard
             </Link>

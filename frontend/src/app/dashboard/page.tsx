@@ -134,8 +134,8 @@ export default function DashboardPage() {
         <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img src="/musashi-logo.png" alt="MUSASHI" className="w-6 h-6" />
-              <span className="text-white font-bold text-lg tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
+              <img src="/musashi-logo.png" alt="MUSASHI" className="w-6 h-6 shrink-0" />
+              <span className="text-white font-bold text-lg tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] whitespace-nowrap">MUSASHI <span className="font-light text-white/50 ml-1">武蔵</span></span>
             </Link>
             <div className="w-px h-5 bg-white/20 hidden sm:block" />
             <span className="text-sm font-semibold text-white/80 hidden sm:block uppercase tracking-wider">Dashboard</span>
