@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { WalletConnect } from "@/components/WalletConnect";
 import { CommandBar } from "@/components/CommandBar";
@@ -77,6 +77,23 @@ export default function DashboardPage() {
 
   const handleSelectFromScanner = useCallback((address: string, chainId: number) => {
     handleGates(address, chainId);
+  }, [handleGates]);
+
+  // Auto-run gates when dashboard is opened with ?analyze=<addr>&chain=<id>.
+  // Lets landing-page "Recent Findings" cards deep-link into a live pipeline
+  // run. Guarded so it only fires once per mount.
+  const autoRanRef = useRef(false);
+  useEffect(() => {
+    if (autoRanRef.current) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("analyze");
+    if (!token || !/^0x[a-fA-F0-9]{40}$/.test(token)) return;
+    const chainParam = params.get("chain");
+    const chain = chainParam ? Number.parseInt(chainParam, 10) : 1;
+    if (!Number.isFinite(chain) || chain <= 0) return;
+    autoRanRef.current = true;
+    handleGates(token, chain);
   }, [handleGates]);
 
   const handleSelectFromSearch = useCallback((result: SearchResult) => {
