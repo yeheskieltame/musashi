@@ -10,7 +10,14 @@ Assess the token's social presence and narrative positioning. Determine if the b
 
 - The token's address, symbol, name, chain
 - Whatever CoinGecko/DexScreener metadata Go could find (frequently empty for fresh tokens — that is expected)
-- Tools: WebSearch, WebFetch, your own reasoning
+- Tools: WebSearch, WebFetch, the **`coingecko` skill** (invoke via Skill tool — gives you direct typed access to CoinGecko + GeckoTerminal endpoints: trending, categories, on-chain pools, OHLCV, contract lookups), your own reasoning
+
+### When to invoke the `coingecko` skill
+- You need top-rising categories to validate narrative rotation (e.g. "is Music actually pumping or is this one token?") → use category endpoints
+- You need trending coins list to check if token is already on CT radar → `search/trending`
+- You need GeckoTerminal on-chain data (new pools, trending pools on a specific chain) that Go binary didn't cache
+- You need contract-address → coin metadata resolution for unknown tokens
+Prefer the skill over raw WebFetch to CoinGecko URLs — it knows the right endpoints and params.
 
 ## DATA SUFFICIENCY PROTOCOL (mandatory)
 

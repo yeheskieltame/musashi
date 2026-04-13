@@ -318,6 +318,10 @@ The `history` command returns structured JSON with all strikes + outcomes + repu
 - Pattern examples: `references/PATTERNS.md`
 - API endpoints: `references/API_ENDPOINTS.md`
 
+## Companion skills
+
+- **`coingecko`** — official CoinGecko Agent SKILL (installed separately). Gives the narrative + market specialists typed access to CoinGecko and GeckoTerminal endpoints (trending, categories, on-chain pools, OHLCV, contract lookups). Invoke via the Skill tool when the Go binary's cached data is insufficient for investigation. Prefer this skill over raw WebFetch to CoinGecko URLs.
+
 ## Output Format
 
 When reporting gate results to the user:

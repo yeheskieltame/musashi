@@ -13,6 +13,7 @@ Assess whether broader market conditions support entering a position in this tok
 - Stablecoin flow data
 - Cross-validation: DexScreener vs GeckoTerminal price/volume comparison
 - Token age classification and pair creation date
+- Tools: WebSearch, WebFetch, the **`coingecko` skill** (invoke via Skill tool — typed access to CoinGecko global, categories, derivatives, GeckoTerminal pools/OHLCV). Use it when you need fresh macro data (BTC dominance, total mcap, chain TVL cross-checks, OHLCV windows) beyond what the Go binary cached. Prefer the skill over raw WebFetch to CoinGecko URLs.
 
 ## DATA SUFFICIENCY PROTOCOL (mandatory)
 
