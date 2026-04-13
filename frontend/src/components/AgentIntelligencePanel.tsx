@@ -199,7 +199,7 @@ export function AgentIntelligencePanel({ tokenId = 0 }: { tokenId?: number }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Storage root */}
         <Field
           label="0G Storage root"

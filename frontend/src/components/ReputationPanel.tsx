@@ -190,7 +190,7 @@ export function ReputationPanel() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-4">
         <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-5 relative overflow-hidden group hover:bg-white/[0.04] transition-all backdrop-blur-md">
           <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-2 font-mono">Strikes</div>
           <div className="flex items-center gap-3">
