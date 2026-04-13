@@ -319,6 +319,54 @@ on the top candidates.`,
 	},
 }
 
+var huntCmd = &cobra.Command{
+	Use:   "hunt",
+	Short: "Just tell me what to strike — end-to-end funnel",
+	Long: `hunt is the "I don't know what to analyze, just tell me what's strikeable
+right now" command. It gathers candidates from trending/new pools and boost
+lists in a handful of rate-limit-safe list calls, scores them with a pure
+heuristic on embedded data (no per-token API calls), then runs the full
+automated gate pipeline on the top N survivors. Output is a ranked list
+with gate verdicts ready for agent debate.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		chainID, _ := cmd.Flags().GetInt64("chain")
+		top, _ := cmd.Flags().GetInt("top")
+		output, _ := cmd.Flags().GetString("output")
+
+		result, err := pipeline.HuntStrikes(chainID, top)
+		if err != nil {
+			return fmt.Errorf("hunt failed: %w", err)
+		}
+
+		if output == "pretty" {
+			fmt.Printf("\n武蔵 MUSASHI — Hunt Results\n")
+			fmt.Printf("Chain: %d | Gathered: %d | Scored: %d | Gates Ran: %d\n",
+				result.ChainID, result.Gathered, result.Scored, result.GatesRan)
+			if len(result.TopNarratives) > 0 {
+				fmt.Printf("Top narratives: %s\n", strings.Join(result.TopNarratives, ", "))
+			}
+			fmt.Println(strings.Repeat("─", 60))
+			for i, c := range result.Candidates {
+				fmt.Printf("\n[%d] %s %s  score=%.1f\n", i+1, c.Name, c.Address, c.Score)
+				fmt.Printf("    vol=$%.0f  liq=$%.0f  24h=%.1f%%  1h=%.1f%%  src=%s\n",
+					c.Volume24h, c.ReserveUsd, c.PriceChange24h, c.PriceChange1h,
+					strings.Join(c.Sources, ","))
+				if c.NarrativeHit != "" {
+					fmt.Printf("    narrative_hit=%s\n", c.NarrativeHit)
+				}
+				if c.GateVerdict != "" {
+					fmt.Printf("    GATES: %s — %s\n", c.GateVerdict, c.GateReason)
+				}
+			}
+			fmt.Println()
+			return nil
+		}
+
+		fmt.Println(result.JSON())
+		return nil
+	},
+}
+
 var setINFTCmd = &cobra.Command{
 	Use:   "set-inft [inft_address]",
 	Short: "Link MusashiINFT contract to ConvictionLog (one-time setup)",
@@ -784,13 +832,17 @@ func init() {
 	scanCmd.Flags().Int("limit", 10, "Max tokens to return")
 	scanCmd.Flags().Bool("gates", false, "Auto-run gate pipeline on top 5 candidates")
 
+	huntCmd.Flags().Int64("chain", 1, "Chain ID (1=ETH, 56=BSC, 137=Polygon, 42161=Arbitrum, 8453=Base, 16661=0G)")
+	huntCmd.Flags().Int("top", 3, "Run full gate pipeline on this many top-ranked candidates")
+	huntCmd.Flags().String("output", "json", "Output format: json or pretty")
+
 	historyCmd.Flags().Uint64("agent-id", 0, "INFT agent token ID")
 	historyCmd.Flags().Int("limit", 20, "Max strikes to fetch")
 
 	rootCmd.AddCommand(
 		gatesCmd, strikeCmd, storeCmd, discoveryCmd,
 		mintAgentCmd, updateAgentCmd, statusCmd, agentInfoCmd,
-		recordOutcomeCmd, searchCmd, setINFTCmd, scanCmd, historyCmd,
+		recordOutcomeCmd, searchCmd, setINFTCmd, scanCmd, huntCmd, historyCmd,
 		// ERC-7857 + 0G Storage integration
 		sealIntelligenceCmd, verifyCmd, orchestrateCmd, transferAgentCmd, setOracleCmd,
 	)

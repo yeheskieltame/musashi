@@ -77,6 +77,7 @@ Slash commands in `.claude/commands/` — work out of the box after `make core`.
 
 | Command                   | Description                                                          |
 | ------------------------- | -------------------------------------------------------------------- |
+| `/hunt [chain]`           | "Just tell me what to strike" — end-to-end funnel, ranked recommendations |
 | `/analyze <token>`        | Full 8-step pipeline: gates → specialists → pattern → debate → judge |
 | `/scan [chain] [--gates]` | Scan, score, and rank opportunities                                  |
 | `/gates <token>`          | Run the 5 automated gates (1,2,3,6,7) via Go binary                  |
