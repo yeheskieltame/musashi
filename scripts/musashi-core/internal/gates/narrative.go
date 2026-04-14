@@ -4,9 +4,59 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"unicode"
 
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/data"
 )
+
+// matchKeyword checks whether `keyword` appears in `haystack` as a whole word
+// or contiguous phrase, not as a mid-word substring.
+//
+// Motivation: raw strings.Contains produced false positives on short
+// keywords. Example: keyword "mew" (Solana memecoin) matched category
+// "AI Framework" because "mew" is inside "fra-mew-ork". Keyword "wif" could
+// match "swift". Keyword "ai " (with trailing space) was a hack workaround.
+//
+// Rules:
+//   - If keyword contains spaces (multi-word phrase), require that the exact
+//     phrase occurs in the haystack with word boundaries on both ends.
+//   - If keyword is a single word, require it to appear as a full word
+//     separated by non-alphanumerics (start-of-string, end-of-string, or
+//     any non-alphanumeric character).
+func matchKeyword(haystack, keyword string) bool {
+	keyword = strings.TrimSpace(keyword)
+	if keyword == "" {
+		return false
+	}
+	idx := 0
+	for {
+		found := strings.Index(haystack[idx:], keyword)
+		if found < 0 {
+			return false
+		}
+		start := idx + found
+		end := start + len(keyword)
+
+		// Check left boundary: start of string OR previous char is non-alphanumeric
+		leftOK := start == 0 || !isWordChar(rune(haystack[start-1]))
+		// Check right boundary: end of string OR next char is non-alphanumeric
+		rightOK := end == len(haystack) || !isWordChar(rune(haystack[end]))
+
+		if leftOK && rightOK {
+			return true
+		}
+		idx = start + 1
+		if idx >= len(haystack) {
+			return false
+		}
+	}
+}
+
+// isWordChar returns true for letters and digits (word characters for
+// boundary detection purposes).
+func isWordChar(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r)
+}
 
 // NarrativeGate implements Gate 5: Narrative Alignment.
 // Pure Go implementation — determines if token's narrative fits current market meta:
@@ -40,7 +90,7 @@ func (g *NarrativeGate) Evaluate(token string, chainID int64) (*Result, error) {
 // (AI Agents, Bitcoin L2) checked before broader ones (AI, L2).
 var hotNarratives = map[string][]string{
 	"AI Agents":       {"ai agent", "autonomous agent", "agent framework", "swarm"},
-	"AI":              {"artificial intelligence", "machine learning", "llm", "neural", "gpt", "ai "},
+	"AI":              {"artificial intelligence", "machine learning", "llm", "neural", "gpt", "ai"},
 	"DeSci":           {"desci", "decentralized science", "longevity", "biotech"},
 	"RWA":             {"rwa", "real world asset", "tokenized", "treasury bill", "t-bill"},
 	"DePIN":           {"depin", "physical infrastructure", "iot", "sensor", "wireless network"},
@@ -213,12 +263,21 @@ func (g *NarrativeGate) scoreCoinGeckoDetail(result *Result, detail *data.CoinDe
 		categoriesLower[i] = strings.ToLower(c)
 	}
 
-	// Ordered narrative check — more specific narratives first
+	// Ordered narrative check — more specific narratives first.
+	//
+	// Uses WORD-BOUNDARY matching, not raw substring. Real bug caught during
+	// 0G Labs analysis: short keyword "mew" (Solana memecoin) was matching
+	// "AI Framework" category because "mew" appears inside "fra-mew-ork".
+	// This classified 0G (an L1 AI infra token) as Solana Memecoin.
+	//
+	// Fix: matchKeyword() enforces word boundaries so single-word keywords
+	// only match complete words, and multi-word keywords only match as a
+	// contiguous phrase.
 	for _, narr := range narrativeOrder {
 		keywords := hotNarratives[narr]
 		for _, catLower := range categoriesLower {
 			for _, kw := range keywords {
-				if strings.Contains(catLower, kw) {
+				if matchKeyword(catLower, kw) {
 					narrative = narr
 					break
 				}
@@ -505,7 +564,10 @@ func (g *NarrativeGate) scoreKeywordMatch(result *Result, name, symbol, alreadyM
 			continue // already scored in categories
 		}
 		for _, kw := range keywords {
-			if strings.Contains(nameLower, kw) || strings.Contains(symbolLower, kw) {
+			// Word-boundary match (same fix as scoreCoinGeckoDetail).
+			// Prevents short keywords from substring-matching unrelated
+			// token names/symbols.
+			if matchKeyword(nameLower, kw) || matchKeyword(symbolLower, kw) {
 				matched = append(matched, narr)
 				break
 			}

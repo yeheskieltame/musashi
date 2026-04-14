@@ -137,35 +137,62 @@ func RunGates(token string, chainID int64, skipAI ...bool) (*PipelineResult, err
 
 	// Pre-fetch CoinGecko data for Gates 4-5 (Social + Narrative share it).
 	// This avoids duplicate searches that would hit CoinGecko rate limits.
+	//
+	// Resolution order (IMPORTANT — do not regress to symbol-first search):
+	//   1. Contract-address lookup via /coins/{platform}/contract/{address}.
+	//      This is the ONLY reliable way to disambiguate tokens that share a
+	//      symbol across chains. Real bug caught during 0G Labs analysis:
+	//      symbol "0G" exists as an L1 infra token on BSC AND as unrelated
+	//      memecoins on Solana — symbol search returned the Solana token
+	//      and classified 0G as "Solana Memecoin" (completely wrong).
+	//   2. Symbol search fallback ONLY when the chain isn't indexed by
+	//      CoinGecko or the contract isn't listed yet. Still a lossy path
+	//      but better than nothing for obscure chains.
 	if !shouldSkipAI {
-		searchTerm := ""
-		if sec != nil && sec.TokenSymbol != "" {
-			searchTerm = sec.TokenSymbol
-		} else if sec != nil && sec.TokenName != "" {
-			searchTerm = sec.TokenName
+		cg := data.NewCoinGeckoClient()
+		var detail *data.CoinDetail
+
+		// Path 1: contract lookup (preferred, always try first)
+		if platform := data.ChainIDToCoinGeckoPlatform(chainID); platform != "" {
+			if d, err := cg.GetCoinByContract(platform, token); err == nil && d != nil {
+				detail = d
+				tokenCtx.CoinGeckoID = d.ID
+			}
 		}
-		if searchTerm != "" {
-			cg := data.NewCoinGeckoClient()
-			searchResult, searchErr := cg.SearchCoins(searchTerm)
-			if searchErr == nil && len(searchResult.Coins) > 0 {
-				// Find best match (prefer exact symbol match)
-				coinID := searchResult.Coins[0].ID
-				if sec != nil {
-					for _, coin := range searchResult.Coins {
-						if strings.EqualFold(coin.Symbol, sec.TokenSymbol) {
-							coinID = coin.ID
-							break
+
+		// Path 2: symbol search fallback
+		if detail == nil {
+			searchTerm := ""
+			if sec != nil && sec.TokenSymbol != "" {
+				searchTerm = sec.TokenSymbol
+			} else if sec != nil && sec.TokenName != "" {
+				searchTerm = sec.TokenName
+			}
+			if searchTerm != "" {
+				searchResult, searchErr := cg.SearchCoins(searchTerm)
+				if searchErr == nil && len(searchResult.Coins) > 0 {
+					// Find best match (prefer exact symbol match)
+					coinID := searchResult.Coins[0].ID
+					if sec != nil {
+						for _, coin := range searchResult.Coins {
+							if strings.EqualFold(coin.Symbol, sec.TokenSymbol) {
+								coinID = coin.ID
+								break
+							}
 						}
 					}
-				}
-				tokenCtx.CoinGeckoID = coinID
-				detail, detailErr := cg.GetCoinDetail(coinID)
-				if detailErr == nil {
-					tokenCtx.CoinGeckoDetail = detail
+					tokenCtx.CoinGeckoID = coinID
+					if d, detailErr := cg.GetCoinDetail(coinID); detailErr == nil {
+						detail = d
+					}
 				}
 			}
-			tokenCtx.CoinGeckoFetched = true
 		}
+
+		if detail != nil {
+			tokenCtx.CoinGeckoDetail = detail
+		}
+		tokenCtx.CoinGeckoFetched = true
 
 		// Pre-fetch narrative landscape: top categories ranked by 24h gain.
 		// Single CoinGecko call shared between social and narrative gates.

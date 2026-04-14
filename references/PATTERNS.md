@@ -1,156 +1,114 @@
-# Pattern Detection Reference
+# Pattern Reference
 
-## MUSASHI Philosophy
+**MUSASHI hunts memecoins. A STRIKE is an early conviction entry, not a confirmed momentum play.** Best strikes: tokens nobody talks about yet with clean contract + velocity + forming narrative. Worst "opportunities": tokens already on trending lists.
 
-**A STRIKE is an early conviction entry signal, not a confirmed momentum play.**
-The best STRIKEs are tokens nobody is talking about yet, with clean fundamentals and forming narratives. The worst "opportunities" are tokens everyone already knows about.
+## Hunter Patterns (STRIKE candidates)
 
-## Ace Card Patterns (4/4 Convergence)
+### 1. Silent Accumulation ⭐ (highest value)
+Clean contract · holder count growing steadily · buy diversity high (many small wallets) · social silent or alpha-channel-only · volume building quietly from low base · market cap $100k–$10M.
+- Key: **nobody talking yet**, but on-chain shows organic belief forming
+- Activity trend >1.5x, holder growth >3/hr, pressure trend negative (buys building)
+- Age: fresh/early (<7d)
+- **Action: STRIKE 4/4**
 
-### Silent Accumulation ⭐ (Highest Value Pattern)
-- **Safety:** Clean contract, LP locked long-term, low tax
-- **On-Chain:** Smart money accumulating, holder count growing steadily, buy diversity high (many small wallets, not one whale)
-- **Narrative:** Fits emerging meta, early mover, catalysts ahead, social still in alpha channels (not mainstream CT)
-- **Market:** Favorable macro, chain TVL growing, stablecoins flowing in
-- **Key Signals:**
-  - Nobody is talking about it yet — social mentions LOW but organic
-  - Volume building quietly from low base (acceleration trend > 1.5x)
-  - Holder count growing steadily (+5-15% daily)
-  - Market cap in sweet spot ($100K-$10M)
-  - Buy pressure increasing across timeframes
-- **Token Age:** Usually fresh or early (< 7 days) — this IS what early entry looks like
-- **Action:** STRIKE with convergence 4
+### 2. First-Mover Clean (narrative seeding stage)
+First or second token in an EMERGING narrative (<10 competitors) · clean contract · alpha-channel discussion only (no mainstream CT) · organic community forming · market cap pre-discovery ($50k–$5M).
+- Key: narrative is FORMING, you're there before the crowd
+- Age: fresh/early
+- **Action: STRIKE 3/4 or 4/4**
 
-### Early Mover Advantage
-- **Safety:** Clean contract, basic security passed
-- **On-Chain:** Growing holders, organic buy diversity, low sell pressure
-- **Narrative:** First or second token in an EMERGING narrative (<10 competitors), community forming organically
-- **Market:** Favorable or neutral macro, entry during accumulation phase
-- **Key Signals:**
-  - Narrative is forming, NOT peaked — no YouTube/TikTok coverage yet
-  - Token is a category leader or first-mover in its narrative
-  - Community engagement ratio healthy (3-5%)
-  - Market cap pre-discovery zone ($100K-$5M)
-- **Token Age:** Fresh or early — being first is the point
-- **Action:** STRIKE with convergence 4 or strong 3/4
+### 3. Narrative Rotation Entry (macro-contrarian)
+Broader market red (BTC -5%, total mcap bleeding) · BUT meme/narrative sector gaining mindshare · this token is first-mover or category leader in the rotation · on-chain velocity positive while BTC drops.
+- Key: **real hunters buy rotations DURING macro fear** — that's where alt capital floods
+- Age: any
+- **Action: STRIKE** — market weakness is an entry DISCOUNT, not a veto
 
-### Infrastructure Play
-- **Safety:** Audited contract, renounced ownership, zero tax
-- **On-Chain:** Institutional-sized accumulation, very low sell ratio
-- **Narrative:** Solves real infrastructure need, partnerships confirmed
-- **Market:** Bull macro, sector rotation into utility
-- **Key Signal:** Fundamentals justify attention before narrative catches up.
-- **Action:** STRIKE with convergence 4
+### 4. Smart Money Coalition Forming
+3+ independent smart-money wallets (blue-chip holders, prior narrative winners) accumulating same token within 12h window · not bundled/coordinated (different funding sources, different entry blocks) · organic social lagging.
+- Key: uncorrelated smart money convergence = conviction signal
+- **Action: STRIKE** even if holder count still low
 
-## Trap Patterns (Eliminate)
+### 5. Dev Accumulation (pre-launch insider phase)
+Deployer wallet adding to position (not selling) · LP growing · holder count growing but dev unchanged · no marketing push yet.
+- Key: dev hasn't started dumping — still in accumulation phase of the lifecycle
+- Age: fresh
+- **Action: STRIKE** with monitoring for phase flip
 
-### Manufactured Hype Trap
-- **Safety:** Contract may look clean (surface level)
-- **On-Chain:** 60-80% fresh wallets, coordinated buy timing, >90% buy ratio with 50+ txns (wash trading signal)
-- **Narrative:** Social +400% mentions, but all posts are copy-paste shills, bot engagement patterns
-- **Market:** Often appears in neutral/bull markets to catch retail
-- **Key Signals:**
-  - Social velocity doesn't match organic on-chain behavior
-  - Mention velocity is linear (not accelerating) — coordinated campaign
-  - Identical messaging across channels = bot network
-  - High follower counts with minimal engagement (<1% ratio)
-- **Action:** ELIMINATE — bot campaign
+## Trap Patterns (ELIMINATE)
+
+### Manufactured Hype
+Social +400% but 60–80% fresh wallets · copy-paste shill text · identical timestamps · bot cluster · >90% buy ratio with 50+ txns (wash).
+- **Action: ELIMINATE**
+
+### Sniper Coalition (coordinated buy)
+3+ top holders bought in same block as LP add · identical buy amounts · sequential nonces · same funding source (often a single dispenser).
+- Distinct from Smart Money Coalition: **same funding source = wash, different = coalition**
+- **Action: ELIMINATE**
 
 ### Rug Setup
-- **Safety:** LP unlocked or short lock (<30 days), mintable supply, deployer has prior rug history
-- **On-Chain:** Creator/deployer + related addresses holding >40% supply, wash trading patterns
-- **Narrative:** Heavy paid influencer promotion, fake partnerships
-- **Market:** Any conditions — rugs happen in all markets
-- **Key Signals:**
-  - Safety red flags combined with artificial social push
-  - Deployer funded from mixer (anonymity intent)
-  - Multiple prior failed/rugged tokens from same deployer address
-  - LP lock under 30 days
-- **Action:** ELIMINATE — rug risk
+LP unlocked or lock expiring <48h · mintable · deployer has prior rug/honeypot history · creator holding >40% supply · funded from mixer.
+- **Action: ELIMINATE**
 
 ### Narrative Exhaustion
-- **Safety:** Usually clean (established token)
-- **On-Chain:** Smart money exiting, sell ratio climbing, activity decelerating (trend < 0.3)
-- **Narrative:** ATH social mentions, "everyone knows about it", copycats appearing (>5 similar tokens), YouTube/TikTok coverage
-- **Market:** Narrative sector market cap declining despite attention
-- **Key Signals:**
-  - Maximum attention + declining on-chain metrics = peak
-  - Copycat tokens appearing = narrative saturation
-  - Mainstream media coverage = you are the exit liquidity
-  - Sell pressure increasing across timeframes
-- **Action:** ELIMINATE — already peaked
+ATH social mentions · smart money exiting · >30 copycats · mainstream CT / YouTube / TikTok coverage · sell ratio climbing.
+- Key: **you found this from a trending list = you are the exit liquidity**
+- **Action: ELIMINATE**
 
-### Timing Trap
-- **Safety:** Clean contract
-- **On-Chain:** Healthy distribution
-- **Narrative:** Strong narrative position
-- **Market:** Macro turning bearish, TVL declining, stablecoins leaving
-- **Key Signal:** Good token in bad market. Everything looks right except timing.
-- **Action:** ELIMINATE — wait for better conditions
+### Dev Distribution Phase
+Deployer wallet SELLING while social pumps · LP withdrawals appearing · holder growth decelerating despite price spike.
+- **Action: ELIMINATE** — insiders exiting, the pump is your exit liquidity
 
-### Volume Mirage
-- **Safety:** Clean contract
-- **On-Chain:** High volume but sell-heavy (>70% sells), price declining despite "activity", concentrated in few wallets
-- **Narrative:** Appears "active" but engagement is fake
-- **Market:** Any conditions
-- **Key Signals:**
-  - High volume ≠ healthy — check who is trading and which direction
-  - Sell pressure increasing while price pumps = distribution (insiders exiting)
-  - Volume spike >500% vs previous day with <5% price change = wash trading
-- **Action:** ELIMINATE — fake momentum
+### Volume Mirage / Wash
+Volume spike >500% with <5% price change · concentrated in 2–3 wallets · sell-heavy (>70%) despite "growth".
+- **Action: ELIMINATE**
 
 ### Whale Dependency
-- **Safety:** Clean
-- **On-Chain:** Single whale holds 30%+ of supply, or top 10 holders >50% (excluding burn/dead addresses)
-- **Narrative:** Decent but not exceptional
-- **Market:** Neutral
-- **Key Signal:** Entire thesis collapses if one wallet sells.
-- **Action:** ELIMINATE — single point of failure
+Single wallet >30% supply (excluding burn/dead) · top 10 >70% · thesis collapses if one wallet sells.
+- **Action: ELIMINATE**
 
 ### Late Chase
-- **Safety:** Clean (established token)
-- **On-Chain:** High volume but declining from peak, holders growing slowly or flat
-- **Narrative:** Everyone already talking about it, narrative at Peak or Declining stage
-- **Market:** Token already >$10M market cap, rising price + declining volume = distribution
-- **Key Signals:**
-  - You found this from a "trending" list = you are late
-  - Volume peaked days ago, now declining
-  - Social mentions peaked, now routine
-  - Buying now = providing exit liquidity for early holders
-- **Action:** ELIMINATE — missed the entry
+Token already >$10M mcap · rising price + declining volume · holder growth flat · narrative at Peak stage.
+- **Action: ELIMINATE** — missed the entry
 
-## Anti-Patterns (What NOT to Match)
+## Anti-Patterns (DO NOT match these as bearish)
 
-### False Positive: Low Social = Bad
-Social silence + strong on-chain accumulation is often the BEST signal.
-Don't penalize low social if on-chain metrics are strong. The absence of hype IS the opportunity.
+### Low social ≠ bad
+Silence + strong on-chain accumulation is the **best** signal. Absence of hype IS the opportunity.
 
-### False Positive: Low Volume = Dead
-A token with $500 volume that is growing to $2,000 is MORE interesting than a token with $50,000 volume that's declining from $200,000. **Trend matters more than absolute value.** Check the activity_trend metric (>1.5 = accelerating).
+### Low volume ≠ dead
+$500 → $2k growing beats $50k → $10k declining. **Trend matters more than absolute.** Activity trend >1.5 = accelerating.
 
-### False Positive: Small Market Cap = Risky
-Small cap with strong fundamentals and growing narrative is opportunity. $200K mcap with clean contract + growing holders + forming narrative = the sweet spot MUSASHI exists to find.
+### Small mcap ≠ risky
+$200k mcap with clean contract + growing holders + forming narrative = sweet spot. Uncertainty ≠ risk.
 
-### False Positive: Few Holders = Bad
-A fresh token (<24h) with 20 holders that are growing is BETTER than an established token with 500 holders that are flat or declining. Check holder GROWTH rate, not absolute count.
+### Few holders ≠ bad
+Fresh token with 12 holders growing > established with 500 flat. Growth rate > snapshot count.
 
-### False Positive: High Volatility = Bad
-Volatility in early-stage tokens is expected and healthy. Focus on direction and holder behavior, not absolute volatility. Multiple price fluctuations = active organic trading.
+### Macro red ≠ wait
+Memecoin narrative rotations INTENSIFY during macro fear. Don't wait for BTC permission. Check narrative sector gain vs BTC divergence.
+
+### Fresh deployer ≠ rug
+A new wallet deploying a token is normal for memecoins. Check funding source: mixer=bad, smart-money-seeded=good, small self-fund=organic.
+
+### No LP lock on fresh ≠ rug
+Fresh + unlocked + organic buys = pure retail conviction. Only flags IF combined with single-wallet volume or dev distribution.
 
 ## Convergence Scoring
 
 | Score | Meaning | Action |
-|-------|---------|--------|
-| 4/4 | All domains converge positively | STRIKE candidate |
-| 3/4 | Strong with one concern | Debate carefully, possible STRIKE |
-| 2/4 | Mixed signals | ELIMINATE |
-| 1/4 | Mostly negative | ELIMINATE |
-| 0/4 | All domains negative | ELIMINATE immediately |
+|---|---|---|
+| 4/4 | All domains align | STRIKE |
+| 3/4 where **market** is weak | Clean + onchain + narrative strong, macro only headwind | **STRIKE** (rotation entry) |
+| 3/4 where safety is weak | Contract concern | ELIMINATE — safety is non-negotiable |
+| 3/4 where narrative/onchain weak | Depends on debate + velocity | DEBATE CAREFULLY |
+| 2/4 or below | Mixed/negative | ELIMINATE |
 
-## Token Age Context for Convergence
+**Fresh token rule:** A domain returning `?` (data-lag, e.g. CoinGecko not indexed, holder count below snapshot min) but with POSITIVE velocity counts as **PROVISIONAL PASS**, not `?`. Only count `?` when the investigation genuinely found nothing after all fallback searches.
 
-| Age | Convergence Interpretation |
-|-----|---------------------------|
-| Fresh (<24h) | 3/4 with low-metrics concern is acceptable — data is naturally thin |
-| Early (1-7d) | 3/4 requires growth trends in the weak domain |
-| Established (>7d) | 3/4 requires strong debate evidence to override the weak domain |
+## Age Context
+
+| Age | Interpretation |
+|---|---|
+| Fresh <24h | 3/4 with weak market/narrative domain is acceptable — velocity replaces snapshot completeness |
+| Early 1–7d | 3/4 requires velocity trends in the weak domain |
+| Established >7d | 3/4 requires debate evidence; late-stage tokens need stronger convergence |

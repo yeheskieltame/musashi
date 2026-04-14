@@ -1,3 +1,8 @@
+---
+model: claude-sonnet-4-6
+description: End-to-end strike funnel — gather, score, deep gates, specialists on survivors
+---
+
 # MUSASHI — Hunt Strikes (just tell me what to strike)
 
 When the user says _"what should I strike?"_, _"find me something"_, _"give me a recommendation"_, or _"I don't know what to analyze"_, this is the command. It runs the end-to-end funnel and returns a ranked list of candidates with gate verdicts — no manual token input required.
@@ -18,20 +23,27 @@ Chain options: `1` ETH · `56` BSC · `137` Polygon · `42161` Arbitrum · `8453
 
 1. **Gather** — 4 parallel list calls: GeckoTerminal trending_pools + new_pools, DexScreener boosts, CoinGecko categories. Embedded volume/reserve/price-change data, zero per-token calls.
 2. **Score** — pure heuristic on embedded data: liquidity floor, volume tier, buy pressure, price momentum, narrative match (from top-rising CoinGecko categories), multi-source convergence bonus, boost-without-backing penalty.
-3. **Deep gates** — full automated pipeline (gates 1,2,3,6,7) on the top N survivors only. Fail-fast, so honeypots drop out cheaply.
+3. **Deep gates** — full automated pipeline on the top N survivors. Gate 1 (safety) is fail-fast — honeypots drop out cheaply. **Gate 6 (market timing) is ADVISORY only** — it never removes a candidate from the hunt based on macro conditions. Memecoin rotations happen DURING macro fear.
 
 Output is JSON with ranked candidates, each carrying score breakdown and gate verdict.
 
 ## What you do after hunt returns
 
-1. **Read the hunt output.** Look at candidates sorted by score.
+1. **Cache check FIRST (for each candidate).** Before spending tokens on specialists/debate, check the journal:
+   ```bash
+   ./scripts/musashi-core/musashi-core journal check <token> --chain <chain_id> --age <age>
+   ```
+   Exit 0 = hit (entry returned on stdout), exit 3 = miss. If a candidate has a recent FAIL in the journal, drop it from the specialist phase — it just failed for a reason. If it has a recent PASS, surface the cached result directly. If STRIKE_WATCH or WARN, still run specialists to see if conditions changed.
+
+2. **Read the hunt output.** Look at candidates sorted by score.
 2. **Filter by gate verdict.**
    - `PASS` or `WARN` candidates → worth running specialists + debate on
    - `FAIL` → mention as traps found, explain why (from gate reason)
    - `DATA_INSUFFICIENT` → the agent must fill gaps; treat as "needs investigation" not failure
 3. **Run specialists on survivors only.** For each PASS/WARN candidate, load the four specialist prompts (safety, onchain, narrative, market) and run them against the gate evidence. This is where the LLM token budget goes — only on the already-ranked survivors, never on the full gathered set.
 4. **Pattern detection + adversarial debate** on the survivors (musashi_pattern.md, bull_researcher.md, bear_researcher.md) same as `/analyze`.
-5. **Judge verdict.** conviction_judge.md decides PASS/FAIL per candidate.
+5. **Judge verdict.** conviction_judge.md decides PASS/STRIKE_WATCH/FAIL/NEED_MORE_DATA per candidate.
+5.5. **Journal write for each candidate** regardless of verdict — same as /analyze Step 7.5. Every verdict feeds the learning loop.
 6. **Recommend.** Present 1-3 ranked recommendations with:
    - Symbol + address + chain
    - Score + why it ranked high (narrative hit? momentum? convergence?)

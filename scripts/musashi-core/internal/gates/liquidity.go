@@ -141,16 +141,43 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 		return result.Fail(fmt.Sprintf("Total liquidity too low: $%.0f (min $%.0f for %s token)", totalLiquidity, minLiq, ctx.Age)), nil
 	}
 
-	// Check 2: LP depth vs market cap (tiered ratio)
-	if bestPair.MarketCap > 0 {
-		lpRatio := totalLiquidity / bestPair.MarketCap
+	// Check 2: LP depth vs circulating supply value.
+	//
+	// Pick the correct denominator carefully. DexScreener reports both
+	// `marketCap` (circulating supply × price) and `fdv` (total supply × price).
+	// For a NATIVE token on its primary chain, FDV ≥ MarketCap (total ≥ circulating).
+	//
+	// For a BRIDGED token on a secondary chain, DexScreener sometimes reports
+	// the GLOBAL market cap (aggregated across all chains) while FDV reflects
+	// only the LOCAL bridged supply. This produces FDV < MarketCap, which is
+	// mathematically impossible for a native token and is a reliable signal
+	// that we're looking at a bridged/wrapped representation.
+	//
+	// Using the inflated global MarketCap as the LP denominator for a local
+	// bridged pair produces a false LP/mcap ratio and a false FAIL. The fix:
+	// when FDV < MarketCap, prefer FDV as the denominator (that's the actual
+	// local supply value the local LP is supporting).
+	denom := bestPair.MarketCap
+	denomLabel := "market cap"
+	if bestPair.FDV > 0 && bestPair.MarketCap > 0 && bestPair.FDV < bestPair.MarketCap {
+		denom = bestPair.FDV
+		denomLabel = "FDV (bridged token — FDV < mcap detected)"
+		result.AddEvidence("analysis", "bridged_token_heuristic", fmt.Sprintf("FDV ($%.0f) < MarketCap ($%.0f) — using FDV as LP denominator because this pair is likely a bridged/wrapped representation of a multi-chain token", bestPair.FDV, bestPair.MarketCap))
+	} else if bestPair.MarketCap == 0 && bestPair.FDV > 0 {
+		denom = bestPair.FDV
+		denomLabel = "FDV (market cap unavailable)"
+	}
+
+	if denom > 0 {
+		lpRatio := totalLiquidity / denom
 		result.AddEvidence("dexscreener", "lp_to_mcap_ratio", fmt.Sprintf("%.4f", lpRatio))
+		result.AddEvidence("analysis", "lp_denominator", denomLabel)
 
 		if lpRatio < minRatio {
 			if totalLiquidity >= 1000000 {
 				result.AddEvidence("analysis", "lp_context", fmt.Sprintf("LP ratio %.1f%% is low but absolute liquidity $%.0fM is substantial — likely CEX-listed token", lpRatio*100, totalLiquidity/1000000))
 			} else {
-				return result.Fail(fmt.Sprintf("LP depth too thin: %.1f%% of market cap (min %.0f%% for %s token)", lpRatio*100, minRatio*100, ctx.Age)), nil
+				return result.Fail(fmt.Sprintf("LP depth too thin: %.1f%% of %s (min %.0f%% for %s token)", lpRatio*100, denomLabel, minRatio*100, ctx.Age)), nil
 			}
 		}
 	}
@@ -176,20 +203,31 @@ func (g *LiquidityGate) EvaluateWithContext(token string, chainID int64, ctx Tok
 			// Tiered interpretation of "no LP locked":
 			//   - Fresh (<24h): WARN only — many legit tokens lock within hours
 			//   - Early (1-7d): FAIL — this is when most rugs happen
-			//   - Established (>7d) with substantial TVL (>$500k) AND many holders
-			//     (>1000): WARN — at scale, burned LP or CEX-migrated LP is normal
-			//   - Established + small: FAIL — small-cap old token with unlocked LP
-			//     is still rug-prone
+			//   - Established (>7d) with substantial TVL (>$500k) AND many
+			//     holders (>1000): WARN — at scale, burned or CEX-migrated LP
+			//     is normal
+			//   - Established BRIDGED (FDV < MarketCap confirmed above): WARN
+			//     rather than FAIL. LP lock on a secondary bridged pair is
+			//     often irrelevant — real liquidity lives on the primary
+			//     venue (native chain or CEX). A hard fail here produces
+			//     false positives on every multi-chain L1 token.
+			//   - Established + small + not bridged: FAIL — small-cap old
+			//     token with unlocked LP is still rug-prone.
 			holders := 0
 			fmt.Sscanf(sec.HolderCount, "%d", &holders)
 
+			isBridged := bestPair.FDV > 0 && bestPair.MarketCap > 0 && bestPair.FDV < bestPair.MarketCap
 			scaleMature := (ctx.Age == AgeMaturation || ctx.Age == AgeEstablished) && totalLiquidity >= 500_000 && holders >= 1000
+			bridgedMature := isBridged && (ctx.Age == AgeMaturation || ctx.Age == AgeEstablished) && bestPair.MarketCap >= 10_000_000 && holders >= 500
 			switch {
 			case ctx.Age == AgeFresh:
 				result.AddEvidence("analysis", "lp_lock_context", "LP not locked — acceptable for <24h token but flag for monitoring")
 			case scaleMature:
 				result.AddEvidence("analysis", "lp_lock_context", fmt.Sprintf("LP not locked, but %s token with $%.1fM TVL and %d holders — likely burned or CEX-migrated LP, not a fresh rug setup", ctx.Age, totalLiquidity/1_000_000, holders))
 				// Fall through to pass — not a rug indicator at scale
+			case bridgedMature:
+				result.AddEvidence("analysis", "lp_lock_context", fmt.Sprintf("LP not locked on secondary bridged pair (local TVL $%.0fk, global mcap $%.1fM, %d holders) — primary trading venue is elsewhere, local LP lock is informational not decisive", totalLiquidity/1_000, bestPair.MarketCap/1_000_000, holders))
+				// Fall through to pass — bridged secondary pair, not a rug vector
 			default:
 				return result.Fail("No LP is locked — rug pull risk"), nil
 			}

@@ -1,3 +1,8 @@
+---
+model: claude-sonnet-4-6
+description: Check MUSASHI on-chain state and reputation
+---
+
 # MUSASHI — Status Check
 
 Check MUSASHI's on-chain state: conviction record, reputation, and agent info.

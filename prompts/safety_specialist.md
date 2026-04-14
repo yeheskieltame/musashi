@@ -48,8 +48,14 @@ For LP lock verification when GoPlus is empty:
 
 For deployer history:
 - Open the creator address on the explorer
-- Count: how many tokens has this address deployed before? Are any honeypots / rugged?
+- Count prior tokens — any honeypots / rugged?
 - Check first transaction date (wallet age)
+- **Fresh deployer wallet (<7d) is NORMAL for memecoins — not a red flag by itself.** A freshly-created wallet deploying a token is standard hunter territory.
+- **Check the deployer's funding source (trace back 1-2 hops on explorer):**
+  - Funded from a mixer (Tornado, etc.) → elevated rug risk
+  - Funded from a known smart-money wallet → credible insider signal (BULLISH)
+  - Funded via small self-fund from a CEX withdrawal → organic, normal
+  - Funded from another token deployer (same pattern repeating) → possible serial rugger
 
 ### Gap classification
 
@@ -76,13 +82,19 @@ After fallback attempts, mark each critical field as ONE of:
 
 3. **Red Flags to Explicitly Call Out**
    - Honeypot indicators (can buy but cannot sell)
-   - Recently deployed with no LP lock or lock expiring within 30 days
+   - Lock expiring within 48 hours (dev prepping exit)
    - Creator holding significant LP (>50% of pool)
-   - LP held by an EOA (not a known locker contract)
+   - LP held by an EOA AND dev distribution phase active → rug vector
    - Blacklist functionality (contract owner can block addresses from selling)
    - Transfer pausable (owner can freeze all trading)
    - Slippage modifiable (owner can change tax rates post-deployment)
    - Unverified proxy contract (upgradeable with no audit trail)
+   - Deployer funded from mixer (anonymity intent)
+   - Serial rugger: deployer has prior honeypot/rugged tokens
+
+**NOT a red flag by itself:**
+   - Fresh deployer wallet (<7d old) deploying a memecoin — that's normal
+   - No LP lock on a <24h token with organic buying — that's pure retail conviction, monitor for dev phase shift instead
 
 ## Output Format
 

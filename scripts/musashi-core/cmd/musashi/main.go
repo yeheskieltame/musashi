@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/chain"
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/data"
+	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/journal"
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/pipeline"
 	"github.com/yeheskieltame/musashi/scripts/musashi-core/internal/storage"
 )
@@ -757,6 +758,170 @@ var transferAgentCmd = &cobra.Command{
 	},
 }
 
+// journalCmd is the parent for MUSASHI's learning-layer commands. The journal
+// captures every pipeline run (PASS / STRIKE_WATCH / FAIL / WARN / NEED_MORE_DATA)
+// so the agent can skip re-running specialists+debate on recently-analyzed
+// tokens and cross-reference current tokens against past outcomes.
+var journalCmd = &cobra.Command{
+	Use:   "journal",
+	Short: "Learning-layer journal: store and query past pipeline runs across verdicts",
+}
+
+// journalWriteCmd appends a full pipeline run to the journal. Unlike `store`,
+// it accepts ANY verdict (PASS/STRIKE_WATCH/FAIL/WARN/NEED_MORE_DATA) — the
+// learning loop needs failures, not just wins.
+//
+// Usage: musashi-core journal write --data payload.json
+// Or:    musashi-core journal write --data -   (read from stdin)
+var journalWriteCmd = &cobra.Command{
+	Use:   "write",
+	Short: "Append a pipeline run to the journal (accepts any verdict)",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dataPath, _ := cmd.Flags().GetString("data")
+		if dataPath == "" {
+			return fmt.Errorf("--data is required (path to payload JSON, or '-' for stdin)")
+		}
+		var raw []byte
+		var err error
+		if dataPath == "-" {
+			raw, err = readAllStdin()
+		} else {
+			raw, err = os.ReadFile(dataPath)
+		}
+		if err != nil {
+			return fmt.Errorf("read payload: %w", err)
+		}
+		var payload journal.Payload
+		if err := json.Unmarshal(raw, &payload); err != nil {
+			return fmt.Errorf("invalid journal payload JSON: %w", err)
+		}
+		if payload.Token == "" || payload.ChainID == 0 || payload.Outcome.Status == "" {
+			return fmt.Errorf("payload must include token, chain_id, and outcome.status")
+		}
+		entry, err := journal.WriteAndStore(&payload)
+		if err != nil {
+			return fmt.Errorf("journal write: %w", err)
+		}
+		b, _ := json.MarshalIndent(entry, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	},
+}
+
+// journalCheckCmd queries the local index for the most recent entry matching
+// the token + chain + age-aware freshness window. Used by the agent as a
+// pre-Step-1 cache check to avoid re-running specialists/debate on a token
+// it just analyzed.
+//
+// Exit code 0 = hit, 3 = miss (stable for shell scripting).
+var journalCheckCmd = &cobra.Command{
+	Use:   "check [token_address]",
+	Short: "Check for a cached journal entry for a token (exit 3 = miss)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		chainID, _ := cmd.Flags().GetInt64("chain")
+		agentID, _ := cmd.Flags().GetUint64("agent-id")
+		tokenAge, _ := cmd.Flags().GetString("age")
+
+		entry, err := journal.Check(args[0], chainID, agentID, tokenAge)
+		if err != nil {
+			return fmt.Errorf("journal check: %w", err)
+		}
+		if entry == nil {
+			fmt.Println(`{"hit": false}`)
+			os.Exit(3)
+		}
+		out := map[string]interface{}{
+			"hit":   true,
+			"entry": entry,
+		}
+		b, _ := json.MarshalIndent(out, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	},
+}
+
+// journalListCmd prints journal entries, optionally filtered. Useful for the
+// agent to pull recent history for pattern cross-reference, or for a human to
+// audit what the agent has been doing.
+var journalListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List journal entries (newest first)",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		token, _ := cmd.Flags().GetString("token")
+		chainID, _ := cmd.Flags().GetInt64("chain")
+		agentID, _ := cmd.Flags().GetUint64("agent-id")
+		kind, _ := cmd.Flags().GetString("kind")
+		limit, _ := cmd.Flags().GetInt("limit")
+
+		entries, err := journal.Query(journal.Filter{
+			Token:   token,
+			ChainID: chainID,
+			AgentID: agentID,
+			Kind:    kind,
+			Limit:   limit,
+		})
+		if err != nil {
+			return fmt.Errorf("journal query: %w", err)
+		}
+		out := map[string]interface{}{
+			"count":   len(entries),
+			"entries": entries,
+		}
+		b, _ := json.MarshalIndent(out, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	},
+}
+
+// journalFetchCmd downloads the full journal payload for a given storage root
+// from 0G Storage. The local index only stores summary fields; the full
+// payload (gates, specialists, debate, judge reasoning) lives on 0G Storage.
+var journalFetchCmd = &cobra.Command{
+	Use:   "fetch [storage_root]",
+	Short: "Download a full journal payload from 0G Storage by merkle root",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		out, _ := cmd.Flags().GetString("out")
+		if out == "" {
+			tmp, err := os.CreateTemp("", "musashi-journal-*.json")
+			if err != nil {
+				return err
+			}
+			out = tmp.Name()
+			tmp.Close()
+		}
+		if err := journal.Fetch(args[0], out); err != nil {
+			return fmt.Errorf("journal fetch: %w", err)
+		}
+		fmt.Printf(`{"downloaded": true, "path": %q, "root": %q}`+"\n", out, args[0])
+		return nil
+	},
+}
+
+// readAllStdin reads payload JSON from stdin (for pipe usage).
+func readAllStdin() ([]byte, error) {
+	info, err := os.Stdin.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if (info.Mode() & os.ModeCharDevice) != 0 {
+		return nil, fmt.Errorf("no stdin data piped")
+	}
+	var buf []byte
+	chunk := make([]byte, 4096)
+	for {
+		n, err := os.Stdin.Read(chunk)
+		if n > 0 {
+			buf = append(buf, chunk[:n]...)
+		}
+		if err != nil {
+			break
+		}
+	}
+	return buf, nil
+}
+
 // setOracleCmd configures the re-encryption oracle on MusashiINFT (one-time).
 var setOracleCmd = &cobra.Command{
 	Use:   "set-oracle [oracle_address]",
@@ -839,12 +1004,27 @@ func init() {
 	historyCmd.Flags().Uint64("agent-id", 0, "INFT agent token ID")
 	historyCmd.Flags().Int("limit", 20, "Max strikes to fetch")
 
+	journalWriteCmd.Flags().String("data", "", "Path to journal payload JSON file (or '-' for stdin)")
+	journalCheckCmd.Flags().Int64("chain", 1, "Chain ID")
+	journalCheckCmd.Flags().Uint64("agent-id", 0, "INFT agent token ID")
+	journalCheckCmd.Flags().String("age", "", "Token age tier (fresh/early/established) — tunes freshness window")
+	journalListCmd.Flags().String("token", "", "Filter by token address")
+	journalListCmd.Flags().Int64("chain", 0, "Filter by chain ID (0 = any)")
+	journalListCmd.Flags().Uint64("agent-id", 0, "Filter by agent ID (0 = any)")
+	journalListCmd.Flags().String("kind", "", "Filter by verdict kind (PASS/STRIKE_WATCH/FAIL/WARN/NEED_MORE_DATA)")
+	journalListCmd.Flags().Int("limit", 20, "Max entries to return")
+	journalFetchCmd.Flags().String("out", "", "Output file path (default: temp file)")
+
+	journalCmd.AddCommand(journalWriteCmd, journalCheckCmd, journalListCmd, journalFetchCmd)
+
 	rootCmd.AddCommand(
 		gatesCmd, strikeCmd, storeCmd, discoveryCmd,
 		mintAgentCmd, updateAgentCmd, statusCmd, agentInfoCmd,
 		recordOutcomeCmd, searchCmd, setINFTCmd, scanCmd, huntCmd, historyCmd,
 		// ERC-7857 + 0G Storage integration
 		sealIntelligenceCmd, verifyCmd, orchestrateCmd, transferAgentCmd, setOracleCmd,
+		// Learning layer
+		journalCmd,
 	)
 }
 

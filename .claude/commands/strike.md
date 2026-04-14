@@ -1,3 +1,8 @@
+---
+model: claude-sonnet-4-6
+description: Publish a STRIKE conviction signal to 0G Chain
+---
+
 # MUSASHI — Publish STRIKE
 
 Publish a STRIKE conviction signal to 0G Chain (ConvictionLog).

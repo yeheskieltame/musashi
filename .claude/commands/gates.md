@@ -1,3 +1,8 @@
+---
+model: claude-sonnet-4-6
+description: Run 5 automated gates on a token
+---
+
 # MUSASHI — Gate Check
 
 Run the 5 automated elimination gates on a token (Gates 1, 2, 3, 6, 7).
@@ -24,7 +29,7 @@ MUSASHI ⚔️ [Token Name] ($SYMBOL)
 [PASS/FAIL] Gate 1: Contract Safety — [reason]
 [PASS/FAIL] Gate 2: Liquidity — [reason]
 [PASS/FAIL] Gate 3: Wallets — [reason]
-[PASS/FAIL] Gate 6: Timing — [reason]
+[ADVISORY] Gate 6: Timing — [entry_timing + rotation note]
 [PASS/FAIL] Gate 7: Cross-Val — [reason]
 
 Token Age: [fresh/early/established]

@@ -1,109 +1,29 @@
-# API Endpoints Reference
+# API Endpoints (all free)
 
-All APIs are free. No paid keys required.
+| Service | Base URL | Rate | Key endpoints / fields |
+|---|---|---|---|
+| **GoPlus** | `https://api.gopluslabs.io/api/v1` | generous | `GET /token_security/{chain}?contract_addresses={addr}` → `is_honeypot, is_mintable, can_take_back_ownership, buy_tax, sell_tax, lp_holders[], holder_count, creator_address` |
+| **DexScreener** | `https://api.dexscreener.com` | ~30/min | `/latest/dex/tokens/{addr}`, `/latest/dex/pairs/{chain}/{pair}`, `/latest/dex/search?q=`, `/token-boosts/latest/v1` → `priceUsd, volume.{m5,h1,h6,h24}, liquidity.usd, txns.h24.{buys,sells}, fdv, marketCap, pairCreatedAt` |
+| **GeckoTerminal** | `https://api.geckoterminal.com/api/v2` | 10/min | `/networks/{net}/tokens/{addr}`, `/networks/{net}/new_pools`, `/networks/trending_pools`, `/networks/{net}/pools/{pool}/trades`, `/networks/{net}/pools/{pool}/ohlcv/{tf}` |
+| **DefiLlama** | `https://api.llama.fi` | generous | `/v2/chains`, `/v2/historicalChainTvl/{chain}`, `/stablecoins`, `/stablecoins/chains` |
+| **CoinGecko** | `https://api.coingecko.com/api/v3` | 10–30/min | `/global`, `/search/trending`, `/coins/categories` |
+| **Neynar (Farcaster)** | `https://api.neynar.com/v2/farcaster` | free key | `/cast/search?q=` (optional — browse Warpcast directly works too) |
 
-## GoPlus Security
+## Chain IDs
+ETH=1 · BSC=56 · Polygon=137 · Arbitrum=42161 · Base=8453 · 0G=16661
 
-**Base URL:** `https://api.gopluslabs.io/api/v1`
+## GeckoTerminal network slugs
+eth · bsc · polygon_pos · arbitrum · base
 
-```
-GET /token_security/{chain_id}?contract_addresses={address}
-```
+## Public RPCs
+ETH `https://eth.llamarpc.com` · BSC `https://bsc-dataseed.binance.org` · Polygon `https://polygon-rpc.com` · Arbitrum `https://arb1.arbitrum.io/rpc` · Base `https://mainnet.base.org` · 0G `https://evmrpc.0g.ai`
 
-Chain IDs: ETH=1, BSC=56, Polygon=137, Arbitrum=42161, Base=8453
-
-Key response fields:
-- `is_honeypot`, `is_mintable`, `can_take_back_ownership`
-- `is_proxy`, `is_open_source`, `is_blacklisted`
-- `buy_tax`, `sell_tax`, `slippage_modifiable`, `transfer_pausable`
-- `holder_count`, `lp_holder_count`, `lp_holders[]`
-- `owner_address`, `creator_address`
-
-## DexScreener
-
-**Base URL:** `https://api.dexscreener.com`
-**Rate Limit:** ~30 req/min
-
-```
-GET /latest/dex/tokens/{tokenAddress}          # All pairs for a token
-GET /latest/dex/pairs/{chainId}/{pairAddress}   # Specific pair
-GET /latest/dex/search?q={query}                # Search by name/symbol
-GET /token-boosts/latest/v1                     # Trending/boosted tokens
-```
-
-Key response fields per pair:
-- `priceUsd`, `priceNative`
-- `volume.h24`, `volume.h6`, `volume.h1`, `volume.m5`
-- `liquidity.usd`, `liquidity.base`, `liquidity.quote`
-- `txns.h24.buys`, `txns.h24.sells`
-- `fdv`, `marketCap`, `pairCreatedAt`
-
-## GeckoTerminal
-
-**Base URL:** `https://api.geckoterminal.com/api/v2`
-**Rate Limit:** 10 calls/min
-
-```
-GET /networks/{network}/tokens/{address}           # Token data
-GET /networks/{network}/tokens/{address}/pools      # Token pools
-GET /networks/{network}/pools/{address}/ohlcv/{tf}  # OHLCV candles
-GET /networks/{network}/new_pools                   # New pools
-GET /networks/trending_pools                        # Trending pools
-```
-
-Networks: eth, bsc, polygon_pos, arbitrum, base
-
-## DefiLlama
-
-**Base URL:** `https://api.llama.fi`
-**Rate Limit:** Generous
-
-```
-GET /v2/chains                           # All chains with TVL
-GET /v2/historicalChainTvl/{chain}        # Historical TVL
-GET /stablecoins                         # All stablecoins
-GET /stablecoins/chains                  # Stablecoins per chain
-```
-
-Chain names: Ethereum, BSC, Polygon, Arbitrum, Base
-
-## CoinGecko
-
-**Base URL:** `https://api.coingecko.com/api/v3`
-**Rate Limit:** 10-30/min (free tier)
-
-```
-GET /global                    # Total market cap, BTC dominance
-GET /search/trending           # Trending coins
-GET /coins/categories          # Categories with market data
-```
-
-## Farcaster (via Neynar) -- Optional
-
-**Base URL:** `https://api.neynar.com/v2/farcaster`
-**Auth:** Free API key from [neynar.com](https://neynar.com) in header (`api_key: YOUR_KEY`). This is the only API that requires a key, and it is optional -- the agent can browse Farcaster directly via the browser tool instead.
-
-```
-GET /cast/search?q={query}&limit=25    # Search casts
-```
-
-## Public Chain RPCs
-
-```
-Ethereum:  https://eth.llamarpc.com
-BSC:       https://bsc-dataseed.binance.org
-Polygon:   https://polygon-rpc.com
-Arbitrum:  https://arb1.arbitrum.io/rpc
-Base:      https://mainnet.base.org
-```
+## Block explorers (API + UI)
+`etherscan.io` · `bscscan.com` · `polygonscan.com` · `arbiscan.io` · `basescan.org` · `chainscan.0g.ai`
+All Etherscan-family expose `/api?module=contract&action=getsourcecode&address=<addr>` and `/api?module=token&action=tokenholderlist&contractaddress=<addr>` without a key (rate-limited).
 
 ## 0G Infrastructure
+Chain RPC `https://evmrpc.0g.ai` (chainId 16661) · Storage indexer `https://indexer-storage-turbo.0g.ai` · Explorer `https://chainscan.0g.ai` · Storage scan `https://storagescan.0g.ai`
 
-```
-0G Chain RPC:    https://evmrpc.0g.ai (Mainnet, Chain ID 16661)
-0G Storage:      https://indexer-storage-turbo.0g.ai (Turbo indexer)
-0G Compute:      https://compute-marketplace.0g.ai/inference (marketplace)
-0G Explorer:     https://chainscan.0g.ai/
-0G Storage Scan: https://storagescan.0g.ai/
-0G Faucet:       https://faucet.0g.ai/
-```
+## Smart-money profile tools (for on-chain specialist)
+`https://debank.com/profile/{addr}` · `https://zapper.xyz/account/{addr}`

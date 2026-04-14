@@ -1,3 +1,8 @@
+---
+model: claude-sonnet-4-6
+description: Scan, score, and rank token opportunities
+---
+
 # MUSASHI — Scan for Token Opportunities
 
 Scan, score, and rank tokens to find the best early-stage opportunities.

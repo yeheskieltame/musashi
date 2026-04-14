@@ -1,3 +1,8 @@
+---
+model: claude-sonnet-4-6
+description: Raw token discovery with pre-screening
+---
+
 # MUSASHI — Raw Token Discovery
 
 Discover newly created tokens with pre-screening (honeypot/mint/ownership filtered out).
