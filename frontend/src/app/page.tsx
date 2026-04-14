@@ -1201,16 +1201,14 @@ claude login`} />
           <Reveal>
             <div className="rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
               {/* Video embed area */}
-              <div id="demo-video-container" className="relative aspect-video bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-7 h-7 text-white/40 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm text-white/40">Demo video coming soon</p>
-                  <p className="text-[11px] text-white/20 mt-1">3-minute walkthrough of the full pipeline</p>
-                </div>
+              <div id="demo-video-container" className="relative aspect-video">
+                <iframe
+                  src="https://www.youtube.com/embed/bejjc7FLcfs"
+                  title="MUSASHI 武蔵 — Demo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
               </div>
 
               {/* Quick stats bar below video */}

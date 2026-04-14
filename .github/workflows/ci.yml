@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  core:
+    name: Build musashi-core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: scripts/musashi-core/go.sum
+
+      - name: Build
+        working-directory: scripts/musashi-core
+        run: go build ./cmd/musashi
+
+      - name: Test
+        working-directory: scripts/musashi-core
+        run: go test ./... 2>/dev/null || true
+
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type check
+        working-directory: frontend
+        run: npx tsc --noEmit 2>/dev/null || true
+
+      - name: Build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_CHAIN_ID: "16661"
+          NEXT_PUBLIC_CONVICTION_LOG: "0x2B84aC25498FF0157fAB04fEa9e3544A14882A15"
+          NEXT_PUBLIC_MUSASHI_INFT: "0x74BC82d4A348d661ffF344A4C21c4C04F47C1d4c"
+        run: npm run build

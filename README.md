@@ -8,7 +8,8 @@ MUSASHI is a conviction-weighted token intelligence engine. It investigates toke
 
 Because every STRIKE is a transaction on 0G Chain and every analysis is stored on 0G Storage, MUSASHI accumulates an immutable track record as it runs. The agent itself is tokenized as an INFT (ERC-7857) whose on-chain reputation — win rate, cumulative return, past calls — is readable by anyone. No self-reported stats. No trust-me-bro. The reputation layer is a natural consequence of the intelligence engine, not a separate product.
 
-**Live dashboard:** https://musashi-agent.xyz
+**Live dashboard:** https://musashi-agent.xyz  
+**Demo video:** https://www.youtube.com/watch?v=bejjc7FLcfs
 
 ---
 
